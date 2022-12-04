@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AdventOfCode2022": {
+      "commandName": "Project",
+      "workingDirectory": "D:\\programming\\source\\AdventOfCode2022"
+    }
+  }
+}

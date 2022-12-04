@@ -16,7 +16,8 @@ namespace AdventOfCode2022
 
     public static void Run(string input)
     {
-      int overlapCount = 0;
+      int fullOverlapCount = 0;
+      int partialOverlapCount = 0;
       foreach(var line in input.Split('\n'))
       {
         if (line.Trim().Length == 0)
@@ -38,16 +39,23 @@ namespace AdventOfCode2022
         if ((ranges[0].Min <= ranges[1].Min && ranges[0].Max >= ranges[1].Max)
           || (ranges[1].Min <= ranges[0].Min && ranges[1].Max >= ranges[0].Max))
         {
-          overlapCount++;
+          fullOverlapCount++;
+          partialOverlapCount++;
           Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} fully overlap");
+        }
+        else if (ranges[0].Min > ranges[1].Max || ranges[0].Max < ranges[1].Min || ranges[1].Min > ranges[0].Max || ranges[1].Max < ranges[0].Min)
+        {
+          Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} are FULLY disjoint.");
         }
         else
         {
           Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} are partially disjoint.");
+          partialOverlapCount++;
         }
       }
 
-      Console.WriteLine($"Full overlaps: {overlapCount}");
+      Console.WriteLine($"Full overlaps: {fullOverlapCount}");
+      Console.WriteLine($"Partial overlaps: {partialOverlapCount}");
     }
   }
 }

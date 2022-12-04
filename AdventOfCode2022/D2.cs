@@ -14,9 +14,17 @@ namespace AdventOfCode2022
     Scissors
   };
 
+
+  enum DesiredResult
+  {
+    Loss,
+    Tie,
+    Win
+  };
+
   internal static class D2
   {
-    public static void Run(string input)
+    public static void RunP1(string input)
     {
       // R P S: A B C
       // R P S: X Y Z
@@ -36,6 +44,7 @@ namespace AdventOfCode2022
         RPS enemyChoice = (RPS)(values[0][0] - 'A');
         RPS suggestedChoice = (RPS)(values[1][0] - 'X');
 
+
         int resultPoints = 0;
         if (enemyChoice == suggestedChoice)
         {
@@ -46,6 +55,43 @@ namespace AdventOfCode2022
         {
           resultPoints = 6;
         }
+
+        int roundPoints = resultPoints + 1 + (int)suggestedChoice;
+        points += roundPoints;
+
+        Console.WriteLine($"Round {roundIndex}: {(RPS)enemyChoice} ({values[0]}) vs {(RPS)suggestedChoice} ({values[1]}). Result: {resultPoints}, {roundPoints}");
+        roundIndex++;
+      }
+
+      Console.WriteLine($"------\nFinal result: {points} points");
+    }
+
+    public static void RunP2(string input)
+    {
+      int points = 0;
+      int roundIndex = 1;
+
+      foreach (var line in input.Split("\n"))
+      {
+        var values = line.Trim().Split(" ", StringSplitOptions.RemoveEmptyEntries);
+        if (values.Length == 0)
+        {
+          continue;
+        }
+
+        Debug.Assert(values.Length == 2);
+
+        RPS enemyChoice = (RPS)(values[0][0] - 'A');
+        DesiredResult desiredResult = (DesiredResult)(values[1][0] - 'X');
+        
+        RPS suggestedChoice = desiredResult switch
+        {
+          DesiredResult.Loss => (RPS)(((int)enemyChoice + 2) % 3),
+          DesiredResult.Tie => enemyChoice,
+          _ => (RPS)(((int)enemyChoice + 1) % 3),
+        };
+
+        int resultPoints = (int)(desiredResult) * 3;
 
         int roundPoints = resultPoints + 1 + (int)suggestedChoice;
         points += roundPoints;

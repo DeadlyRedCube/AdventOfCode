@@ -4,5 +4,5 @@ using AdventOfCode2022;
 Console.WriteLine("Hello, World!");
 
 
-D1.Run(File.ReadAllText("D1.txt"));
+D2.Run(File.ReadAllText("D2.txt"));
 

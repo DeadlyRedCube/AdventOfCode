@@ -6,28 +6,19 @@ using System.Threading.Tasks;
 
 namespace AdventOfCode2022
 {
-  internal static class D1P1
+  internal static class D1
   {
     public static void Run(string input)
     {
-      int mostCals = 0;
-      int bestElf = 0;
-
-      int curElf = 1;
       int curCals = 0;
+      var calCounts = new List<int>();
       foreach (var striter in (input + "\n").Split('\n'))
       {
         var str = striter.Trim();
         if (str.Length == 0)
         {
-          if (curCals > mostCals)
-          {
-            mostCals = curCals;
-            bestElf = curElf;
-          }
-
+          calCounts.Add(curCals);
           curCals = 0;
-          curElf++;
         }
         else
         {
@@ -35,7 +26,17 @@ namespace AdventOfCode2022
         }
       }
 
-      Console.WriteLine($"Best elf: {bestElf} with {mostCals} calories");
+      calCounts.Sort((x, y) => y.CompareTo(x));
+
+      int totalCals = 0;
+      Console.WriteLine("Top 3 elf counts:");
+      for (int i = 0; i < 3; i++)
+      {
+        Console.WriteLine($"  {calCounts[i]}");
+        totalCals += calCounts[i];
+      }
+
+      Console.WriteLine($"\nTotal: {totalCals}");
     }
   }
 }

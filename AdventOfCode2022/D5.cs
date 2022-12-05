@@ -16,7 +16,7 @@ namespace AdventOfCode2022
       public int DstStack;
     }
 
-    public static void Run(string input)
+    public static void Run(string input, bool multipleAtOnce)
     {
       var stacks = new List<Stack<char>>();
       var moves = new List<Move>();
@@ -70,9 +70,25 @@ namespace AdventOfCode2022
       // Great now do the moves
       foreach (var move in moves)
       {
-        for (int i = 0; i < move.Count; i++)
+        if (multipleAtOnce)
         {
-          stacks[move.DstStack].Push(stacks[move.SrcStack].Pop());
+          var tempStack = new Stack<char>();
+          for (int i = 0; i < move.Count; i++)
+          {
+            tempStack.Push(stacks[move.SrcStack].Pop());
+          }
+
+          for (int i = 0; i < move.Count; i++)
+          {
+            stacks[move.DstStack].Push(tempStack.Pop());
+          }
+        }
+        else
+        {
+          for (int i = 0; i < move.Count; i++)
+          {
+            stacks[move.DstStack].Push(stacks[move.SrcStack].Pop());
+          }
         }
       }
 

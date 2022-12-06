@@ -10,27 +10,18 @@ namespace AdventOfCode2022
   {
     public static void Run(string input, int len)
     {
-      string stream = input.Replace("\r", "").Replace("\n", "");
-      var q = new Queue<char>();
       var set = new HashSet<char>();
       for (int i = 0; i < input.Length; i++) 
       {
-        if (q.Count == len)
+        set.Clear();
+        for (int j = 0; j < len; j++)
+          set.Add(input[i + j]);
+
+        if (set.Count == len)
         {
-          set.Clear();
-          foreach (char c in q)
-            set.Add(c);
-
-          if (set.Count == len)
-          {
-            Console.Write($"Marker: {i}");
-            return;
-          }
-
-          q.Dequeue();
+          Console.Write($"Marker: {i + len}");
+          return;
         }
-        
-        q.Enqueue(input[i]);
       }
     }
 

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Formats.Tar;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AdventOfCode2022
+﻿namespace AdventOfCode2022
 {
   internal static class D7
   {
@@ -72,6 +65,21 @@ namespace AdventOfCode2022
       foreach (var sub in dir.Subdirs.Values)
       {
         FindUndersizeDirsNoExclusion(sub, sizeCap, outList);
+      }
+    }
+
+    static void FindOversizeDir(Dir dir, int requiredSize, List<Dir> outList)
+    {
+      if (dir.TotalSize < requiredSize)
+      {
+        return;
+      }
+
+      outList.Add(dir);
+
+      foreach (var sub in dir.Subdirs.Values)
+      {
+        FindOversizeDir(sub, requiredSize, outList);
       }
     }
 
@@ -151,6 +159,20 @@ namespace AdventOfCode2022
 
       int sum = undersizeNodes.Aggregate(0, (total, next) => total + next.TotalSize);
       Console.WriteLine($"Sum: {sum}");
+
+      const int totalDiskSize = 70_000_000;
+      const int requiredDiskSize = 30_000_000;
+
+      int availableDiskSpace = totalDiskSize - root.TotalSize;
+
+      int requiredDeletionAmount = requiredDiskSize - availableDiskSpace;
+
+      var oversizeNodes = new List<Dir>();
+      FindOversizeDir(root, requiredDeletionAmount, oversizeNodes);
+
+      oversizeNodes.Sort((a, b) => (a.TotalSize < b.TotalSize) ? -1 : 1);
+
+      Console.WriteLine($"Size of dir to delete: {oversizeNodes[0].TotalSize}");
     }
   }
 }

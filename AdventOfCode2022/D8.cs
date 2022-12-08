@@ -8,6 +8,57 @@ namespace AdventOfCode2022
 {
   internal static class D8
   {
+    public static int VisibilityFrom(int[,] grid, int xo, int yo)
+    {
+      int count = 0;
+
+      int product = 1;
+      for (int x = xo - 1; x >= 0; x--)
+      {
+        count++;
+        if (grid[x,yo] >= grid[xo,yo])
+        {
+          break;
+        }
+      }
+
+      product *= count;
+      count = 0;
+      for (int x = xo + 1; x < grid.GetLength(0); x++)
+      {
+        count++;
+        if (grid[x,yo] >= grid[xo,yo])
+        {
+          break;
+        }
+      }
+
+      product *= count;
+      count = 0;
+      for (int y = yo - 1; y >= 0; y--)
+      {
+        count++;
+        if (grid[xo,y] >= grid[xo,yo])
+        {
+          break;
+        }
+      }
+
+      product *= count;
+      count = 0;
+      for (int y = yo + 1; y < grid.GetLength(1); y++)
+      {
+        count++;
+        if (grid[xo,y] >= grid[xo,yo])
+        {
+          break;
+        }
+      }
+
+      product *= count;
+      return product;
+    }
+
     public static void Run(string input)
     {
       List<List<int>> gridParse = new List<List<int>>();
@@ -89,6 +140,18 @@ namespace AdventOfCode2022
       }    
       
       Console.WriteLine($"vis count: {visCount}");
+
+      int maxScore = 0;
+      for (int i = 0; i < grid.GetLength(0); i++)
+      {
+        for (int j = 0; j < grid.GetLength(1); j++)
+        {
+          maxScore = int.Max(maxScore, VisibilityFrom(grid, i, j));
+        }
+      }    
+
+      Console.WriteLine($"max score: {maxScore}");
+
     }
   }
 }

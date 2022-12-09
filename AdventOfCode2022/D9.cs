@@ -13,39 +13,25 @@ namespace AdventOfCode2022
     public int X;
     public int Y;
 
-    public static int DistanceTo(V2 v1, V2 v2)
-    {
-      return Math.Max(Math.Abs(v1.X - v2.X), Math.Abs(v1.Y - v2.Y));
-    }
-
     public void MoveToBeAdjacentTo(V2 h)
     {
-      if (DistanceTo(this, h) <= 1)
-        { return; }
+      int xDir = h.X - X;
+      int yDir = h.Y - Y;
 
-      int xDir = h.X - this.X;
-      int yDir = h.Y - this.Y;
-
-      if (xDir == 0)
+      if (Math.Max(Math.Abs(xDir), Math.Abs(yDir)) <= 1)
       {
-        Debug.Assert(Math.Abs(yDir) == 2);
-        Y += (yDir > 0) ? 1 : -1;
+        // Already adjacent (no more than 1 away along either axis), so return
+        return;
       }
-      else if (yDir == 0) 
-      {
-        Debug.Assert(Math.Abs(xDir) == 2);
-        X += (xDir > 0) ? 1 : -1;
-      }
-      else
-      {
-        Debug.Assert(Math.Abs(xDir) == 2 || Math.Abs(yDir) == 2);
 
-        xDir = (xDir > 0) ? 1 : -1;
-        yDir = (yDir > 0) ? 1 : -1;
+      Debug.Assert(Math.Abs(xDir) == 2 || Math.Abs(yDir) == 2);
+      Debug.Assert(Math.Max(Math.Abs(xDir), Math.Abs(yDir)) == 2);
 
-        X += xDir;
-        Y += yDir;
-      }
+      xDir = Math.Clamp(xDir, -1, 1);
+      yDir = Math.Clamp(yDir, -1, 1);
+
+      X += xDir;
+      Y += yDir;
     }
   }
   
@@ -62,7 +48,6 @@ namespace AdventOfCode2022
     public static void Run(string input, int ropeCount)
     {
       HashSet<V2> tailSet = new HashSet<V2>();
-
       V2[] rope = new V2[ropeCount];
 
       tailSet.Add(rope.Last());

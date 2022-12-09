@@ -18,11 +18,9 @@ namespace AdventOfCode2022
       int xDir = h.X - X;
       int yDir = h.Y - Y;
 
+      // if we're already adjacent (no more than 1 away along either axis), return
       if (Math.Max(Math.Abs(xDir), Math.Abs(yDir)) <= 1)
-      {
-        // Already adjacent (no more than 1 away along either axis), so return
-        return;
-      }
+        { return; }
 
       Debug.Assert(Math.Abs(xDir) == 2 || Math.Abs(yDir) == 2);
       Debug.Assert(Math.Max(Math.Abs(xDir), Math.Abs(yDir)) == 2);
@@ -63,9 +61,9 @@ namespace AdventOfCode2022
 
         switch (split[0])
         {
-        case "R": xDir = 1; break;
+        case "R": xDir =  1; break;
         case "L": xDir = -1; break;
-        case "U": yDir = 1; break;
+        case "U": yDir =  1; break;
         case "D": yDir = -1; break;
         default: Debug.Assert(false); break;
         }
@@ -76,9 +74,7 @@ namespace AdventOfCode2022
           rope[0].Y += yDir;
 
           for (int j = 1; j < rope.Length; j++)
-          {
-            rope[j].MoveToBeAdjacentTo(rope[j - 1]);
-          }
+            { rope[j].MoveToBeAdjacentTo(rope[j - 1]); }
 
           tailSet.Add(rope.Last());
         }

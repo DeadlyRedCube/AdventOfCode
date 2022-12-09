@@ -1,4 +1,6 @@
-﻿namespace AdventOfCode2022
+﻿using System.Diagnostics;
+
+namespace AdventOfCode2022
 {
   internal static class D7
   {
@@ -8,78 +10,29 @@
       public int Size;
     }
 
+    // Obviously this whole Dir thing is wildly inefficient but for purposes of a dumb programming test, whatever
     class Dir
     {
       public Dir? Parent = null;
       public string Name = string.Empty;
       
       public int FileSize
-      {
-        get 
-        {
-          if (fileSize == 0)
-          {
-            foreach (var item in Files.Values) 
-            {
-              fileSize += item.Size;
-            }
-          }
-
-          return fileSize;
-        }
-      }
+        { get => Files.Values.Aggregate(0, (s, v) => s + v.Size); }
 
       public int TotalSize
-      {
-        get
-        {
-          if (totalSize == 0)
-          {
-            totalSize = FileSize;
+        { get => Subdirs.Values.Aggregate(FileSize, (s, v) => s + v.TotalSize); }
 
-            foreach (var item in Subdirs.Values)
-            {
-              totalSize += item.TotalSize;
-            }
-          }
-
-          return totalSize;
-        }
-      }
-
-
-      int fileSize;
-      int totalSize;
       public Dictionary<string, Dir> Subdirs = new Dictionary<string, Dir>();
       public Dictionary<string, File> Files = new Dictionary<string, File>();
-    }
 
-
-    static void FindUndersizeDirsNoExclusion(Dir dir, int sizeCap, List<Dir> outList)
-    {
-      if (dir.TotalSize <= sizeCap)
+      public IEnumerable<Dir> IterRecursive()
       {
-        outList.Add(dir);
-      }
-
-      foreach (var sub in dir.Subdirs.Values)
-      {
-        FindUndersizeDirsNoExclusion(sub, sizeCap, outList);
-      }
-    }
-
-    static void FindOversizeDir(Dir dir, int requiredSize, List<Dir> outList)
-    {
-      if (dir.TotalSize < requiredSize)
-      {
-        return;
-      }
-
-      outList.Add(dir);
-
-      foreach (var sub in dir.Subdirs.Values)
-      {
-        FindOversizeDir(sub, requiredSize, outList);
+        yield return this;
+        foreach (var dir in Subdirs.Values)
+        {
+          foreach (var sub in dir.IterRecursive())
+            { yield return sub; }
+        }
       }
     }
 
@@ -90,13 +43,8 @@
       root.Name = "";
 
       Dir cur = root;
-      foreach (var line in input.Split('\n', StringSplitOptions.TrimEntries))
+      foreach (var line in input.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
       {
-        if (line.Length == 0)
-        {
-          continue;
-        }
-
         if (line.StartsWith('$'))
         {
           // this is a command
@@ -105,74 +53,48 @@
           if (line.StartsWith("$ cd "))
           {
             var target = line.Substring("$ cd ".Length).Trim();
-
-            if (target == "/")
+            cur = target switch
             {
-              cur = root;
-            }
-            else if (target == "..")
-            {
-              cur = cur.Parent!;
-            }
-            else
-            {
-              if (!cur.Subdirs.TryGetValue(target, out var targetDir))
-              {
-                targetDir = new Dir();
-                targetDir.Parent = cur;
-                targetDir.Name = target;
-                cur.Subdirs.Add(target, targetDir);
-              }
-
-              cur = targetDir!;
-            }
+              "/" => root,
+              ".." => cur.Parent!,
+              _ => cur.Subdirs[target]!, // We should have already listed the directories at this point so just yolo it
+            };
           }
         }
         else if (line.StartsWith("dir"))
         {
           var name = line.Substring("dir".Length).Trim();
-          if (!cur.Subdirs.TryGetValue(name, out var newDir))
-          {
-            newDir = new Dir();
-            newDir.Parent = cur;
-            newDir.Name = name;
-            cur.Subdirs.Add(name, newDir);
-          }
+          Debug.Assert(!cur.Subdirs.ContainsKey(name));
+          cur.Subdirs.Add(name, new Dir { Parent = cur, Name = name });
         }
         else
         {
           var split = line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-          if (!cur.Files.ContainsKey(split[1]))
-          {
-            var file = new File();
-            file.Size = int.Parse(split[0]);
-            file.Name = split[1];
-            cur.Files.Add(file.Name, file);
-          }
+          Debug.Assert (!cur.Files.ContainsKey(split[1]));
+          cur.Files.Add(split[1], new File { Size = int.Parse(split[0]), Name = split[1] });
         }
       }
 
       // Now we have our directory structure time to evaluate it
-      var undersizeNodes = new List<Dir>();
+      // We want the sum of the sizes of every directory that contains at most "sizeCap" bytes.
       const int sizeCap = 100_000;
-      FindUndersizeDirsNoExclusion(root, sizeCap, undersizeNodes);
+      int undersizedNodeSum = root.IterRecursive()
+        .Where(d => d.TotalSize <= sizeCap)
+        .Aggregate(0, (s, v) => s + v.TotalSize);
 
-      int sum = undersizeNodes.Aggregate(0, (total, next) => total + next.TotalSize);
-      Console.WriteLine($"Sum: {sum}");
+      Console.WriteLine($"[P1] Sum of undersized node sizes: {undersizedNodeSum}");
 
       const int totalDiskSize = 70_000_000;
       const int requiredDiskSize = 30_000_000;
-
       int availableDiskSpace = totalDiskSize - root.TotalSize;
-
       int requiredDeletionAmount = requiredDiskSize - availableDiskSpace;
 
-      var oversizeNodes = new List<Dir>();
-      FindOversizeDir(root, requiredDeletionAmount, oversizeNodes);
+      // Find the smallest node at least as large as the required deletion amount
+      var smallestOversizeNode = root.IterRecursive()
+        .Where(d => d.TotalSize >= requiredDeletionAmount)
+        .Aggregate(root, (result, cur) => (cur.TotalSize < result.TotalSize) ? cur : result);
 
-      oversizeNodes.Sort((a, b) => (a.TotalSize < b.TotalSize) ? -1 : 1);
-
-      Console.WriteLine($"Size of dir to delete: {oversizeNodes[0].TotalSize}");
+      Console.WriteLine($"[P2] Size of dir to delete: {smallestOversizeNode.TotalSize}");
     }
   }
 }

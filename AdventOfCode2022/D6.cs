@@ -8,18 +8,16 @@ namespace AdventOfCode2022
 {
   internal static class D6
   {
-    public static void Run(string input, int len)
+    public static void Run(string inputStr, int len)
     {
-      var set = new HashSet<char>();
-      for (int i = 0; i < input.Length; i++) 
+      var input = inputStr.ToList();
+      for (int i = 0; i < input.Count; i++) 
       {
-        set.Clear();
-        for (int j = 0; j < len; j++)
-          set.Add(input[i + j]);
-
-        if (set.Count == len)
+        // Make a set out of the next "len" characters, if the count == len then they were
+        //  all unique and we've found our marker
+        if ((new HashSet<char>(input.GetRange(i, len))).Count == len)
         {
-          Console.Write($"Marker: {i + len}");
+          Console.WriteLine($"Marker: {i + len}");
           return;
         }
       }

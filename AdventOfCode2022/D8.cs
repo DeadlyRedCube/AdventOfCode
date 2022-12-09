@@ -8,150 +8,126 @@ namespace AdventOfCode2022
 {
   internal static class D8
   {
-    public static int VisibilityFrom(int[,] grid, int xo, int yo)
+    static IEnumerable<T> XSlice<T>(this T[,] grid, int x)
+    {
+      for (int y = 0; y < grid.GetLength(1); y++)
+        { yield return grid[x, y]; }
+    }
+
+    static IEnumerable<T> YSlice<T>(this T[,] grid, int y)
+    {
+      for (int x = 0; x < grid.GetLength(0); x++)
+        { yield return grid[x, y]; }
+    }
+
+    // Get a list of the indices of slice indices that are visible (taller than any preceding heights)
+    static IEnumerable<int> VisibleIndicesCountAlongSlice(IEnumerable<int> slice)
+    {
+      int maxH = -1;
+      int idx = 0;
+      foreach (int h in slice)
+      {
+        if (h > maxH)
+        {
+          maxH = h;
+          yield return idx;
+        }
+
+        idx++;
+      }
+    }
+
+    // Calculate the view score along a single slice (stopping visibility testing at the given ref height)
+    static int ViewScoreAlongSlice(IEnumerable<int> slice, int refHeight)
     {
       int count = 0;
-
-      int product = 1;
-      for (int x = xo - 1; x >= 0; x--)
+      foreach (var h in slice)
       {
         count++;
-        if (grid[x,yo] >= grid[xo,yo])
-        {
-          break;
-        }
+        if (h >= refHeight)
+          { break; }
       }
 
-      product *= count;
-      count = 0;
-      for (int x = xo + 1; x < grid.GetLength(0); x++)
-      {
-        count++;
-        if (grid[x,yo] >= grid[xo,yo])
-        {
-          break;
-        }
-      }
+      return count;
+    }
 
-      product *= count;
-      count = 0;
-      for (int y = yo - 1; y >= 0; y--)
-      {
-        count++;
-        if (grid[xo,y] >= grid[xo,yo])
-        {
-          break;
-        }
-      }
+    // Return a list of all of the slices radiating out from the given xo, yo position
+    public static IEnumerable<IEnumerable<int>> SlicesFromPosition(int[,] grid, int xo, int yo)
+    {
+      yield return grid.XSlice(xo).Where((v, y) => y < yo).Reverse();
+      yield return grid.XSlice(xo).Where((v, y) => y > yo);
+      yield return grid.YSlice(yo).Where((v, x) => x < xo).Reverse();
+      yield return grid.YSlice(yo).Where((v, x) => x > xo);
+    }
 
-      product *= count;
-      count = 0;
-      for (int y = yo + 1; y < grid.GetLength(1); y++)
-      {
-        count++;
-        if (grid[xo,y] >= grid[xo,yo])
-        {
-          break;
-        }
-      }
-
-      product *= count;
-      return product;
+    // Calculate the view score for a given position in the grid
+    public static int ViewScore(int[,] grid, int xo, int yo)
+    {
+      return SlicesFromPosition(grid, xo, yo)
+        .Aggregate(1, (prod, slice) => prod * ViewScoreAlongSlice(slice, grid[xo, yo]));
     }
 
     public static void Run(string input)
     {
-      List<List<int>> gridParse = new List<List<int>>();
-      foreach (var line in input.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+      int[,] grid;
       {
-        var l = new List<int>();
-        gridParse.Add(l);
-        foreach (char digit in line)
+        // Parse our grid
+        List<List<int>> gridParse = new List<List<int>>();
+        foreach (var line in input.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
         {
-          l.Add(int.Parse(digit.ToString()));
+          var l = new List<int>();
+          gridParse.Add(l);
+          foreach (char digit in line)
+            { l.Add(int.Parse(digit.ToString())); }
+        }
+
+        // Turn it into a 2D array
+        grid = new int[gridParse[0].Count, gridParse.Count];
+        for (int i = 0; i < grid.GetLength(0); i++)
+        {
+          for (int j = 0; j < grid.GetLength(1); j++)
+            { grid[i,j] = gridParse[j][i]; }
         }
       }
 
-      int[,] grid = new int[gridParse[0].Count, gridParse.Count];
+      // Make a grid of booleans where true values mean "this tree was visible from an edge"
+      bool[,] vis = new bool[grid.GetLength(0), grid.GetLength(1)];
 
-      // these are all false
-      bool[,]vis = new bool[grid.GetLength(0), grid.GetLength(1)];
-      for (int i = 0; i < grid.GetLength(0); i++)
+      // Calculate visibility looking from the left and right for every x coordinate
+      for (int x = 0; x < grid.GetLength(0); x++)
       {
-        for (int j = 0; j < grid.GetLength(1); j++)
-        {
-          grid[i,j] = gridParse[j][i];
-        }
+        foreach (var y in VisibleIndicesCountAlongSlice(grid.XSlice(x)))
+          {  vis[x, y] = true; }
+
+        foreach (var yr in VisibleIndicesCountAlongSlice(grid.XSlice(x).Reverse()))
+          {  vis[x, grid.GetLength(1) - yr - 1] = true; }
       }
 
-      for (int i = 0; i < grid.GetLength(0); i++)
+      // Do the same for y
+      for (int y = 0; y < grid.GetLength(0); y++)
       {
-        int maxFromLowSide = grid[i, 0];
-        int maxFromHighSide = grid[i, grid.GetLength(1) - 1];
-        vis[i, 0] = true;
-        vis[i, grid.GetLength(1) - 1] = true;
-        for (int j = 1; j < grid.GetLength(1); j++)
-        {
-          int j2 = grid.GetLength(1) - j - 1;
-          if (grid[i,j] > maxFromLowSide)
-          {
-            maxFromLowSide = grid[i, j];
-            vis[i,j] = true;
-          }
+        foreach (var x in VisibleIndicesCountAlongSlice(grid.YSlice(y)))
+          {  vis[x, y] = true; }
 
-          if (grid[i,j2] > maxFromHighSide)
-          {
-            maxFromHighSide = grid[i, j2];
-            vis[i,j2] = true;
-          }
-        }
+        foreach (var xr in VisibleIndicesCountAlongSlice(grid.YSlice(y).Reverse()))
+          {  vis[grid.GetLength(0) - xr - 1, y] = true; }
       }
 
-      for (int j = 0; j < grid.GetLength(0); j++)
-      {
-        int maxFromLowSide = grid[0, j];
-        int maxFromHighSide = grid[grid.GetLength(0) - 1, j];
-        vis[0, j] = true;
-        vis[grid.GetLength(0) - 1, j] = true;
-        for (int i = 1; i < grid.GetLength(0); i++)
-        {
-          int i2 = grid.GetLength(0) - i - 1;
-          if (grid[i,j] > maxFromLowSide)
-          {
-            maxFromLowSide = grid[i, j];
-            vis[i,j] = true;
-          }
-
-          if (grid[i2,j] > maxFromHighSide)
-          {
-            maxFromHighSide = grid[i2, j];
-            vis[i2,j] = true;
-          }
-        }
-      }
-
+      // Now count up how many trues (visible trees) there are in the vis grid
       int visCount = 0;
-      for (int i = 0; i < grid.GetLength(0); i++)
-      {
-        for (int j = 0; j < grid.GetLength(1); j++)
-        {
-          visCount += vis[i,j] ? 1 : 0;
-        }
-      }    
-      
-      Console.WriteLine($"vis count: {visCount}");
+      for (int x = 0; x < grid.GetLength(0); x++)
+        { visCount = vis.XSlice(x).Aggregate(visCount, (count, vis) => count + (vis ? 1 : 0)); }
+      Console.WriteLine($"[P1] vis count: {visCount}");
 
+      // Now test every grid position's View Score to find the best tree's score
       int maxScore = 0;
-      for (int i = 0; i < grid.GetLength(0); i++)
+      for (int x = 0; x < grid.GetLength(0); x++)
       {
-        for (int j = 0; j < grid.GetLength(1); j++)
-        {
-          maxScore = int.Max(maxScore, VisibilityFrom(grid, i, j));
-        }
-      }    
+        for (int y = 0; y < grid.GetLength(1); y++)
+          { maxScore = int.Max(maxScore, ViewScore(grid, x, y)); }
+      }
 
-      Console.WriteLine($"max score: {maxScore}");
-
+      Console.WriteLine($"[P2] max score: {maxScore}");
     }
   }
 }

@@ -18,29 +18,25 @@ namespace AdventOfCode2022
     {
       int fullOverlapCount = 0;
       int partialOverlapCount = 0;
-      foreach(var line in input.Split('\n'))
+      foreach(var line in input.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
       {
-        if (line.Trim().Length == 0)
-        {
-          continue;
-        }
-        
+        // Each line is a pair of ranges like 1-93,2-11
         var strRanges = line.Split(',');
 
         var ranges = new Range[2];
         for (int i = 0; i < 2; i++)
         {
-          var rangeEnds = strRanges[i].Split('-');
+          var rangeEnds = strRanges[i].Split('-', StringSplitOptions.TrimEntries);
 
-          ranges[i].Min = int.Parse(rangeEnds[0].Trim());
-          ranges[i].Max = int.Parse(rangeEnds[1].Trim());
+          ranges[i].Min = int.Parse(rangeEnds[0]);
+          ranges[i].Max = int.Parse(rangeEnds[1]);
         }
 
+        // Test for full and partial overlaps
         if ((ranges[0].Min <= ranges[1].Min && ranges[0].Max >= ranges[1].Max)
           || (ranges[1].Min <= ranges[0].Min && ranges[1].Max >= ranges[0].Max))
         {
           fullOverlapCount++;
-          partialOverlapCount++;
           Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} fully overlap");
         }
         else if (ranges[0].Min > ranges[1].Max || ranges[0].Max < ranges[1].Min || ranges[1].Min > ranges[0].Max || ranges[1].Max < ranges[0].Min)
@@ -55,7 +51,7 @@ namespace AdventOfCode2022
       }
 
       Console.WriteLine($"Full overlaps: {fullOverlapCount}");
-      Console.WriteLine($"Partial overlaps: {partialOverlapCount}");
+      Console.WriteLine($"Full or partial overlaps: {fullOverlapCount + partialOverlapCount}");
     }
   }
 }

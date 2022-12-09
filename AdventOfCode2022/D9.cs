@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace AdventOfCode2022
 {
+  [DebuggerDisplay("{X}, {Y}")]
   struct V2
   {
     public int X;
@@ -38,7 +39,6 @@ namespace AdventOfCode2022
       else
       {
         Debug.Assert(Math.Abs(xDir) == 2 || Math.Abs(yDir) == 2);
-        Debug.Assert(Math.Abs(xDir) + Math.Abs(yDir) == 3);
 
         xDir = (xDir > 0) ? 1 : -1;
         yDir = (yDir > 0) ? 1 : -1;
@@ -53,14 +53,19 @@ namespace AdventOfCode2022
   
   internal class D9
   {
-    public static void Run(string input)
+    public static void RunP1(string input)
+      => Run(input, 2);
+
+    public static void RunP2(string input)
+      => Run(input, 10);
+
+    public static void Run(string input, int ropeCount)
     {
       HashSet<V2> tailSet = new HashSet<V2>();
 
-      V2 head = new V2();
-      V2 tail = new V2();
+      V2[] rope = new V2[ropeCount];
 
-      tailSet.Add(tail);
+      tailSet.Add(rope.Last());
 
       foreach (var line in input.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
       {
@@ -82,11 +87,15 @@ namespace AdventOfCode2022
 
         for (int i = 0; i < stepCount; i++)
         {
-          head.X += xDir;
-          head.Y += yDir;
+          rope[0].X += xDir;
+          rope[0].Y += yDir;
 
-          tail.MoveToBeAdjacentTo(head);
-          tailSet.Add(tail);
+          for (int j = 1; j < rope.Length; j++)
+          {
+            rope[j].MoveToBeAdjacentTo(rope[j - 1]);
+          }
+
+          tailSet.Add(rope.Last());
         }
       }
 

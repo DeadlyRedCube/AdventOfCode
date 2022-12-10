@@ -3,18 +3,18 @@ using AdventOfCode2022;
 
 Console.WriteLine("Hello, World!");
 
-//D1.Run(File.ReadAllText("D1.txt"));
-//D2.RunP1(File.ReadAllText("D2.txt"));
-//D2.RunP2(File.ReadAllText("D2.txt"));
-//D3.Run(File.ReadAllText("D3.txt"));
-//D4.Run(File.ReadAllText("D4.txt"));
-//D5.RunP1(File.ReadAllText("D5.txt"));
-//D5.RunP2(File.ReadAllText("D5.txt"));
-//D6.RunP1(File.ReadAllText("D6.txt"));
-//D6.RunP2(File.ReadAllText("D6.txt"));
-//D7.Run(File.ReadAllText("D7.txt"));
-//D8.Run(File.ReadAllText("D8.txt"));
-//D9.RunP1(File.ReadAllText("D9.txt"));
-//D9.RunP2(File.ReadAllText("D9.txt"));
+//D01.Run(File.ReadAllText("D01.txt"));
+//D02.RunP1(File.ReadAllText("D02.txt"));
+//D02.RunP2(File.ReadAllText("D02.txt"));
+//D03.Run(File.ReadAllText("D03.txt"));
+//D04.Run(File.ReadAllText("D04.txt"));
+//D05.RunP1(File.ReadAllText("D05.txt"));
+//D05.RunP2(File.ReadAllText("D05.txt"));
+//D06.RunP1(File.ReadAllText("D06.txt"));
+//D06.RunP2(File.ReadAllText("D06.txt"));
+//D07.Run(File.ReadAllText("D07.txt"));
+//D08.Run(File.ReadAllText("D08.txt"));
+//D09.RunP1(File.ReadAllText("D09.txt"));
+//D09.RunP2(File.ReadAllText("D09.txt"));
 D10.Run(File.ReadAllText("D10.txt"));
 

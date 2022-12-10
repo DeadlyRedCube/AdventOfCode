@@ -25,10 +25,18 @@ namespace AdventOfCode2022
         for (int i = 0; i < (add ? 2 : 1); i++)
         {
           cycleIndex++;
+          int c = (cycleIndex - 1) % 40;
+          if (c == 0)
+          {
+            Console.Write($"\nCycle {cycleIndex, 5}: ");
+          }
+
+          Console.Write((x >= c - 1 && x <= c + 1) ? "#" : ".");
+
           if (testCycleIndices.Contains(cycleIndex))
           {
             strengthSum += cycleIndex * x;
-            Console.WriteLine($"Cycle {cycleIndex}, Strength: {cycleIndex * x}");
+            // Console.WriteLine($"Cycle {cycleIndex}, Strength: {cycleIndex * x}");
           }
         }
 
@@ -38,7 +46,7 @@ namespace AdventOfCode2022
         }
       }
 
-      Console.WriteLine($"Signal Sum: {strengthSum}");
+      Console.WriteLine($"\n\nSignal Sum: {strengthSum}");
     }
   }
 }

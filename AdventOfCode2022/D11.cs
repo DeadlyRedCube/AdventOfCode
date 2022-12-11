@@ -16,6 +16,7 @@ namespace AdventOfCode2022
       Add,
       Multiply,
     }
+
     class Monkey
     {
       public List<long> items = new List<long>();
@@ -25,11 +26,19 @@ namespace AdventOfCode2022
       public int trueTarget;
       public int falseTarget;
 
-      public int inspectCount = 0;
+      public long inspectCount = 0;
     }
 
-    public static void Run(string input)
+    public static void RunP1(string input)
+      => Run(input, false);
+    
+    public static void RunP2(string input)
+      => Run(input, true);
+    
+    static void Run(string input, bool part2)
     {
+      // Give our modulo an extra 3 here because in part 1 we have an extra divide by 3 and so we actually need to effectively track divisibility by 9
+      int modBoundary = 3;
       var monkeys = new List<Monkey>();
       foreach (var line in input.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
       {
@@ -62,6 +71,7 @@ namespace AdventOfCode2022
 
         case "Test:":
           monkeys.Last().divisibleBy  = int.Parse(tokens[3]);
+          modBoundary *= monkeys.Last().divisibleBy;
           break;
 
         case "If":
@@ -83,7 +93,7 @@ namespace AdventOfCode2022
       }
 
       // Now do the thing!
-      const int RoundCount = 20;
+      int RoundCount = part2 ? 10000 : 20;
       for (int round = 0; round < RoundCount; round++)
       {
         for (int monkeyIndex = 0; monkeyIndex < monkeys.Count; monkeyIndex++)
@@ -108,7 +118,13 @@ namespace AdventOfCode2022
               _ => throw new Exception("RONG"),
             };
 
-            calcWorry /= 3;
+            if (!part2)
+            {
+              calcWorry /= 3;
+            }
+
+            calcWorry %= modBoundary;
+
 #if WRITE_ROUNDS
             Console.WriteLine($"    New level: {calcWorry}");
 #endif

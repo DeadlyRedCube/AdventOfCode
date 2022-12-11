@@ -16,5 +16,6 @@ Console.WriteLine("Hello, World!");
 //D08.Run(File.ReadAllText("D08.txt"));
 //D09.RunP1(File.ReadAllText("D09.txt"));
 //D09.RunP2(File.ReadAllText("D09.txt"));
-D10.Run(File.ReadAllText("D10.txt"));
+//D10.Run(File.ReadAllText("D10.txt"));
+D11.Run(File.ReadAllText("D11.txt"));
 

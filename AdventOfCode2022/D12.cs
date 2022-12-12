@@ -113,6 +113,22 @@ namespace AdventOfCode2022
       int stepsToExit = stepCount[startX, startY];
 
       Console.WriteLine($"Steps to exit: {stepsToExit}");
+
+      int minElevationAStepCount = stepsToExit;
+      for (int y = 0; y < parsedGridLines.Count; y++) 
+      {
+        Debug.Assert(parsedGridLines[y].Count == elevations.GetLength(0));
+
+        for (int x = 0; x < parsedGridLines[y].Count; x++)
+        {
+          if (elevations[x, y] != 0)
+            { continue; }
+
+          minElevationAStepCount = Math.Min(minElevationAStepCount, stepCount[x, y]);
+        }
+      }
+
+      Console.WriteLine($"Steps to bestLowStart: {minElevationAStepCount}");
     }
   }
 }

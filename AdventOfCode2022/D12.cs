@@ -15,120 +15,75 @@ namespace AdventOfCode2022
       public int X;
       public int Y;
 
+      public Vec(int x, int y)
+        { X = x; Y = y; }
+
       public static Vec operator+(Vec a, Vec b)
-      {
-        return new Vec{X = a.X + b.X, Y = a.Y + b.Y};
-      }
+        => new Vec{X = a.X + b.X, Y = a.Y + b.Y};
     }
 
     public static void Run(string input)
     {
-      int startX = 0, startY = 0;
-      int endX = 0, endY = 0;
-      List<List<int>> parsedGridLines = new List<List<int>>();
-      {
-        int y = 0;
-        foreach (var line in input.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
-        {
-          var l = new List<int>();
-          parsedGridLines.Add(l);
-          int height = 0;
-          int x = 0;
-          foreach (var ch in line)
-          {
-            switch (ch)
-            {
-            case 'S':
-              height = 0;
-              startX = x;
-              startY = y;
-              break;
+      // Find the first instance of '\n', which is our grid width, then remove all newlines and calc height
+      int width = input.Replace("\r", "").IndexOf('\n');
+      input = input.Replace("\r", "").Replace("\n", "");
+      int height = input.Length / width;
 
-            case 'E':
-              height = 'z' - 'a';
-              endX = x;
-              endY = y;
-              break;
+      // Find the start and end positions, then replace them with their (given) elevations
+      var start = new Vec(input.IndexOf('S') % width, input.IndexOf('S') / width);
+      var end = new Vec(input.IndexOf('E') % width, input.IndexOf('E') / width);
+      input = input.Replace('S', 'a').Replace('E', 'z');
 
-            default:
-              height = ch - 'a';
-              break;
-            }
+      // Start our step count array with max distance in all spaces
+      int[] stepCountArray = Enumerable.Repeat(int.MaxValue, width * height).ToArray();
 
-            x++;
-            l.Add(height);
-          }
+      // Some lambdas to make it less error-prone to do the 2D lookup in the 1D enumerables
+      var Elevation = (Vec v) => input[v.Y * width + v.X];
+      var StepCount = (Vec v) => stepCountArray[v.Y * width + v.X];
+      var SetStepCount = (Vec v, int steps) => { stepCountArray[v.Y * width + v.X] = steps; };
 
-          y++;
-        }
-      }
+      // We're going to step backwards from the ending, so start the ending at a step count of 0
+      SetStepCount(end, 0);
 
-      int[,] elevations = new int[parsedGridLines[0].Count, parsedGridLines.Count];
-      int[,] stepCount = new int[elevations.GetLength(0), elevations.GetLength(1)];
-
-      for (int y = 0; y < parsedGridLines.Count; y++) 
-      {
-        Debug.Assert(parsedGridLines[y].Count == elevations.GetLength(0));
-
-        for (int x = 0; x < parsedGridLines[y].Count; x++)
-        {
-          elevations[x, y] = parsedGridLines[y][x];
-          stepCount[x, y] = int.MaxValue;
-        }
-      }
-
-      // Yay okay now we have the grid and our starting point
-      stepCount[endX, endY] = 0;
-
+      // We're going to spider out from the end and (ultimately) fill any reachable spaces.
       Queue<Vec> queue = new Queue<Vec>();
-      queue.Enqueue(new Vec{X = endX, Y = endY});
-
+      queue.Enqueue(end);
       while (queue.Count > 0)
       {
         var v = queue.Dequeue();
-
-        int curElev = elevations[v.X, v.Y];
-
-        foreach (Vec dir in new Vec[] { new Vec{X = -1, Y = 0}, new Vec{X = 1, Y = 0}, new Vec{X = 0, Y = -1}, new Vec{X = 0, Y = 1} })
+        foreach (Vec dir in new Vec[] { new Vec(-1, 0), new Vec(1, 0), new Vec(0, -1), new Vec(0, 1) })
         {
           var target = v + dir;
 
-          if (target.X < 0 || target.Y < 0 || target.X >= elevations.GetLength(0) || target.Y >= elevations.GetLength(1))
+          // Ignore out of range indices
+          if (target.X < 0 || target.Y < 0 || target.X >= width || target.Y >= height)
             { continue; }
 
-          if (curElev > elevations[target.X, target.Y] + 1)
+          // We can't have stepped "up" to our exit if the elevation increase was more than one, so skip this
+          if (Elevation(v) > Elevation(target) + 1)
             { continue; }
 
-          int steps = stepCount[v.X, v.Y] + 1;
-          if (steps < stepCount[target.X, target.Y])
+          // Test our step count and, if we can step here cheaper than has been done, enqueue the destination so
+          //  we keep spidering.
+          int steps = StepCount(v) + 1;
+          if (steps < StepCount(target))
           {
-            stepCount[target.X, target.Y] = steps;
+            SetStepCount(target, steps);
             queue.Enqueue(target);
           }
         }
       }
 
+      // Now we know the step count ot the exit (which is how many steps from end to start)
+      Console.WriteLine($"[P1] Steps to exit: {StepCount(start)}");
 
-      // Okay now we're done
-      int stepsToExit = stepCount[startX, startY];
+      // Find the smallest distance to exit where the elevation is 'a'
+      int minElevationAStepCount = input
+        .Select((x, i) => (x, i, stepCountArray[i]))
+        .Where(v => (v.x == 'a'))
+        .Aggregate(int.MaxValue, (min, v) => min = Math.Min(min, v.Item3));
 
-      Console.WriteLine($"Steps to exit: {stepsToExit}");
-
-      int minElevationAStepCount = stepsToExit;
-      for (int y = 0; y < parsedGridLines.Count; y++) 
-      {
-        Debug.Assert(parsedGridLines[y].Count == elevations.GetLength(0));
-
-        for (int x = 0; x < parsedGridLines[y].Count; x++)
-        {
-          if (elevations[x, y] != 0)
-            { continue; }
-
-          minElevationAStepCount = Math.Min(minElevationAStepCount, stepCount[x, y]);
-        }
-      }
-
-      Console.WriteLine($"Steps to bestLowStart: {minElevationAStepCount}");
+      Console.WriteLine($"[P2] Steps to bestLowStart: {minElevationAStepCount}");
     }
   }
 }

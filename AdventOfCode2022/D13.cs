@@ -104,6 +104,19 @@ namespace AdventOfCode2022
       }
 
       Console.WriteLine($"[p1] correct sum: {sumCorrect}");
+
+      // Part 2: add these packets
+      var div2 = new Packet(new Packet(2)); 
+      var div6 = new Packet(new Packet(6));
+      packs.Add(div2);
+      packs.Add(div6);
+
+      // Sort
+      packs.Sort(Packet.Compare);
+
+      // Multiply the 1-based indices of them in the sorted array to get our score
+      int divProd = packs.Select((p, i) => (p, i)).Where(v => v.p == div2 || v.p == div6).Aggregate(1, (prod, v) => prod *= v.i + 1);
+      Console.WriteLine($"[p2] divider packet score: {divProd}");
     }
   }
 }

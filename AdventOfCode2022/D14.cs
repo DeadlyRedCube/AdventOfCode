@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -70,12 +71,18 @@ namespace AdventOfCode2022
         }
       }
 
+      int maxGivenY = max.Y;
+      int bottomDepth = maxGivenY + 2;
+      int sideBuffer = bottomDepth + 20;
+      min.X = Math.Min(min.X, sandEntry.X - sideBuffer);
+      max.X = Math.Max(max.X, sandEntry.X + sideBuffer);
+      max.Y = bottomDepth;
       var grid = new char[max.X - min.X + 1, max.Y - min.Y + 1];
       for (int y = 0; y < grid.GetLength(1); y++)
       {
         for (int x = 0; x < grid.GetLength(0); x++)
         {
-          grid[x, y] = '.';
+          grid[x, y] = (y == bottomDepth) ? '#' : '.';
         }
       }
 
@@ -100,11 +107,14 @@ namespace AdventOfCode2022
         }
       }
 
-      Console.WriteLine("Start Grid:");
-      PrintGrid(grid);
+      //Console.WriteLine("Start Grid:");
+      //PrintGrid(grid);
 
-      int sandCount = 0;
+      int dripSandCount = 0;
+      int fullSandCount = 0;
       sandEntry -= min;
+      bool countingFall = true;
+      maxGivenY -= min.Y;
       while (true)
       {
         Vec p = sandEntry;
@@ -115,9 +125,10 @@ namespace AdventOfCode2022
           foreach (var delta in new Vec[] { new Vec(0, 1), new Vec(-1, 1), new Vec(1, 1)})
           {
             Vec t = p + delta;
-            if (t.X < 0 || t.X >= grid.GetLength(0) || t.Y >= grid.GetLength(1))
+            Debug.Assert(t.X >= 0 && t.X < grid.GetLength(0));
+            if (t.Y > maxGivenY)
             {
-              goto DoneFilling;
+              countingFall = false;
             }
 
             if (grid[t.X, t.Y] == '.')
@@ -131,7 +142,17 @@ namespace AdventOfCode2022
           {
             // Came to rest
             grid[p.X, p.Y] = 'o';
-            sandCount++;
+
+            fullSandCount++;
+            if (countingFall)
+            {
+              dripSandCount++;
+            }
+
+            if (p.Y == sandEntry.Y)
+            {
+              goto DoneFilling;
+            }
             break;
           }
 
@@ -139,11 +160,12 @@ namespace AdventOfCode2022
         }
 
         //PrintGrid(grid);
-        Console.Write("");
+        //Console.Write("");
       }
 
 DoneFilling:;
-      Console.WriteLine($"There were {sandCount} grains before rest.");
+      Console.WriteLine($"[P1] There were {dripSandCount} grains before dropping.");
+      Console.WriteLine($"[P2] There were {fullSandCount} grains before stopping.");
     }
   }
 }

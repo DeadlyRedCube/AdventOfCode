@@ -64,6 +64,24 @@ namespace AdventOfCode2022
       }
     }
 
+
+    [DebuggerDisplay("({a}, {b})")]
+    struct Span
+    {
+      public Span() {}
+      public Span(int a, int b) { this.a = a; this.b = b; }
+      public int a;
+      public int b;
+
+      public Span? CombineWith(Span other)
+      {
+        if (b < other.a - 1 || a > other.b + 1)
+          return null;
+
+        return new Span(Math.Min(a, other.a), Math.Max(b, other.b));
+      }
+    }
+
     public static void Run(string input)
     {
       var beaconList = new List<Beacon>();
@@ -98,30 +116,76 @@ namespace AdventOfCode2022
         sensors.Add(s);
       }
 
-      var lineXInRangeOfSensors = new HashSet<int>();
-
-      const int y = 2000000;
-
-      foreach (var s in sensors)
+      const int puzMax = 4_000_000;
+      const int testY = 2_000_000;
+      for (int y = 0; y <= puzMax; y++)
       {
-        int nd = s.DistanceToNearest;
-
-        int rd = Math.Abs(s.pos.Y - y);
-        if (rd > nd)
-          { continue; }
-
-        int span = nd - rd;
-        for (int x = s.pos.X - span; x <= s.pos.X + span; x++)
+        var spans = new List<Span>();
+        foreach (var sens in sensors)
         {
-          lineXInRangeOfSensors.Add(x);
+          int nd = sens.DistanceToNearest;
+
+          int rd = Math.Abs(sens.pos.Y - y);
+          if (rd > nd)
+            { continue; }
+
+          var span = new Span { 
+            a = sens.pos.X - (nd - rd),
+            b = sens.pos.X + (nd - rd)};
+
+          while (true)
+          {
+            bool overlapped = false;
+            for (int i = 0; i < spans.Count; i++)
+            {
+              var c = span.CombineWith(spans[i]);
+              if (c != null)
+              {
+                overlapped = true;
+                spans.RemoveAt(i);
+                span = c.Value;
+                break;
+              }
+            }
+
+            if (!overlapped)
+            {
+              spans.Add(span);
+              break;
+            }
+          }
         }
-      }
 
-      foreach (var b in beaconList)
-      {
-        if (b.pos.Y == y)
+        if (y == testY)
         {
-          lineXInRangeOfSensors.Remove(b.pos.X);
+          int count = 0;
+          foreach (var s in spans)
+          {
+            count += s.b - s.a + 1;
+          }
+
+          foreach (var b in beaconList)
+          {
+            foreach (var s in spans)
+            {
+              if (b.pos.Y == y && b.pos.X >= s.a && b.pos.X <= s.b)
+              {
+                count--;
+                break;
+              }
+            }
+          }
+
+          Console.WriteLine($"[P1] Count of {testY} positions with no beacon: {count}");
+        }
+
+        if (spans.Count > 1)
+        {
+          Debug.Assert(spans.Count == 2);
+          var s = (spans[0].a < spans[1].a) ? spans[1] : spans[0];
+
+          int x = s.a - 1;
+          Console.WriteLine($"[P2] ({x}, {y}): Score is {((long)x) * puzMax + y}");
         }
       }
     }

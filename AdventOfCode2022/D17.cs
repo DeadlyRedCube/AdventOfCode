@@ -81,32 +81,69 @@ namespace AdventOfCode2022
       Console.WriteLine("\n");
     }
 
-    public static void Run(string input)
+
+    static int NormalizeChamberHeight(List<byte> chamber)
+    {
+      // All of our pieces are 4 units tall and we want 3 units of space between the bottom of
+      //  a piece and the top of the current pile.
+      while (chamber.Count < 3 + 4 || chamber[2 + 4] != 0)
+        { chamber.Insert(0, 0b00000000); }
+
+      return chamber.Count - 8;
+    }
+
+    public static void RunP1(string input)
+      => Run(input, 2022);
+
+    public static void RunP2(string input)
+      => Run(input, 1_000_000_000_000);
+
+    public static void Run(string input, long totalRockCount)
     {
       input = input.Trim();
       int jetIndex = 0;
       int rockShapeIndex = 0;
 
-      List<byte> chamber = new List<byte>();
-      chamber.Add(0b01111111);
-      
-      const int rockCount = 2022;
-      for (int rockFallIndex = 0; rockFallIndex < rockCount; rockFallIndex++)
+      // Create our chamber with a single entry (the floor, across all 7 tiles (bits))
+      List<byte> chamber = new List<byte>(new byte[] { 0b01111111 });
+
+      // When searching for our repeat counts, we use the set to look for known jet index values,
+      //  and then set repeatJetIndex once we get a duplicate.
+      int? repeatJetIndex = null;
+      var jetIndexSet = new HashSet<int>();
+
+      // Bottom/repeat/modulo are the three sections of our measurement - bottom is
+      //  "how many rocks/how much height before our first measured repetition section"
+      // repeat is "how many rocks/how much height in the repeated section"
+      // modulo is "how much height after the repeated section
+      int bottomHeight = 0;
+      long bottomRockCount = 0;
+
+      int repeatHeight = 0;
+      long repeatRockCount = 0;
+
+      int moduloHeight = 0;
+
+      // This is our target - it defaults to our total but we'll calculate a much smaller version once
+      //  we've found the repetition frequency of the system.
+      long targetRockFallIndex = totalRockCount;
+
+      for (long rockFallIndex = 0; rockFallIndex < targetRockFallIndex; rockFallIndex++)
       {
-        // Our rocks are all 4 units tall and we want there to be 3 spaces of
-        //  space between bottom of rock start and where the drop starts
-        while (chamber.Count < 3 + 4 || chamber[2 + 4] != 0)
-        {
-          chamber.Insert(0, 0b00000000);
-        }
+        NormalizeChamberHeight(chamber);
 
         int shape = RockShapes[rockShapeIndex];
         int y = 0;
 
+        bool jetWrapped = false;
         while (true)
         {
           bool shiftRight = (input[jetIndex] == '>');
           jetIndex = (jetIndex + 1) % input.Length;
+          if (jetIndex == 0)
+          {
+            jetWrapped = true;
+          }
 
           // Shift side to side
           int shiftedShape = ShiftRock(shape, shiftRight);
@@ -132,7 +169,6 @@ namespace AdventOfCode2022
               chamber[y + r] |= row; 
             }
 
-            //DrawChamber(chamber);
             break;
           }
 
@@ -140,15 +176,45 @@ namespace AdventOfCode2022
         }
 
         rockShapeIndex = (rockShapeIndex + 1) % RockShapes.Length;
+
+        if (jetWrapped && rockShapeIndex == 0)
+        {
+          if (repeatJetIndex == null)
+          {
+            // We haven't found our repeat index yet so test to see if this is it or we need to keep searching
+            if (jetIndexSet.Contains(jetIndex))
+            {
+              // Found it! We now know how tall the bottom section of our pattern is (i.e. the bit before
+              //  the repeated pattern starts)
+              bottomHeight = NormalizeChamberHeight(chamber);
+              bottomRockCount = rockFallIndex;
+              repeatJetIndex = jetIndex;
+            }
+            else
+            {
+              // We haven't seen this index yet so add it into the set.
+              jetIndexSet.Add(jetIndex);
+            }
+          }
+          else if(jetIndex == repeatJetIndex)
+          {
+            // We've now measured a full repeat of our jet indices, and we know how much height/rock count accumulates
+            //  each time. Now we can use some modulo math to figure out how many rocks off from the repeat our 
+            //  final rock count will be (so we can measure how much height is in the interrupted final section)
+            repeatHeight = NormalizeChamberHeight(chamber) - bottomHeight;
+            repeatRockCount = rockFallIndex - bottomRockCount;
+
+            targetRockFallIndex = rockFallIndex + (totalRockCount - bottomRockCount) % repeatRockCount;
+          }
+        }
       }
 
-      int height = chamber.Count - 1;
-      for (int i = 0; chamber[i] == 0; i++)
-      {
-        height--;
-      }
+      moduloHeight = NormalizeChamberHeight(chamber) - bottomHeight - repeatHeight;
 
-      Console.WriteLine($"Height: {height}");
+      var repeatCount = (repeatRockCount > 0) ? ((totalRockCount - bottomRockCount) / repeatRockCount) : 0;
+
+      long height = bottomHeight + repeatCount * repeatHeight + moduloHeight;
+      Console.WriteLine($"Height for {totalRockCount}: {height}");
     }
   }
 }

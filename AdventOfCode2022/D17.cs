@@ -8,58 +8,58 @@ namespace AdventOfCode2022
 {
   internal static class D17
   {
+    // I decided to make the rocks out of bits because I thought that shifting and ands and ors would
+    //  simplify some of the code (and I think I was right?). Since each rock shape is 4 units tall
+    //  thanks to vertical long piece) I just packed all 4 in a single int.
     static int MakeRock(byte a, byte b, byte c, byte d)
-    {
-      return ((int)a << 24) | ((int)b << 16) | ((int)c << 8) | ((int)d);
-    }
+      => (a << 24) | (b << 16) | (c << 8) | d;
 
+    // Each rock shape is situated 2 bits from the left edge where they drop (note that each constant
+    //  is 7 bits, not a full 8)
     static readonly int[] RockShapes = 
     {
       MakeRock(
-        0b00000000,
-        0b00000000,
-        0b00000000,
-        0b00011110),
+        0b0000000,
+        0b0000000,
+        0b0000000,
+        0b0011110),
       MakeRock(
-        0b00000000,
-        0b00001000,
-        0b00011100,
-        0b00001000),
+        0b0000000,
+        0b0001000,
+        0b0011100,
+        0b0001000),
       MakeRock(
-        0b00000000,
-        0b00000100,
-        0b00000100,
-        0b00011100),
+        0b0000000,
+        0b0000100,
+        0b0000100,
+        0b0011100),
       MakeRock(
-        0b00010000,
-        0b00010000,
-        0b00010000,
-        0b00010000),
+        0b0010000,
+        0b0010000,
+        0b0010000,
+        0b0010000),
       MakeRock(
-        0b00000000,
-        0b00000000,
-        0b00011000,
-        0b00011000),
+        0b0000000,
+        0b0000000,
+        0b0011000,
+        0b0011000),
     };
 
+    // This just overlaps the rows of the rock to give one "row" that has the min/max horizontal
+    //  extent for the piece.
     static byte RockExtent(int rock) 
       => (byte)(RockRow(rock, 0) | RockRow(rock, 1) | RockRow(rock, 2) | RockRow(rock, 3));
 
+    // Shift a rock either right or left, blocked by the bounds of the chamber.
     static int ShiftRock(int rock, bool right)
     {
       int rockExtent = RockExtent(rock);
       if (right && (rockExtent & 1) == 0)
-      {
-        return rock >> 1;
-      }
-      else if (!right && (rockExtent & 0b01000000) == 0)
-      {
-        return rock << 1;
-      }
+        { return rock >> 1; }
+      else if (!right && (rockExtent & 0b1000000) == 0)
+        { return rock << 1; }
       else
-      {
-        return rock;
-      }
+        { return rock; }
     }
 
     static byte RockRow(int rock, int row)
@@ -81,14 +81,16 @@ namespace AdventOfCode2022
       Console.WriteLine("\n");
     }
 
-
     static int NormalizeChamberHeight(List<byte> chamber)
     {
       // All of our pieces are 4 units tall and we want 3 units of space between the bottom of
       //  a piece and the top of the current pile.
       while (chamber.Count < 3 + 4 || chamber[2 + 4] != 0)
-        { chamber.Insert(0, 0b00000000); }
+        { chamber.Insert(0, 0b0000000); }
 
+      // We've left 7 spaces of empty above the bottom of the chamber, plus we have one extra
+      //  floor space, so if we subtract 8 from the current chamber item count we get our
+      //  current height.
       return chamber.Count - 8;
     }
 
@@ -105,7 +107,7 @@ namespace AdventOfCode2022
       int rockShapeIndex = 0;
 
       // Create our chamber with a single entry (the floor, across all 7 tiles (bits))
-      List<byte> chamber = new List<byte>(new byte[] { 0b01111111 });
+      List<byte> chamber = new List<byte>(new byte[] { 0b1111111 });
 
       // When searching for our repeat counts, we use the set to look for known jet index values,
       //  and then set repeatJetIndex once we get a duplicate.
@@ -162,7 +164,8 @@ namespace AdventOfCode2022
 
           if (overlap)
           {
-            // Write our rock into the array
+            // We hit the bottom, so rather than move downward, we'll commit our stone into the grid
+            //  and return (we're done!)
             for (int r = 0; r < 4; r++)
             { 
               var row = RockRow(shape, r);
@@ -209,8 +212,10 @@ namespace AdventOfCode2022
         }
       }
 
+      // We hit our target so the last bit of height is whatever we added since the end of the repeat section
       moduloHeight = NormalizeChamberHeight(chamber) - bottomHeight - repeatHeight;
 
+      // How many repeats to we need between the bottom and the top section?
       var repeatCount = (repeatRockCount > 0) ? ((totalRockCount - bottomRockCount) / repeatRockCount) : 0;
 
       long height = bottomHeight + repeatCount * repeatHeight + moduloHeight;

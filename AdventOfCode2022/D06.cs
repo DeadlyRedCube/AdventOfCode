@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AdventOfCode2022
 {
-  internal static class D6
+  internal static class D06
   {
     public static void Run(string inputStr, int len)
     {

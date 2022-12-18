@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AdventOfCode2022
 {
-  internal static class D5
+  internal static class D05
   {
     struct Move
     {
@@ -79,15 +79,17 @@ namespace AdventOfCode2022
         }
       }
 
-      Console.WriteLine("\n----- Shuffled\n");
+      // Console.WriteLine("\n----- Shuffled\n");
 
       var b = new StringBuilder();
       for (int i = 0; i < stacks.Count; i++)
       {
-        Console.Write("Stack: ");
-        foreach (char c in stacks[i])
-          { Console.Write($"{c} "); }
-        Console.WriteLine("");
+        #if false
+          Console.Write("Stack: ");
+          foreach (char c in stacks[i])
+            { Console.Write($"{c} "); }
+          Console.WriteLine("");
+        #endif
 
         b.Append(stacks[i].Peek());
       }

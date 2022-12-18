@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AdventOfCode2022
 {
-  internal static class D8
+  internal static class D08
   {
     static IEnumerable<T> XSlice<T>(this T[,] grid, int x)
     {

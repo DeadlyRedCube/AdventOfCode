@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AdventOfCode2022
 {
-  internal static class D3
+  internal static class D03
   {
     static int PriFromChar(char ch)
     {
@@ -33,7 +33,7 @@ namespace AdventOfCode2022
         Debug.Assert(intersect.Count == 1);
         var v = intersect[0];
 
-        Console.WriteLine($"Common element: {v.ch}, pri {v.pri}");
+        //Console.WriteLine($"Common element: {v.ch}, pri {v.pri}");
         priSum += v.pri;
       }
 
@@ -45,11 +45,11 @@ namespace AdventOfCode2022
       {
         var badge = sacks[i + 0].Intersect(sacks[i + 1]).Intersect(sacks[i + 2]).ToList();
         Debug.Assert(badge.Count == 1);
-        Console.WriteLine($"Badge for group: {badge[0].ch}");
+        //Console.WriteLine($"Badge for group: {badge[0].ch}");
         badgePris += badge[0].pri;
       }
 
-      Console.Write($"Badge sum: {badgePris}");
+      Console.WriteLine($"Badge sum: {badgePris}");
     }
   }
 }

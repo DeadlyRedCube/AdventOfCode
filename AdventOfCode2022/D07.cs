@@ -2,7 +2,7 @@
 
 namespace AdventOfCode2022
 {
-  internal static class D7
+  internal static class D07
   {
     struct File
     {

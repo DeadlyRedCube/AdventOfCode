@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace AdventOfCode2022
 {
-  internal static class D4
+  internal static class D04
   {
     struct Range
     {
@@ -37,15 +37,15 @@ namespace AdventOfCode2022
           || (ranges[1].Min <= ranges[0].Min && ranges[1].Max >= ranges[0].Max))
         {
           fullOverlapCount++;
-          Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} fully overlap");
+          //Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} fully overlap");
         }
         else if (ranges[0].Min > ranges[1].Max || ranges[0].Max < ranges[1].Min || ranges[1].Min > ranges[0].Max || ranges[1].Max < ranges[0].Min)
         {
-          Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} are FULLY disjoint.");
+          //Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} are FULLY disjoint.");
         }
         else
         {
-          Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} are partially disjoint.");
+          //Console.WriteLine($"Ranges {ranges[0].Min}..{ranges[0].Max} and {ranges[1].Min}..{ranges[1].Max} are partially disjoint.");
           partialOverlapCount++;
         }
       }

@@ -35,7 +35,7 @@ namespace AdventOfCode2022
   
   
   
-  internal class D9
+  internal class D09
   {
     public static void RunP1(string input)
       => Run(input, 2);

@@ -22,7 +22,7 @@ namespace AdventOfCode2022
     Win
   };
 
-  internal static class D2
+  internal static class D02
   {
     public static void RunP1(string input)
       => Run(input, true);
@@ -78,7 +78,7 @@ namespace AdventOfCode2022
         int roundPoints = resultPoints + 1 + (int)suggestedChoice;
         points += roundPoints;
 
-        Console.WriteLine($"Round {roundIndex}: {(RPS)enemyChoice} ({values[0]}) vs {(RPS)suggestedChoice} ({values[1]}). Result: {resultPoints}, {roundPoints}");
+        //Console.WriteLine($"Round {roundIndex}: {(RPS)enemyChoice} ({values[0]}) vs {(RPS)suggestedChoice} ({values[1]}). Result: {resultPoints}, {roundPoints}");
         roundIndex++;
       }
 

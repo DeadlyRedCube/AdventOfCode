@@ -52,6 +52,7 @@ namespace AdventOfCode2022
         if (timeRemaining > 1)
         {
           int bestResult = 0;
+
           // We can buy a geode robot if we have its cost and we didn't skip buying it in the past.
           if ((allowedRobots & AllowedRobots.Geode) != 0 
             && obsidianCount >= bp.geodeCostObsidian 
@@ -72,87 +73,95 @@ namespace AdventOfCode2022
               timeRemaining - 1);
           }
 
-          // With obsidian robot, we have the additional condition that if we're making enough obsidian every minute
-          //  to fulfill the geode robot's cost we never need to build one again.
-          if (obsidianRobotCount < bp.geodeCostObsidian 
-            && (allowedRobots & AllowedRobots.Obsidian) != 0 
-            && clayCount >= bp.obsidianCostClay 
-            && oreCount >= bp.obsidianCostOre)
+          // Don't try to build any other robots if we could build a geode robot
+          if ((allowedRobots & AllowedRobots.Geode) != 0)
           {
-            allowedRobots &= ~AllowedRobots.Obsidian;
-            bestResult = Math.Max(bestResult, Simulate(
-              bp, 
-              oreRobotCount, 
-              clayRobotCount, 
-              obsidianRobotCount + 1, 
-              geodeRobotCount, 
-              oreCount - bp.obsidianCostOre + oreRobotCount, 
-              clayCount - bp.obsidianCostClay + clayRobotCount, 
-              obsidianCount + obsidianRobotCount, 
-              geodeCount + geodeRobotCount, 
-              AllowedRobots.All, 
-              timeRemaining - 1));
-          }
+            // With obsidian robot, we have the additional condition that if we're making enough obsidian every minute
+            //  to fulfill the geode robot's cost we never need to build one again.
+            if (obsidianRobotCount < bp.geodeCostObsidian 
+              && (allowedRobots & AllowedRobots.Obsidian) != 0 
+              && clayCount >= bp.obsidianCostClay 
+              && oreCount >= bp.obsidianCostOre)
+            {
+              allowedRobots &= ~AllowedRobots.Obsidian;
+              bestResult = Math.Max(bestResult, Simulate(
+                bp, 
+                oreRobotCount, 
+                clayRobotCount, 
+                obsidianRobotCount + 1, 
+                geodeRobotCount, 
+                oreCount - bp.obsidianCostOre + oreRobotCount, 
+                clayCount - bp.obsidianCostClay + clayRobotCount, 
+                obsidianCount + obsidianRobotCount, 
+                geodeCount + geodeRobotCount, 
+                AllowedRobots.All, 
+                timeRemaining - 1));
+            }
 
-          // Clay robot basically same as obsidian: if we aren't already producing enough and we can afford it and we didn't
-          //  skip it
-          if (clayRobotCount < bp.obsidianCostClay 
-            && (allowedRobots & AllowedRobots.Clay) != 0 
-            && oreCount >= bp.clayCostOre)
-          {
-            allowedRobots  &= ~AllowedRobots.Clay;
-            bestResult = Math.Max(bestResult, Simulate(
-              bp, 
-              oreRobotCount, 
-              clayRobotCount + 1, 
-              obsidianRobotCount, 
-              geodeRobotCount, 
-              oreCount - bp.clayCostOre + oreRobotCount, 
-              clayCount + clayRobotCount, 
-              obsidianCount + obsidianRobotCount, 
-              geodeCount + geodeRobotCount, 
-              AllowedRobots.All, 
-              timeRemaining - 1));
-          }
+            // Clay robot basically same as obsidian: if we aren't already producing enough and we can afford it and we didn't
+            //  skip it
+            if (clayRobotCount < bp.obsidianCostClay 
+              && (allowedRobots & AllowedRobots.Clay) != 0 
+              && oreCount >= bp.clayCostOre)
+            {
+              allowedRobots  &= ~AllowedRobots.Clay;
+              bestResult = Math.Max(bestResult, Simulate(
+                bp, 
+                oreRobotCount, 
+                clayRobotCount + 1, 
+                obsidianRobotCount, 
+                geodeRobotCount, 
+                oreCount - bp.clayCostOre + oreRobotCount, 
+                clayCount + clayRobotCount, 
+                obsidianCount + obsidianRobotCount, 
+                geodeCount + geodeRobotCount, 
+                AllowedRobots.All, 
+                timeRemaining - 1));
+            }
 
-          // Ore robot tests against the maximum ore cost of all robots (except itself because who cares?) to see if we should bother 
-          //  building one
-          if (oreRobotCount < maxOreCost 
-            && (allowedRobots & AllowedRobots.Ore) != 0 
-            && oreCount >= bp.oreCostOre)
-          {
-            allowedRobots  &= ~AllowedRobots.Ore;
-            bestResult = Math.Max(bestResult, Simulate(
-              bp, 
-              oreRobotCount + 1, 
-              clayRobotCount, 
-              obsidianRobotCount, 
-              geodeRobotCount, 
-              oreCount - bp.oreCostOre + oreRobotCount, 
-              clayCount + clayRobotCount, 
-              obsidianCount + obsidianRobotCount, 
-              geodeCount + geodeRobotCount, 
-              AllowedRobots.All, 
-              timeRemaining - 1));
+            // Ore robot tests against the maximum ore cost of all robots (except itself because who cares?) to see if we should bother 
+            //  building one
+            if (oreRobotCount < maxOreCost 
+              && (allowedRobots & AllowedRobots.Ore) != 0 
+              && oreCount >= bp.oreCostOre)
+            {
+              allowedRobots  &= ~AllowedRobots.Ore;
+              bestResult = Math.Max(bestResult, Simulate(
+                bp, 
+                oreRobotCount + 1, 
+                clayRobotCount, 
+                obsidianRobotCount, 
+                geodeRobotCount, 
+                oreCount - bp.oreCostOre + oreRobotCount, 
+                clayCount + clayRobotCount, 
+                obsidianCount + obsidianRobotCount, 
+                geodeCount + geodeRobotCount, 
+                AllowedRobots.All, 
+                timeRemaining - 1));
+            }
           }
 
           if (allowedRobots != AllowedRobots.All)
           {
-            // If we recursed into any robots, we also need to simulate "what if we chose to build nothing at all this round"
-            //  in which case we disallow future building of any robots we had the option to build since there's never a 
-            //  scenario in which we should wait to build a robot we can afford now, but do nothing else.
-            bestResult = Math.Max(bestResult, Simulate(
-              bp, 
-              oreRobotCount, 
-              clayRobotCount, 
-              obsidianRobotCount, 
-              geodeRobotCount, 
-              oreCount + oreRobotCount, 
-              clayCount + clayRobotCount, 
-              obsidianCount + obsidianRobotCount, 
-              geodeCount + geodeRobotCount, 
-              allowedRobots, 
-              timeRemaining - 1));
+            // If we recursed into any robots (except geode), we also need to simulate "what if we chose to build nothing 
+            //  at all this round" in which case we disallow future building of any robots we had the option to build
+            //  since there's never a scenario in which we should wait to build a robot we can afford now, but do nothing 
+            //  else.
+            if ((allowedRobots & AllowedRobots.Geode) != 0)
+            {
+              bestResult = Math.Max(bestResult, Simulate(
+                bp, 
+                oreRobotCount, 
+                clayRobotCount, 
+                obsidianRobotCount, 
+                geodeRobotCount, 
+                oreCount + oreRobotCount, 
+                clayCount + clayRobotCount, 
+                obsidianCount + obsidianRobotCount, 
+                geodeCount + geodeRobotCount, 
+                allowedRobots, 
+                timeRemaining - 1));
+            }
             return bestResult;
           }
         }

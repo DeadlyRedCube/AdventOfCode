@@ -221,6 +221,15 @@ namespace AdventOfCode2022
       }
 
       Console.WriteLine($"[P1] Score: {totalP1Score}");
+
+      blueprints = blueprints.Where((x, i) => i < 3).ToList();
+      int totalP2Score = 1;
+      foreach (var bp in blueprints)
+      {
+        int best = Simulate(bp, 1, 0, 0, 0, 0, 0, 0, 0, AllowedRobots.All, 32);
+        totalP2Score *= best;
+      }
+      Console.WriteLine($"[P2] Score: {totalP2Score}");
     }
   }
 }

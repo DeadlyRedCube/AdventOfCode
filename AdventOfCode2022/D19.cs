@@ -72,9 +72,7 @@ namespace AdventOfCode2022
               AllowedRobots.All, 
               timeRemaining - 1);
           }
-
-          // Don't try to build any other robots if we could build a geode robot
-          if ((allowedRobots & AllowedRobots.Geode) != 0)
+          else // We can only build other robots if we couldn't build a geode bot
           {
             // With obsidian robot, we have the additional condition that if we're making enough obsidian every minute
             //  to fulfill the geode robot's cost we never need to build one again.

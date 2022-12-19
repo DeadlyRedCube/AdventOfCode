@@ -139,6 +139,7 @@ namespace AdventOfCode2022
             }
           }
 
+          // Test to see if we recursed into any other robots: if we did, their flags will be cleared and we can return.
           if (allowedRobots != AllowedRobots.All)
           {
             // If we recursed into any robots (except geode), we also need to simulate "what if we chose to build nothing 
@@ -160,6 +161,8 @@ namespace AdventOfCode2022
                 allowedRobots, 
                 timeRemaining - 1));
             }
+
+            // Regardless of whether we simulate the "do nothing" case or not, return our best result from the recursion.
             return bestResult;
           }
         }

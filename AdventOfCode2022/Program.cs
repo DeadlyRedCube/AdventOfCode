@@ -31,8 +31,9 @@ var sw = Stopwatch.StartNew();
 //D17.RunP2(File.ReadAllText("D17.txt"));
 //D18.Run(File.ReadAllText("D18.txt"));
 //D19.Run(File.ReadAllText("D19.txt"));
-D20.RunP1(File.ReadAllText("D20.txt"));
-D20.RunP2(File.ReadAllText("D20.txt"));
+//D20.RunP1(File.ReadAllText("D20.txt"));
+//D20.RunP2(File.ReadAllText("D20.txt"));
+D21.Run(File.ReadAllText("D21.txt"));
 
 long elapsed = sw.ElapsedMilliseconds;
 Console.WriteLine($"Run time: {elapsed / 1000 / 60:D2}:{(elapsed / 1000) % 60:D2}:{elapsed % 1000:D4}");

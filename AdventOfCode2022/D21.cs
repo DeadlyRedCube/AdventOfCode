@@ -33,25 +33,21 @@ namespace AdventOfCode2022
     public static void Run(string input)
     {
       var knownValues = new Dictionary<string, long>();
-      var equations = new Dictionary<string, List<Op>>();
+      var equationsByOperand = new Dictionary<string, List<Op>>();
 
       void TestEqs(string newKnown)
       {
-        if (equations.ContainsKey(newKnown))
+        if (equationsByOperand.ContainsKey(newKnown))
         {
-          for (int i = 0; i < equations[newKnown].Count;)
+          for (int i = 0; i < equationsByOperand[newKnown].Count;)
           {
-            var op = equations[newKnown][i];
+            var op = equationsByOperand[newKnown][i];
 
             if (knownValues.ContainsKey(op.op1) && knownValues.ContainsKey(op.op2))
             {
               knownValues.Add(op.name, RunOp(op.op, knownValues[op.op1], knownValues[op.op2]));
-              equations[op.op1] = equations[op.op1].Where(o => o != op).ToList();
-              equations[op.op2] = equations[op.op2].Where(o => o != op).ToList();
-              //if (op.name == "root")
-              {
-                Console.WriteLine($"{op.name}: {knownValues[op.name]}");
-              }
+              equationsByOperand[op.op1] = equationsByOperand[op.op1].Where(o => o != op).ToList();
+              equationsByOperand[op.op2] = equationsByOperand[op.op2].Where(o => o != op).ToList();
               TestEqs(op.name);
             }
             else
@@ -62,6 +58,9 @@ namespace AdventOfCode2022
         }
       };
 
+      // We're going to store the value for "humn" here instead of adding it into known values
+      long humnValue = 0;
+
       foreach (var line in input.Split("\n", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
       {
         var split 
@@ -69,8 +68,16 @@ namespace AdventOfCode2022
 
         if (split.Length == 2)
         {
-          knownValues.Add(split[0], long.Parse(split[1]));
-          TestEqs(split[0]);
+          if (split[0] == "humn")
+          {
+            // Store this for now instead of throwing it into known values (so it doesn't collapse before we do part 2)
+            humnValue = long.Parse(split[1]);
+          }
+          else
+          {
+            knownValues.Add(split[0], long.Parse(split[1]));
+            TestEqs(split[0]);
+          }
         }
         else
         {
@@ -90,16 +97,70 @@ namespace AdventOfCode2022
           {
             foreach (var operand in new string[] { op.op1, op.op2 })
             {
-              if (!equations.ContainsKey(operand))
+              if (!equationsByOperand.ContainsKey(operand))
               {
-                equations.Add(operand, new List<Op>());
+                equationsByOperand.Add(operand, new List<Op>());
               }
 
-              equations[operand].Add(op);
+              equationsByOperand[operand].Add(op);
             }
           }
         }
       }
+
+      // Take all of our equations and throw them into a list by their output name
+      var equationsByName = new Dictionary<string, Op>();
+      foreach (var l in equationsByOperand.Values)
+      {
+        foreach (var op in l)
+        {
+          if (!equationsByName.ContainsKey(op.name))
+          {
+            equationsByName.Add(op.name, op);
+          }
+        }
+      }
+
+      // NOTE that for this part, every step should have one known and one unknown value (thankfully)
+
+      // Get the root and figure out which value we're tracing up from
+      var rootOp = equationsByName["root"];
+      Debug.Assert(knownValues.ContainsKey(rootOp.op1) || knownValues.ContainsKey(rootOp.op2));
+      long p2Value = knownValues.ContainsKey(rootOp.op1) ? knownValues[rootOp.op1] : knownValues[rootOp.op2];
+      var curOp = knownValues.ContainsKey(rootOp.op1) ? equationsByName[rootOp.op2] : equationsByName[rootOp.op1];
+
+      while (true)
+      {
+        Debug.Assert(knownValues.ContainsKey(curOp.op1) || knownValues.ContainsKey(curOp.op2));
+       
+        // Compute the inverse of our operation given known/unknown value
+        p2Value = (knownValues.ContainsKey(curOp.op1), curOp.op) switch
+        {
+          (true, '+') => p2Value - knownValues[curOp.op1],
+          (false, '+') => p2Value - knownValues[curOp.op2],
+          (true, '-') => -(p2Value - knownValues[curOp.op1]),
+          (false, '-') => p2Value + knownValues[curOp.op2],
+          (true, '*') => p2Value / knownValues[curOp.op1],
+          (false, '*') => p2Value / knownValues[curOp.op2],
+          (true, '/') => knownValues[curOp.op1] / p2Value,
+          (false, '/') => p2Value * knownValues[curOp.op2],
+          _ => throw new InvalidOperationException(),
+        };
+
+        // Figure out what the next equation in the chain is - if we've reached the "humn" entry we're done.
+        string nextKey = knownValues.ContainsKey(curOp.op1) ? curOp.op2 : curOp.op1;
+        if (nextKey == "humn")
+          { break; }
+        
+        curOp = equationsByName[nextKey];
+      }
+
+      // Now that we've done the P2 work we can collapse the P1 answer
+      knownValues.Add("humn", humnValue);
+      TestEqs("humn");
+
+      Console.WriteLine($"[P1] root: {knownValues["root"]}");
+      Console.WriteLine($"[P2] humn: {p2Value}");
     }
   }
 }

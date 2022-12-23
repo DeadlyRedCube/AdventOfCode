@@ -104,7 +104,7 @@ namespace AdventOfCode2022
         }
       }
 
-      for (int round = 0; round < 10; round++)
+      for (int round = 1;; round++)
       {
         // Step 1: scan
         var elfMoves = new Dictionary<Vec, Vec>();
@@ -130,6 +130,19 @@ namespace AdventOfCode2022
           }
         }
 
+        if (round == 10)
+        {
+          var min = elves.Aggregate(elves.First(), (m, e) => Vec.Min(m, e));
+          var max = elves.Aggregate(elves.First(), (m, e) => Vec.Max(m, e));
+          int emptyCount = (max.X - min.X + 1) * (max.Y - min.Y + 1) - elves.Count;
+          Console.WriteLine($"[P1] Empty Count: {emptyCount}");
+        }
+
+        if (elfMoves.Count == 0)
+        {
+          Console.WriteLine($"[P2] Round: {round}");
+          break;
+        }
 
         var newElves = new HashSet<Vec>();
         foreach (var elf in elves)
@@ -165,13 +178,6 @@ namespace AdventOfCode2022
           }
         }
         #endif
-      }
-
-      {
-        var min = elves.Aggregate(elves.First(), (m, e) => Vec.Min(m, e));
-        var max = elves.Aggregate(elves.First(), (m, e) => Vec.Max(m, e));
-        int emptyCount = (max.X - min.X + 1) * (max.Y - min.Y + 1) - elves.Count;
-        Console.WriteLine($"Empty Count: {emptyCount}");
       }
     }
   }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Security.AccessControl;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AdventOfCode2022
@@ -43,30 +44,7 @@ namespace AdventOfCode2022
 
     // Tokenize the direction string (breaking 40L17R10 into "40" "L" "17" "R" "10")
     static IEnumerable<string> Tokenize(string input)
-    {
-      int i = 0;
-      StringBuilder b = new StringBuilder();
-      while (i < input.Length)
-      {
-        b.Clear();
-        while (i < input.Length && char.IsDigit(input[i]))
-        {
-          b.Append(input[i]);
-          i++;
-        }
-
-        if (b.Length > 0)
-        {
-          yield return b.ToString();
-        }
-
-        while (i < input.Length && !char.IsDigit(input[i]))
-        {
-          yield return input[i].ToString();
-          i++;
-        }
-      }
-    }
+      => Regex.Split(input, "(L|R)");
 
     [DebuggerDisplay("{X}, {Y}")]
     struct Vec

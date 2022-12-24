@@ -139,8 +139,11 @@ namespace AdventOfCode2022
 
     static int Walk(int startStep, Vec start, Vec target, List<Blizzards> blizzards, Vec bounds)
     {
+      // Use a priority queue here so we do it breadth-first (all step 1s before all step 2s, etc). Mostly to eliminate duplicates
       var q = new PriorityQueue<Tuple<Vec, int>, int>();
       q.Enqueue(new Tuple<Vec, int>(start, startStep), startStep);
+
+      // Speaking of eliminating duplicates, here's a hash set of ones that we've done so that we can not try them again.
       var tested = new HashSet<Tuple<Vec, int>>();
 
       int best = int.MaxValue;
@@ -150,12 +153,11 @@ namespace AdventOfCode2022
         if (curStep >= best)
           { continue; }
 
-        // Get (or calculate) the blizzards for the next step
-        Blizzards newBlizzards;
+        // Get (or calculate) the blizzards for the next step (and cache it for others at this step)
         while (curStep >= blizzards.Count)
         {
-          newBlizzards = new Blizzards();
-          newBlizzards.blizzards = new List<Object>();
+          var newb = new Blizzards();
+          newb.blizzards = new List<Object>();
           foreach (var b in blizzards[blizzards.Count - 1].blizzards)
           {
             var newPos = b.type switch
@@ -167,13 +169,14 @@ namespace AdventOfCode2022
               _ => throw new InvalidOperationException(),
             };
 
-            newBlizzards.blizzards.Add(new Object { pos = newPos, type = b.type });
+            newb.blizzards.Add(new Object { pos = newPos, type = b.type });
           }
 
-          blizzards.Add(newBlizzards);
-          newBlizzards.positions = newBlizzards.blizzards.Select(v => v.pos).ToHashSet();
+          blizzards.Add(newb);
+          newb.positions = newb.blizzards.Select(v => v.pos).ToHashSet();
         }
-        newBlizzards = blizzards[curStep];
+
+        var newBlizzards = blizzards[curStep];
 
         // Now see where we can step, prioritizing the direction that takes us along the axis
         //  that we're farther from the exit along
@@ -184,16 +187,20 @@ namespace AdventOfCode2022
           var t = exp + PotentialMoves[i];
           if (t == target)
           {
+            // We stepped to the target so stash our best and we don't have to test any farther from this position.
             best = Math.Min(curStep, best);
             break;
           }
 
+          // Don't test it if it's out of bounds (unless we're waiting in place at the start, that's fine)
           if (t != exp && (t.X < 0 || t.Y < 0 || t.X >= bounds.X || t.Y >= bounds.Y))
             { continue; }
 
+          // If there's a blizzard where we're going, don't
           if (newBlizzards.positions.Contains(t))
             { continue; }
 
+          // Alright we have a valid move so enqueue it unless we already did so
           var tup = new Tuple<Vec, int>(t, curStep + 1);
           if (!tested.Contains(tup))
           {
@@ -240,6 +247,7 @@ namespace AdventOfCode2022
       var best = Walk(1, expStartPos, target, blizzards, bounds);
       Console.WriteLine($"[P1] Best: {best}");
 
+      // We need to walk back to the start then back to the end again. Easy peasy.
       best = Walk(best + 1, target, expStartPos, blizzards, bounds);
       best = Walk(best + 1, expStartPos, target, blizzards, bounds);
       Console.WriteLine($"[P2] Best: {best}");

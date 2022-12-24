@@ -137,10 +137,10 @@ namespace AdventOfCode2022
     }
     #endif
 
-    static int Walk(Vec start, Vec target, List<Blizzards> blizzards, Vec bounds)
+    static int Walk(int startStep, Vec start, Vec target, List<Blizzards> blizzards, Vec bounds)
     {
       var q = new PriorityQueue<Tuple<Vec, int>, int>();
-      q.Enqueue(new Tuple<Vec, int>(start, 1), 1);
+      q.Enqueue(new Tuple<Vec, int>(start, startStep), startStep);
       var tested = new HashSet<Tuple<Vec, int>>();
 
       int best = int.MaxValue;
@@ -184,16 +184,15 @@ namespace AdventOfCode2022
           var t = exp + PotentialMoves[i];
           if (t == target)
           {
-            best = Math.Min(curStep + 1, best);
+            best = Math.Min(curStep, best);
             break;
           }
 
-          if (t.X < 0 || t.Y < 0 || t.X >= bounds.X || t.Y >= bounds.Y)
+          if (t != exp && (t.X < 0 || t.Y < 0 || t.X >= bounds.X || t.Y >= bounds.Y))
             { continue; }
 
           if (newBlizzards.positions.Contains(t))
             { continue; }
-
 
           var tup = new Tuple<Vec, int>(t, curStep + 1);
           if (!tested.Contains(tup))
@@ -231,67 +230,19 @@ namespace AdventOfCode2022
             }))
           .Aggregate(Enumerable.Empty<Object>(), Enumerable.Concat);
       var expStartPos = new Vec(0, -1);
-      var target = new Vec(width - 1, height - 1);
+      var target = new Vec(width - 1, height);
 
       var blizzards = new List<Blizzards>();
       blizzards.Add(new Blizzards { blizzards = blizzardStarts.ToList(), positions = blizzardStarts.Select(v => v.pos).ToHashSet() });
       
       var bounds = new Vec(width, height);
 
-      var best = Walk(expStartPos, target, blizzards, bounds);
+      var best = Walk(1, expStartPos, target, blizzards, bounds);
+      Console.WriteLine($"[P1] Best: {best}");
 
-      Console.WriteLine($"Best: {best}");
-      #if false
-        for (int i = 0; i < blizzards.Count; i++)
-        {
-          var b = blizzards[i];
-          Console.WriteLine($"Step {i}");
-          Console.Write("#");
-          Console.Write(".");
-          for (int x = 1; x <= width; x++)
-          {
-            Console.Write("#");
-          }
-
-          Console.WriteLine();
-
-          for (int y = 0; y < height; y++)
-          {
-            Console.Write("#");
-
-            for (int x = 0; x < width; x++)
-            {
-              if (b.positions.Contains(new Vec(x, y)))
-              {
-                var blz = b.blizzards.Where(v => v.pos == new Vec(x, y)).ToList();
-                if (blz.Count == 1)
-                {
-                  Console.Write(blz[0].type switch
-                    {
-                      Type.Up => "^",
-                      Type.Down => "v",
-                      Type.Left => "<",
-                      Type.Right => ">",
-                      _ => throw new InvalidOperationException(),
-                    });
-                }
-                else
-                {
-                  Console.Write(blz.Count > 9 ? "!" : blz.Count.ToString());
-                }
-              }
-              else
-              {
-                Console.Write(".");
-              }
-            }
-
-            Console.WriteLine("#");
-          }
-
-          Console.WriteLine("\n");
-        }
-      #endif
+      best = Walk(best + 1, target, expStartPos, blizzards, bounds);
+      best = Walk(best + 1, expStartPos, target, blizzards, bounds);
+      Console.WriteLine($"[P2] Best: {best}");
     }
   }
 }

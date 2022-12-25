@@ -63,13 +63,9 @@ namespace AdventOfCode2022
       {
         var number = FromSNAFU(line);
         sum += number;
-        Console.WriteLine($"{line} -> {number} -> {ToSNAFU(number)}");
-        Debug.Assert(line == ToSNAFU(number));
       }
 
-      Console.WriteLine($"Sum (decimal): {sum}");
       Console.WriteLine($"Sum (SNAFU): {ToSNAFU(sum)}");
-      Console.WriteLine($"Sum (decimal again): {FromSNAFU(ToSNAFU(sum))}");
     }
   }
 }

@@ -8,14 +8,14 @@ namespace AdventOfCode2022
 
     unsafe struct Blueprint
     {
-      public Blueprint(int c0, int c1, int c2, int c3, int c4, int c5)
+      public Blueprint(List<int> c)
       { 
-        this[Res.Ore, Res.Ore] = c0; 
-        this[Res.Clay, Res.Ore] = c1; 
-        this[Res.Obsidian, Res.Ore] = c2; 
-        this[Res.Obsidian, Res.Clay] = c3; 
-        this[Res.Geode, Res.Ore] = c4; 
-        this[Res.Geode, Res.Obsidian] = c5; 
+        this[Res.Ore, Res.Ore] = c[0]; 
+        this[Res.Clay, Res.Ore] = c[1]; 
+        this[Res.Obsidian, Res.Ore] = c[2]; 
+        this[Res.Obsidian, Res.Clay] = c[3]; 
+        this[Res.Geode, Res.Ore] = c[4]; 
+        this[Res.Geode, Res.Obsidian] = c[5]; 
       }
 
       fixed int costs[16];
@@ -102,12 +102,12 @@ namespace AdventOfCode2022
 
     public static void Run(string input)
     {
-      List<Blueprint> blueprints = new List<Blueprint>();
-
-      var numbers = input.Split().Where(x => int.TryParse(x, out var _)).Select(x => int.Parse(x)).ToList();
-      for (int i = 0; i < numbers.Count; i += 6)
-        { blueprints.Add(new Blueprint(numbers[i + 0], numbers[i + 1], numbers[i + 2], numbers[i + 3], numbers[i + 4], numbers[i + 5])); }
-
+      var blueprints = input.Split()
+        .Where(x => int.TryParse(x, out var _))
+        .Select((x, i) => (int.Parse(x), i))
+        .GroupBy(v => v.i / 6)
+        .Select(g => new Blueprint(g.Select(v => v.Item1).ToList())).ToList();
+        
       int totalP1Score = blueprints.Select((b, i) => (b, i+1)).Aggregate(0, (s, v) => s + v.Item2 * Simulate(v.b, 24));
       Console.WriteLine($"[P1] Score: {totalP1Score}");
 

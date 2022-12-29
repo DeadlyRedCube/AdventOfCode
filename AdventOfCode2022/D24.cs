@@ -66,8 +66,8 @@ namespace AdventOfCode2022
 
     class Blizzards
     {
-      public List<Object> blizzards;
-      public HashSet<Vec> positions;
+      public List<Object> blizzards = null!;
+      public HashSet<Vec> positions = null!;
     }
 
     static readonly Vec[] PotentialMoves = new Vec[]

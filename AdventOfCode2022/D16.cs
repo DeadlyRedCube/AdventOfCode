@@ -13,7 +13,7 @@ namespace AdventOfCode2022
     [DebuggerDisplay("{name}: {flowRate}")]
     class Valve
     {
-      public string name;
+      public string name = "";
       public int flowRate;
 
       public bool isOpen = false;

@@ -34,7 +34,7 @@ namespace AdventOfCode2022
 
     class Move
     {
-      public Vec[] tests;
+      public Vec[] tests = new Vec[0];
       public Vec target;
     }
 

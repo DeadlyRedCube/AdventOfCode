@@ -12,9 +12,9 @@ namespace AdventOfCode2022
     [DebuggerDisplay("{name} = {op1} {op} {op2}")]
     class Op
     {
-      public string name;
-      public string op1;
-      public string op2;
+      public string name = "";
+      public string op1 = "";
+      public string op2 = "";
       public char op;
     }
 

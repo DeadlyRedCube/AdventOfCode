@@ -110,11 +110,11 @@ namespace AdventOfCode2022
 
     class Face
     {
-      public char[,] map;   // The slice of the map for this face, in the same orientation as it was in the 2D map
-      public Vec mapOrigin; // the 2D coordinates in the input map that this face's upper left coordinate is at
-      public Vec3 normal;   // The face normal in 3-space
-      public Vec3 uDir;     // stepping along u steps along the x coordinate in the map
-      public Vec3 vDir;     // stepping along v steps along the y coordinate in the map
+      public char[,] map = null!; // The slice of the map for this face, in the same orientation as it was in the 2D map
+      public Vec mapOrigin;       // the 2D coordinates in the input map that this face's upper left coordinate is at
+      public Vec3 normal;         // The face normal in 3-space
+      public Vec3 uDir;           // stepping along u steps along the x coordinate in the map
+      public Vec3 vDir;           // stepping along v steps along the y coordinate in the map
 
       public Vec Project(Vec3 pos)
       {

@@ -50,13 +50,20 @@ namespace AdventOfCode2022
 
     // Simulate a blueprint for a given number of rounds (Starting with a single ore robot)
     static int Simulate(Blueprint bp, int rounds) 
-      => Simulate(bp, new Counts(1, 0, 0, 0), new Counts(), 0, rounds);
+      => Simulate(bp, new Counts(1, 0, 0, 0), new Counts(), 0, rounds, 0);
 
-    static int Simulate(Blueprint bp, Counts robots, Counts resources, int previouslyTriedBotFlags,  int timeRemaining)
+    static int Simulate(Blueprint bp, Counts robots, Counts resources, int previouslyTriedBotFlags, int timeRemaining, int bestResult)
     {
       // If we only have one last turn, don't bother building anything just add our geode values together and we're done.
       if (timeRemaining == 1)
-        { return resources[Res.Geode] + robots[Res.Geode]; }
+        { return Math.Max(resources[Res.Geode] + robots[Res.Geode], bestResult); }
+
+      // If we were to make a geode robot every turn from now on (ignoring resource constraints) and it's still not enough to beat our best
+      //  score, early out.
+      // "(timeRemaining * (timeRemaining - 1)) / 2" is the closed form of the arithmetic sequence for how many extra geodes we'd generate
+      //  if we were to build a new geode robot every turn.
+      if (resources[Res.Geode] + robots[Res.Geode] * timeRemaining + (timeRemaining * (timeRemaining - 1)) / 2 < bestResult)
+        { return bestResult; }
 
       // Calculate how many resources of each type we need from this point until the end to build one of the max cost (per resource)
       //  on every turn until we run out of turns.
@@ -67,9 +74,8 @@ namespace AdventOfCode2022
         bp[Res.Geode, Res.Obsidian] * (timeRemaining - 1),
         int.MaxValue);
 
-      int bestResult = 0;
-
-      // For each robot type
+      // For each robot type (intuitively I would have thought that iterating from geode down would be faster but instead it seems to be
+      //  the other way around)
       for (int i = 0; i < 4; i++)
       {
         var robot = (Res)i;
@@ -83,7 +89,7 @@ namespace AdventOfCode2022
         if ((previouslyTriedBotFlags & (1 << (int)robot)) != 0)
           { continue; }
                 
-        // If we have enough resources and generating power that we'll never run out while spending our max every turn, we don't need any more
+        // If we have enough resources and generating power that we'll never run out while spending our max every turn, we don't need more
         if (resources[robot] + robots[robot] * (timeRemaining - 1) >= mostRequired[robot])
           { continue; }
               
@@ -92,12 +98,12 @@ namespace AdventOfCode2022
         previouslyTriedBotFlags |= (1 << (int)robot);
 
         // Simulate! (Note that we're passing a "previously tried bot flag" of 0 here, meaning that all bots are once again fair game
-        bestResult = Math.Max(bestResult, Simulate(bp,  robots + robot, resources + robots - cost, 0, timeRemaining - 1));
+        bestResult = Simulate(bp,  robots + robot, resources + robots - cost, 0, timeRemaining - 1, bestResult);
       }
 
       // Finally we need to simulate the "do nothing" option: but we'll pass our previously-tried bot flags in so that any bots
       //  that were affordable this round are not considered until we build something else
-      return Math.Max(bestResult, Simulate(bp, robots, resources + robots, previouslyTriedBotFlags, timeRemaining - 1));
+      return Simulate(bp, robots, resources + robots, previouslyTriedBotFlags, timeRemaining - 1, bestResult);
     }
 
     public static void Run(string input)

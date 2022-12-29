@@ -83,8 +83,7 @@ namespace AdventOfCode2022
         if ((previouslyTriedBotFlags & (1 << (int)robot)) != 0)
           { continue; }
                 
-        // If this isn't the geode robot and we have enough resources and generating power that we'll never run out while spending
-        //  our max every turn, we don't need any more
+        // If we have enough resources and generating power that we'll never run out while spending our max every turn, we don't need any more
         if (resources[robot] + robots[robot] * (timeRemaining - 1) >= mostRequired[robot])
           { continue; }
               

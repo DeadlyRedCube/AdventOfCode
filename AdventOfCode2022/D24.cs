@@ -51,7 +51,6 @@ namespace AdventOfCode2022
 
     enum Type
     {
-      Expedition,
       Down,
       Left,
       Up,

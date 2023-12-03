@@ -1,11 +1,29 @@
 #pragma once
 
+int64_t D03GetNumberAt(const Array2D<char> &ary, ssize_t x, ssize_t y)
+{
+  while (x > 0 && std::isdigit(ary.Idx(x - 1, y)))
+    { x--; }
+
+  int64_t v = 0;
+  for (; x < ary.Width() && std::isdigit(ary.Idx(x, y)); x++)
+  {
+    v *= 10;
+    v += ary.Idx(x, y) - '0';
+  }
+
+  return v;
+}
+
 void D03(const char *path)
 {
   Array2D<char> ary = MakeCharArray(ReadFileLines(path));
 
   Array2D<bool> partNeighbors = { ary.Width(), ary.Height() };
   partNeighbors.Fill(false);
+
+  Array2D<bool> gears = { ary.Width(), ary.Height() };
+  int64_t gearSum = 0;
 
   for (ssize_t y = 0; y < ary.Height(); y++)
   {
@@ -21,6 +39,74 @@ void D03(const char *path)
             auto y2 = std::clamp(y + j, ssize_t(0), ary.Height());
             partNeighbors.Idx(x2, y2) = true;
           }
+        }
+
+        if (ary.Idx(x, y) == '*')
+        {
+          int neighboringNumberCount = 0;
+          int64_t gearVal = 1;
+          if (x >= 0 && std::isdigit(ary.Idx(x - 1, y)))
+          {
+            gearVal *= D03GetNumberAt(ary, x - 1, y);
+            neighboringNumberCount++;
+          }
+
+          if (x < ary.Width() && std::isdigit(ary.Idx(x + 1, y)))
+          {
+            gearVal *= D03GetNumberAt(ary, x + 1, y);
+            neighboringNumberCount++;
+          }
+
+          if (y >= 0)
+          {
+            auto y2 = y - 1;
+            if (std::isdigit(ary.Idx(x, y2)))
+            {
+              gearVal *= D03GetNumberAt(ary, x, y2);
+              neighboringNumberCount++;
+            }
+            else
+            {
+              if (x >= 0 && std::isdigit(ary.Idx(x - 1, y2)))
+              {
+                gearVal *= D03GetNumberAt(ary, x - 1, y2);
+                neighboringNumberCount++;
+              }
+
+              if (x < ary.Width() && std::isdigit(ary.Idx(x + 1, y2)))
+              {
+                gearVal *= D03GetNumberAt(ary, x + 1, y2);
+                neighboringNumberCount++;
+              }
+            }
+          }
+
+          if (y < ary.Height())
+          {
+            auto y2 = y + 1;
+            if (std::isdigit(ary.Idx(x, y2)))
+            {
+              gearVal *= D03GetNumberAt(ary, x, y2);
+              neighboringNumberCount++;
+            }
+            else
+            {
+              if (x >= 0 && std::isdigit(ary.Idx(x - 1, y2)))
+              {
+                gearVal *= D03GetNumberAt(ary, x - 1, y2);
+                neighboringNumberCount++;
+              }
+
+              if (x < ary.Width() && std::isdigit(ary.Idx(x + 1, y2)))
+              {
+                gearVal *= D03GetNumberAt(ary, x + 1, y2);
+                neighboringNumberCount++;
+              }
+            }
+          }
+
+          if (neighboringNumberCount == 2)
+            { gearSum += gearVal; }
         }
       }
     }
@@ -51,7 +137,6 @@ void D03(const char *path)
         { continue; }
 
       // This is a part-neighbor digit so parse as string
-      char *end;
       int64_t v = 0;
       for (; x < ary.Width() && std::isdigit(ary.Idx(x, y)); x++)
       {
@@ -59,10 +144,12 @@ void D03(const char *path)
         v += ary.Idx(x, y) - '0';
       }
 
-      PrintFmt("Number: {}\n", v);
       sum += v;
     }
   }
 
   PrintFmt("SUM: {}\n", sum);
+  PrintFmt("GearSum: {}\n", gearSum);
+
+
 }

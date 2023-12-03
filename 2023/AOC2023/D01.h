@@ -79,17 +79,21 @@ namespace D01
   void Run(const char *path)
   {
     auto lines = ReadFileLines(path);
-    int sum = 0;
+    int sumPart1 = 0;
+    int sumPart2 = 0;
     for (auto line : lines)
     {
-      auto firstDig = FindFirstDigitOrName(line);
-      auto lastDig = FindLastDigitOrName(line);
+      auto firstPart1 = *std::ranges::find_if(line, [](auto c){ return std::isdigit(c); }) - '0';
+      auto lastPart1  = *std::ranges::find_if(std::views::reverse(line), [](auto c){ return std::isdigit(c); }) - '0';
 
-      int num = firstDig * 10 + lastDig;
-      PrintFmt("{}\n", num);
-      sum += num;
+      auto firstPart2 = FindFirstDigitOrName(line);
+      auto lastPart2 = FindLastDigitOrName(line);
+
+      sumPart1 += firstPart1 * 10 + lastPart1;
+      sumPart2 += firstPart2 * 10 + lastPart2;
     }
 
-    PrintFmt("\nSUM: {}\n", sum);
+    PrintFmt("Part 1: {}\n", sumPart1);
+    PrintFmt("Part 2: {}\n", sumPart2);
   }
 }

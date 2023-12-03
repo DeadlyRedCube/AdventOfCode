@@ -11,7 +11,7 @@ namespace D02
     int targetB = 14;
 
     int gameIndex = 1;
-    int possibleCount = 0;
+    int possibleIDSum = 0;
     int powerSum = 0;
     for (auto game : lines)
     {
@@ -21,43 +21,29 @@ namespace D02
       int maxG = 0;
       int maxB = 0;
 
-      for (auto round : Split(gameData, ";", KeepEmpty::No))
+      for (auto colorSet : Split(gameData, ",;", KeepEmpty::No))
       {
-        for (auto colorSet : Split(round, ",", KeepEmpty::No))
-        {
-          auto toks = Split(colorSet, " ", KeepEmpty::No);
+        auto toks = Split(colorSet, " ", KeepEmpty::No);
 
-          char *end;
-          int count = std::strtol(toks[0].c_str(), &end, 10);
+        char *end;
+        int count = std::strtol(toks[0].c_str(), &end, 10);
 
-          if (toks[1] == "red")
-            { maxR = std::max(maxR, count); }
-          else if (toks[1] == "green")
-            { maxG = std::max(maxG, count); }
-          else if (toks[1] == "blue")
-            { maxB = std::max(maxB, count); }
-          else
-            { ASSERT(false); }
-        }
+        if (toks[1] == "red")
+          { maxR = std::max(maxR, count); }
+        else if (toks[1] == "green")
+          { maxG = std::max(maxG, count); }
+        else if (toks[1] == "blue")
+          { maxB = std::max(maxB, count); }
       }
 
-      PrintFmt("Game {}, Maximums: {}, {}, {}\n", gameIndex, maxR, maxG, maxB);
-
-      if (maxR > targetR || maxG > targetG || maxB > targetB)
-      {
-        PrintFmt("Game {} not possible\n", gameIndex);
-      }
-      else
-      {
-        PrintFmt("Game {} YES\n", gameIndex);
-        possibleCount += gameIndex;
-      }
+      if (maxR <= targetR && maxG <= targetG && maxB <= targetB)
+        { possibleIDSum += gameIndex; }
 
       powerSum += maxR * maxG * maxB;
       gameIndex++;
     }
 
-    PrintFmt("Possible count {}\n", possibleCount);
-    PrintFmt("Power: {}\n", powerSum);
+    PrintFmt("Part 1: {}\n", possibleIDSum);
+    PrintFmt("Part 2: {}\n", powerSum);
   }
 }

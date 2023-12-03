@@ -22,9 +22,9 @@ int main()
 {
   Timer t;
 
-  //D01("D01.txt");
-  //D02("D02.txt");
-  D03("D03.txt");
+  //D01::Run("D01.txt");
+  //D02::Run("D02.txt");
+  D03::Run("D03.txt");
 
   auto time = t.SecondsSinceLastCheckpoint();
   PrintFmt("Finished in {:.02} seconds", time);

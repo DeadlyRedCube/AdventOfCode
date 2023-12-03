@@ -84,19 +84,22 @@ std::vector<std::string> Split(const std::string &s, const std::string &delims, 
   std::vector<std::string> v;
   for (auto c : s)
   {
-    if (delims.find(c) >= 0)
+    if (delims.find(c) != std::string::npos)
     {
       if (buf.size() > 0 || ke == KeepEmpty::Yes)
       {
         v.push_back(std::move(buf));
         buf = {};
       }
-      else
-      {
-        buf += c;
-      }
+    }
+    else
+    {
+      buf += c;
     }
   }
+
+  if (buf.size() > 0 || ke == KeepEmpty::Yes)
+    { v.push_back(std::move(buf)); }
 
   return v;
 }

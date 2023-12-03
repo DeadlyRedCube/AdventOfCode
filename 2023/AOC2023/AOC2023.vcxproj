@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="D01.h" />
+    <ClInclude Include="D02.h" />
     <ClInclude Include="Helpers.h" />
   </ItemGroup>
   <ItemGroup>

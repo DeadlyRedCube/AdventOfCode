@@ -15,9 +15,10 @@
 
 
 #include "D01.h"
+#include "D02.h"
 
 int main()
 {
-  D01("D01.txt");
+  D02("D02.txt");
   return 0;
 }

@@ -225,6 +225,52 @@ std::optional<SSearchResult> FindLastMatch(const std::string_view &str, Predicat
 }
 
 
+std::optional<std::smatch> FindFirstMatch(const std::regex &re, const std::string &str)
+{
+  std::smatch res;
+  if (std::regex_search(str.cbegin(), str.cend(), res, re))
+    { return res; }
+
+  return std::nullopt;
+}
+
+
+std::optional<std::smatch> FindLastMatch(const std::regex &re, const std::string &str)
+{
+  auto iterStart = str.cbegin();
+  auto iterEnd = str.cend();
+
+  std::smatch lastMatch;
+  // Start with the first match, and if we didn't find one there's no match at all.
+  if (!std::regex_search(iterStart, iterEnd, lastMatch, re))
+    { return std::nullopt; }
+
+  // Start our search one character after the start of our first match.
+  iterStart = lastMatch.prefix().second + 1;
+
+  while (true)
+  {
+    // Start at the midpoint between just past our last match and the "known no matches after here" point.
+    auto midpoint = iterStart + (iterEnd - iterStart) / 2;
+    std::smatch match;
+    if (std::regex_search(midpoint, str.cend(), match, re))
+    {
+      // Found a match after the midpoint, update our start point to be one past the start of it.
+      lastMatch = std::move(match);
+      iterStart = lastMatch.prefix().second + 1;
+    }
+    else
+    {
+      // No matches after this point, so we can narrow our allowed starting search space
+      iterEnd = midpoint;
+    }
+
+    if (iterEnd <= iterStart)
+      { return lastMatch; }
+  }
+}
+
+
 std::vector<std::smatch> FindAllMatches(const std::regex &re, const std::string &str)
 {
   std::smatch res;

@@ -17,6 +17,9 @@ public:
     return *this;
   }
 
+  UnboundedArray(const std::initializer_list<T> &l)
+    { this->AppendMultiple(l); }
+
   UnboundedArray(UnboundedArray &&other) noexcept
     : Super(std::exchange(other.elements, nullptr), std::exchange(other.count, 0))
     , capacity(std::exchange(other.capacity, 0))

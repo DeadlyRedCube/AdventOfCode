@@ -243,9 +243,10 @@ std::vector<std::smatch> FindAllMatchesOverlapping(const std::regex &re, const s
   std::smatch res;
 
   std::vector<std::smatch> matches;
-  for (std::string::const_iterator searchStart( str.cbegin() )
-    ; std::regex_search( searchStart, str.cend(), res, re )
-    ; ++searchStart)
-   { matches.push_back(res); }
+  for (std::string::const_iterator searchStart( str.cbegin() ) ; std::regex_search( searchStart, str.cend(), res, re );)
+  {
+    matches.push_back(res);
+    searchStart = res.prefix().second + 1; // skip the first character in the match and start matching again from there.
+  }
   return matches;
 }

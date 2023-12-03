@@ -35,7 +35,7 @@ void D02(const char *path)
         else if (toks[1] == "blue")
           { maxB = std::max(maxB, count); }
         else
-          { assert(false); }
+          { ASSERT(false); }
       }
     }
 

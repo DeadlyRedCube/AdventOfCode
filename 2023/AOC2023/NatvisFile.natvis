@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="ArrayView&lt;*&gt;">
+        <DisplayString>[Count = {count}] {elements, [count] na}</DisplayString>
+        <Expand>
+            <Item Name="[Count]">count</Item>
+            <Synthetic Name="[Elements]" Condition="count > 0">
+                <Expand>
+                    <ArrayItems>
+                        <Size>count</Size>
+                        <ValuePointer>elements</ValuePointer>
+                    </ArrayItems>
+                </Expand>
+            </Synthetic>
+        </Expand>
+    </Type>
+</AutoVisualizer>

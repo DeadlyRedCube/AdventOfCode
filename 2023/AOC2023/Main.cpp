@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cassert>
 #include <cinttypes>
 #include <iostream>
 #include <format>
@@ -11,13 +10,23 @@
 #include <type_traits>
 #include <vector>
 
+#include "Util/Core.h"
 #include "Helpers.h"
 
 
+#include "D01.h"
+#include "D02.h"
 #include "D03.h"
 
 int main()
 {
+  Timer t;
+
+  //D01("D01.txt");
+  //D02("D02.txt");
   D03("D03.txt");
+
+  auto time = t.SecondsSinceLastCheckpoint();
+  PrintFmt("Finished in {:.02} seconds", time);
   return 0;
 }

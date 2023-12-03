@@ -17,14 +17,12 @@ int64_t D03GetNumberAt(const Array2D<char> &ary, ssize_t x, ssize_t y)
 
 void D03(const char *path)
 {
-  Array2D<char> ary = MakeCharArray(ReadFileLines(path));
+  Array2D<char> ary = ReadFileAsCharArray(path);
 
   Array2D<bool> partNeighbors = { ary.Width(), ary.Height() };
   partNeighbors.Fill(false);
 
-  Array2D<bool> gears = { ary.Width(), ary.Height() };
   int64_t gearSum = 0;
-
   for (ssize_t y = 0; y < ary.Height(); y++)
   {
     for (ssize_t x = 0; x < ary.Width(); x++)
@@ -121,9 +119,7 @@ void D03(const char *path)
         { continue; }
 
       for (ssize_t x2 = x; x2 >= 0 && std::isdigit(ary.Idx(x2, y)); x2--)
-      {
-        partNeighbors.Idx(x2, y) = true;
-      }
+        { partNeighbors.Idx(x2, y) = true; }
     }
   }
 
@@ -150,6 +146,4 @@ void D03(const char *path)
 
   PrintFmt("SUM: {}\n", sum);
   PrintFmt("GearSum: {}\n", gearSum);
-
-
 }

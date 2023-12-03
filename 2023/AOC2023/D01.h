@@ -32,7 +32,7 @@ int D01FindFirstDigitOrName(const std::string &s)
     sub = sub.substr(1);
   }
 
-  assert(false);
+  ASSERT(false);
   return -1;
 }
 
@@ -70,7 +70,7 @@ int D01FindLastDigitOrName(const std::string &s)
     sub = sub.substr(1);
   }
 
-  assert(false);
+  ASSERT(false);
   return -1;
 }
 

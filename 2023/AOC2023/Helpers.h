@@ -57,7 +57,7 @@ void ReplaceAll(
 std::vector<std::string> ReadFileLines(const char *filename)
 {
   std::ifstream infile { filename };
-  assert(infile);
+  ASSERT(!!infile);
 
   std::vector<std::string> vec;
   while (!infile.eof())
@@ -137,13 +137,13 @@ public:
 
   T &Idx(ssize_t x, ssize_t y)
   {
-    assert(x < width && y < height);
+    ASSERT(x < width && y < height);
     return data[x + y * width];
   }
 
   const T &Idx(ssize_t x, ssize_t y) const
   {
-    assert(x < width && y < height);
+    ASSERT(x < width && y < height);
     return data[x + y * width];
   }
 
@@ -174,3 +174,6 @@ Array2D<char> MakeCharArray(const std::vector<std::string> &v)
 
   return ary;
 }
+
+Array2D<char> ReadFileAsCharArray(const char *path)
+  { return MakeCharArray(ReadFileLines(path)); }

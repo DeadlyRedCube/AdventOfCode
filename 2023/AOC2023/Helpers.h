@@ -223,3 +223,29 @@ std::optional<SSearchResult> FindLastMatch(const std::string_view &str, Predicat
 
   return std::nullopt;
 }
+
+
+std::vector<std::smatch> FindAllMatches(const std::regex &re, const std::string &str)
+{
+  std::smatch res;
+
+  std::vector<std::smatch> matches;
+  for (std::string::const_iterator searchStart( str.cbegin() ); std::regex_search( searchStart, str.cend(), res, re ); )
+  {
+    matches.push_back(res);
+    searchStart = res.suffix().first;
+  }
+  return matches;
+}
+
+std::vector<std::smatch> FindAllMatchesOverlapping(const std::regex &re, const std::string &str)
+{
+  std::smatch res;
+
+  std::vector<std::smatch> matches;
+  for (std::string::const_iterator searchStart( str.cbegin() )
+    ; std::regex_search( searchStart, str.cend(), res, re )
+    ; ++searchStart)
+   { matches.push_back(res); }
+  return matches;
+}

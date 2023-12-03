@@ -9,6 +9,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <regex>
 #include <tuple>
 #include <ranges>
 

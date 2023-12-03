@@ -177,3 +177,49 @@ Array2D<char> MakeCharArray(const std::vector<std::string> &v)
 
 Array2D<char> ReadFileAsCharArray(const char *path)
   { return MakeCharArray(ReadFileLines(path)); }
+
+
+struct SSearchResult
+{
+  ssz index;
+  std::string match;
+};
+
+
+// Calls a predicate on a substring for every character in the string, where the substring loses the first character
+//  on each iteration
+// i.e. if you Find on "abcd", it'll call the predicate on "abcd" then "bcd" then "cd" then "d"
+// If the predicate returns a std::string, that's the "match" value, and we return that and the index it started on.
+template <callable_as<std::optional<std::string>(const std::string_view &s)> PredicateType>
+std::optional<SSearchResult> FindFirstMatch(const std::string_view &str, PredicateType pred)
+{
+  // This is a slow way to do it but whatever
+  std::string_view v = str;
+
+  for (ssz i = 0; !v.empty(); v = v.substr(1), i++)
+  {
+    if (auto res = pred(v); res.has_value())
+      { return SSearchResult { i, *res }; }
+  }
+
+  return std::nullopt;
+}
+
+// Calls a predicate on a substring for every character in the string, where the substring loses the last character
+//  on each iteration.
+// i.e. if you Find on "abcd", it'll call the predicate on "abcd" then "abc" then "ab" then "a"
+// If the predicate returns a std::string, that's the "match" value, and we return that and the index it ended on.
+template <callable_as<std::optional<std::string>(const std::string_view &s)> PredicateType>
+std::optional<SSearchResult> FindLastMatch(const std::string_view &str, PredicateType pred)
+{
+  // This is a slow way to do it but whatever
+  std::string_view v = str;
+
+  for (ssz i = str.length() - 1; !v.empty(); v = v.substr(0, v.length() - 1), i--)
+  {
+    if (auto res = pred(v); res.has_value())
+      { return SSearchResult { i, *res }; }
+  }
+
+  return std::nullopt;
+}

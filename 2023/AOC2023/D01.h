@@ -3,36 +3,31 @@
 
 namespace D01
 {
-  int FindFirstDigitOrName(const std::string &s)
-  {
-    std::string sub = s;
-    while (sub.length() > 0)
-    {
-      if (sub.starts_with("zero"))
-        { return 0; }
-      if (sub.starts_with("one"))
-        { return 1; }
-      if (sub.starts_with("two"))
-        { return 2; }
-      if (sub.starts_with("three"))
-        { return 3; }
-      if (sub.starts_with("four"))
-        { return 4; }
-      if (sub.starts_with("five"))
-        { return 5; }
-      if (sub.starts_with("six"))
-        { return 6; }
-      if (sub.starts_with("seven"))
-        { return 7; }
-      if (sub.starts_with("eight"))
-        { return 8; }
-      if (sub.starts_with("nine"))
-        { return 9; }
-      if (std::isdigit(sub[0]))
-        { return sub[0] - '0'; }
+  constexpr const char *digitWords[] =
+    { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
 
-      sub = sub.substr(1);
+  template <bool forward>
+  std::optional<std::string> SearchPredicate(const std::string_view &v)
+  {
+    usz idx = forward ? 0 : (v.length() - 1);
+    if (std::isdigit(v[idx]))
+      { return std:: string { v, idx, 1 }; }
+    for (ssz i = 0; i < 10; i++)
+    {
+      if (forward ? v.starts_with(digitWords[i]) : v.ends_with(digitWords[i]))
+      {
+        char chs[] = { char(i) + '0', 0 };
+        return chs;
+      }
     }
+
+    return std::nullopt;
+  }
+
+  int FindFirstDigitOrName(const std::string_view &s)
+  {
+    if (auto res = FindFirstMatch(s, SearchPredicate<true>); res.has_value())
+      { return res->match[0] - '0'; }
 
     ASSERT(false);
     return -1;
@@ -41,36 +36,8 @@ namespace D01
 
   int FindLastDigitOrName(const std::string &s)
   {
-    auto rev = s;
-    std::ranges::reverse(rev);
-    std::string sub = rev;
-    while (sub.length() > 0)
-    {
-      if (sub.starts_with("orez"))
-        { return 0; }
-      if (sub.starts_with("eno"))
-        { return 1; }
-      if (sub.starts_with("owt"))
-        { return 2; }
-      if (sub.starts_with("eerht"))
-        { return 3; }
-      if (sub.starts_with("ruof"))
-        { return 4; }
-      if (sub.starts_with("evif"))
-        { return 5; }
-      if (sub.starts_with("xis"))
-        { return 6; }
-      if (sub.starts_with("neves"))
-        { return 7; }
-      if (sub.starts_with("thgie"))
-        { return 8; }
-      if (sub.starts_with("enin"))
-        { return 9; }
-      if (std::isdigit(sub[0]))
-        { return sub[0] - '0'; }
-
-      sub = sub.substr(1);
-    }
+    if (auto res = FindLastMatch(s, SearchPredicate<false>); res.has_value())
+      { return res->match[0] - '0'; }
 
     ASSERT(false);
     return -1;

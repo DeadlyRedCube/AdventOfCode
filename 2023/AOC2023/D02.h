@@ -10,6 +10,7 @@ void D02(const char *path)
 
   int gameIndex = 1;
   int possibleCount = 0;
+  int powerSum = 0;
   for (auto game : lines)
   {
     auto gameData = game.substr(game.find(':') + 1);
@@ -50,8 +51,10 @@ void D02(const char *path)
       possibleCount += gameIndex;
     }
 
+    powerSum += maxR * maxG * maxB;
     gameIndex++;
   }
 
   printf(std::format("Possible count {}\n", possibleCount).c_str());
+  printf(std::format("Power: {}\n", powerSum).c_str());
 }

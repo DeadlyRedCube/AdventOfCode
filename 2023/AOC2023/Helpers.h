@@ -104,3 +104,10 @@ std::vector<std::string> Split(const std::string &s, const std::string &delims, 
   return v;
 }
 
+
+template <typename... t_args>
+void PrintFmt(std::format_string<t_args...> fmt, t_args&&...args)
+{
+  printf(std::format(fmt, std::forward<t_args>(args)...).c_str());
+}
+

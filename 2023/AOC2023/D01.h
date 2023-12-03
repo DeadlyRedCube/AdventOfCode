@@ -84,9 +84,9 @@ void D01(const char *path)
     auto lastDig = D01FindLastDigitOrName(line);
 
     int num = firstDig * 10 + lastDig;
-    printf(std::format("{}\n", num).c_str());
+    PrintFmt("{}\n", num);
     sum += num;
   }
 
-  printf(std::format("\nSUM: {}\n", sum).c_str());
+  PrintFmt("\nSUM: {}\n", sum);
 }

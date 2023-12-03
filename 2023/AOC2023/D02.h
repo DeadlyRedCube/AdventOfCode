@@ -39,15 +39,15 @@ void D02(const char *path)
       }
     }
 
-    printf(std::format("Game {}, Maximums: {}, {}, {}\n", gameIndex, maxR, maxG, maxB).c_str());
+    PrintFmt("Game {}, Maximums: {}, {}, {}\n", gameIndex, maxR, maxG, maxB);
 
     if (maxR > targetR || maxG > targetG || maxB > targetB)
     {
-      printf(std::format("Game {} not possible\n", gameIndex).c_str());
+      PrintFmt("Game {} not possible\n", gameIndex);
     }
     else
     {
-      printf(std::format("Game {} YES\n", gameIndex).c_str());
+      PrintFmt("Game {} YES\n", gameIndex);
       possibleCount += gameIndex;
     }
 
@@ -55,6 +55,6 @@ void D02(const char *path)
     gameIndex++;
   }
 
-  printf(std::format("Possible count {}\n", possibleCount).c_str());
-  printf(std::format("Power: {}\n", powerSum).c_str());
+  PrintFmt("Possible count {}\n", possibleCount);
+  PrintFmt("Power: {}\n", powerSum);
 }

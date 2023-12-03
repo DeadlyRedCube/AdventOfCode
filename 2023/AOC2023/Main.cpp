@@ -14,11 +14,10 @@
 #include "Helpers.h"
 
 
-#include "D01.h"
-#include "D02.h"
+#include "D03.h"
 
 int main()
 {
-  D02("D02.txt");
+  D03("D03.txt");
   return 0;
 }

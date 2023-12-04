@@ -44,7 +44,7 @@ public:
     EnsureCapacity(count + 1, false);
     auto res = new (&elements[count]) T();
     count++;
-    return res;
+    return *res;
   }
 
   void AppendMultiple(ArrayView<T> v)

@@ -145,6 +145,7 @@
     <ClInclude Include="Util\Containers\ResizeableArray.h" />
     <ClInclude Include="Util\Containers\UnboundedArray.h" />
     <ClInclude Include="Util\Core.h" />
+    <ClInclude Include="D04.h" />
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="Util\Math\MathHelper.h" />
     <ClInclude Include="Util\Math\Vec.h" />

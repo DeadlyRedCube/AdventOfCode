@@ -6,23 +6,18 @@ namespace D05
   {
     auto lines = ReadFileLines(path);
 
+    using Interval = ::Interval<int64_t>;
+
     struct MapEntry
     {
       int64_t destStart;
-      int64_t srcStart;
-      int64_t length;
+      Interval srcInterval;
     };
 
     UnboundedArray<UnboundedArray<MapEntry>> maps;
     UnboundedArray<int64_t> seeds;
 
-    struct Range
-    {
-      int64_t start;
-      int64_t length;
-    };
-
-    UnboundedArray<Range> part2Ranges;
+    UnboundedArray<Interval> part2Ranges;
 
     // Parse the text into structures
     for (auto line : lines)
@@ -40,7 +35,7 @@ namespace D05
 
           // Every two seed entries goes into a part 2 seed range.
           if (seeds.Count() % 2 == 0)
-            { part2Ranges.Append({ seeds[FromEnd(-2)], seeds[FromEnd(-1)] }); }
+            { part2Ranges.Append(Interval::FromStartAndLength(seeds[FromEnd(-2)], seeds[FromEnd(-1)])); }
         }
       }
       else if (std::isdigit(line[0]))
@@ -51,7 +46,7 @@ namespace D05
         for (auto e : Split(line, " ", KeepEmpty::No))
           { es.Append(std::atoll(e.c_str())); }
 
-        maps[FromEnd(-1)].Append({ es[0], es[1], es[2] });
+        maps[FromEnd(-1)].Append({ es[0], Interval::FromStartAndLength(es[1], es[2]) });
       }
       else
       {
@@ -70,10 +65,10 @@ namespace D05
       {
         for (auto &e : map)
         {
-          if (target >= e.srcStart && target < e.srcStart + e.length)
+          if (e.srcInterval.Contains(target))
           {
             // Found a match so update our target point and we can stop searching.
-            target += (e.destStart - e.srcStart);
+            target += (e.destStart - e.srcInterval.Start());
             break;
           }
         }
@@ -87,11 +82,11 @@ namespace D05
     // Sort the map entries by srcStart to make overlap testing easier (since we can just scan linearly through
     //  in source space).
     for (auto &m : maps)
-      { std::ranges::sort(m, {}, &MapEntry::srcStart); }
+      { std::ranges::sort(m, [](auto a, auto b) { return a.srcInterval.Start() < b.srcInterval.Start(); }); }
 
     // Now we're going to scan the ranges and see how they overlap each level of map entry to filter down to the
     //  final set.
-    UnboundedArray<Range> scratch;
+    UnboundedArray<Interval> scratch;
     for (auto map : maps)
     {
       scratch.SetCount(0);
@@ -100,39 +95,42 @@ namespace D05
       {
         for (auto e : map)
         {
-          if (r.start < e.srcStart)
+          if (auto before = r.PartBefore(e.srcInterval); before.has_value())
           {
-            // This starts with entries that don't correspond to any map entries for this level, so this goes in as
-            //  a new range, clipped to the start of the current map entry.
-            scratch.Append({ r.start, std::min(r.length, e.srcStart - r.start) });
+            // At least part of our range extends before the current map interval, so add that portion verbatim.
+            scratch.Append(*before);
 
-            // Clip the area we just consumed off of this range.
-            r.length -= scratch[FromEnd(-1)].length;
-            r.start = e.srcStart;
-
-            // If we've eaten up all of this range, we're done.
-            if (r.length <= 0)
-              { break; }
+            // Keep the remainder if there is a remainder, otherwise clear out our range and break, we're done.
+            if (auto remainder = r.PartAfter(*before); remainder.has_value())
+              { r = *remainder; }
+            else
+            {
+              r = {};
+              break;
+            }
           }
 
-          if (r.start < e.srcStart + e.length)
+          if (auto overlap = r.Intersection(e.srcInterval); overlap.has_value())
           {
-            // Our range overlaps this map entry, so append the overlapped value (mapped into destination space)
-            //  so it can be properly used in the next map pass.
-            scratch.Append({ r.start - e.srcStart + e.destStart, std::min(r.length, e.srcStart + e.length - r.start) });
+            // At least part of the range overlapped the map entry, add the overlapped portion, mapped from
+            //  source -> dest.
+            scratch.Append(Interval::FromStartAndLength(
+              overlap->Start() + e.destStart - e.srcInterval.Start(),
+              overlap->Length()));
 
-            // Clip the range and break if we're done with this range.
-            r.length -= scratch[FromEnd(-1)].length;
-            r.start = e.srcStart + e.length;
-            if (r.length <= 0)
-              { break; }
+            // Keep the remainder if there is a remainder, otherwise clear out our range and break, we're done.
+            if (auto remainder = r.PartAfter(e.srcInterval); remainder.has_value())
+              { r = *remainder; }
+            else
+            {
+              r = {}; break;
+            }
           }
         }
 
-        if (r.length > 0)
+        if (r.Length() > 0)
         {
-          // This range ended with entries that on't correspond to any map entries for this level, so it gets added
-          //  as a new destination range directly (since we've already clipped the front of it as we went).
+          // We still have some range left after checking all the map entries so add whatever's left verbatim.
           scratch.Append(r);
         }
       }
@@ -144,7 +142,7 @@ namespace D05
     // Now find the minimum starting range point, as that'll guaranteed be our first entry.
     minLoc = std::numeric_limits<int64_t>::max();
     for (auto &r : part2Ranges)
-      { minLoc = std::min(minLoc, r.start); }
+      { minLoc = std::min(minLoc, r.Start()); }
     PrintFmt("Part 2: {}\n", minLoc);
   }
 }

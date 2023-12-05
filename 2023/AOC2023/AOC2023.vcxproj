@@ -148,6 +148,7 @@
     <ClInclude Include="D04.h" />
     <ClInclude Include="D05.h" />
     <ClInclude Include="Util\Debug.h" />
+    <ClInclude Include="Util\Math\Interval.h" />
     <ClInclude Include="Util\Math\MathHelper.h" />
     <ClInclude Include="Util\Math\Vec.h" />
     <ClInclude Include="Util\Timer.h" />

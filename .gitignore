@@ -4,3 +4,4 @@ AdventOfCode2022/bin/
 .vs
 *.user
 2023/AOC2023/x64/
+*.txt

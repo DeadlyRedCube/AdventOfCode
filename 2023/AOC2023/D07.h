@@ -88,5 +88,41 @@ namespace D07
       { sum += hands[i].bid * (hands.Count() - i); }
 
     PrintFmt("Part 1: {}\n", sum);
+
+    for (auto &h : hands)
+    {
+      if (h.cards.Count() > 1)
+      {
+        if (auto jokerIndex = h.cards.FindFirst([](auto c) { return c.c == 'J'; }); jokerIndex >= 0)
+        {
+          if (jokerIndex == 0)
+          {
+            h.cards[1].count += h.cards[jokerIndex].count;
+          }
+          else
+          {
+            h.cards[0].count += h.cards[jokerIndex].count;
+          }
+
+          h.cards[jokerIndex].count = 0;
+
+          std::ranges::sort(h.cards, [](auto a, auto b) { return a.count > b.count; });
+        }
+      }
+
+      for (auto &r : h.unsortedRanks)
+      {
+        if (r == cardRanks['J'])
+          { r = 1; }
+      }
+    }
+
+    std::ranges::sort(hands, SortHands<Hand>);
+
+    sum = 0;
+    for (int i = 0; i < hands.Count(); i++)
+      { sum += hands[i].bid * (hands.Count() - i); }
+
+    PrintFmt("Part 2: {}\n", sum);
   }
 }

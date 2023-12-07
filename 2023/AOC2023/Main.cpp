@@ -19,7 +19,8 @@
 //#include "D03.h"
 //#include "D04.h"
 //#include "D05.h"
-#include "D06.h"
+//#include "D06.h"
+#include "D07.h"
 
 int main()
 {
@@ -30,7 +31,8 @@ int main()
   //D03::Run("D03.txt");
   //D04::Run("D04.txt");
   //D05::Run("D05.txt");
-  D06::Run("D06.txt");
+  //D06::Run("D06.txt");
+  D07::Run("D07.txt");
 
   auto time = t.SecondsSinceLastCheckpoint();
   PrintFmt("Finished in {:.02} seconds", time);

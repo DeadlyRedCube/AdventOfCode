@@ -25,6 +25,7 @@ namespace D08
       nodes[split[0]] = n;
     }
 
+    if (nodes.contains("AAA") && nodes.contains("ZZZ"))
     {
       s64 stepCount = 0;
       std::string cur = "AAA";
@@ -56,7 +57,7 @@ namespace D08
       {
         s64 startIndex;
         s64 length;
-        s64 zIndex = -1;
+        UnboundedArray<s64> zIndices;
       };
 
       UnboundedArray<Loop> loops;
@@ -77,8 +78,7 @@ namespace D08
           if (node.ends_with('Z'))
           {
             // In my answer, there was only one Z ending per loop so I did not bother solving the more complex case
-            ASSERT(loop.zIndex < 0);
-            loop.zIndex = stepCount;
+            loop.zIndices.Append(stepCount);
           }
 
           auto inst = instructions[stepCount % instructions.size()];
@@ -104,31 +104,50 @@ namespace D08
       }
 
       // Now we can iterate through using modular arithmetic
-      s64 zIndex = loops[0].zIndex;
+      UnboundedArray<s64> zIndices = loops[0].zIndices;
+
       s64 count = loops[0].length;
+
       for (auto &loop : ArrayView{loops, 1, ToEnd})
       {
-        for (;;)
-        {
-          // Check where our zIndex is modulo the current loop
-          auto mod = (zIndex - loop.startIndex) % loop.length + loop.startIndex;
-          if (mod == loop.zIndex)
-          {
-            // The zIndices match, so they will next match again on the least common multiple of the current count and
-            //  the loop length.
-            // Every iteration of the loop increases the count so that it's the interval that all of the previous
-            //  loops had Zs at once.
-            count = LeastCommonMultiple(count, loop.length);
-            break;
-          }
+        UnboundedArray<s64> zScratch;
+        auto lcm = LeastCommonMultiple(count, loop.length);
 
-          // No match so increase by the count.
-          zIndex += count;
+        for (const auto outerZIndex : zIndices)
+        {
+          for (const auto innerZIndex : loop.zIndices)
+          {
+            auto zIndex = outerZIndex;
+            s64 inc = 0;
+            for (;;)
+            {
+              // Check where our zIndex is modulo the current loop
+              auto mod = (zIndex - loop.startIndex) % loop.length + loop.startIndex;
+              if (mod == innerZIndex)
+              {
+                zScratch.Append(zIndex);
+                // The zIndices match, so they will next match again on the least common multiple of the current count and
+                //  the loop length.
+                // Every iteration of the loop increases the count so that it's the interval that all of the previous
+                //  loops had Zs at once.
+                break;
+              }
+
+              // No match so increase by the count.
+              zIndex += count;
+              inc += count;
+              if (inc >= lcm)
+                { break; } // Doesn't ever intersect
+            }
+          }
         }
+
+        count = LeastCommonMultiple(count, loop.length);
+        std::swap(zIndices, zScratch);
       }
 
       // We finally found a perfect overlap!
-      PrintFmt("Part 2: {}\n", zIndex);
+      PrintFmt("Part 2: {}\n", std::ranges::min(zIndices));
     }
   }
 }

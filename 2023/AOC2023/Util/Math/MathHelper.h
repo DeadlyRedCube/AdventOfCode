@@ -56,5 +56,37 @@ constexpr f32 operator "" _deg (long double deg) noexcept
 constexpr f32 operator "" _deg (unsigned long long deg) noexcept
   { return RadFromDeg(f32(deg)); }
 
-constexpr u32 CountSetBits(std::integral auto val) noexcept
-  { return std::popcount(val); }
+
+template <std::integral T>
+T GreatestCommonDemoninator(T a, T b)
+{
+  for (;;)
+  {
+    if (a == 0)
+      { return b; }
+
+    b %= a;
+    if (b == 0)
+      { return a; }
+
+    a %= b;
+  }
+}
+
+template <std::integral T>
+T LeastCommonMultiple(T a, T b)
+{
+  auto gcd = GreatestCommonDemoninator(a, b);
+  return gcd ? (a / gcd * b) : 0;
+}
+
+
+template <std::integral T>
+T LeastCommonMultiple(ArrayView<T> list)
+{
+  T mul = 1;
+  for (auto v : list)
+    { mul = LeastCommonMultiple(mul, v); }
+
+  return mul;
+}

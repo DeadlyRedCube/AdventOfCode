@@ -105,12 +105,12 @@ public:
 
   void RemoveAt(ssz index, ssz c = 1)
   {
-    ASSERT(count >= 0);
+    ASSERT(c >= 0);
 
     ASSERT(this->IndexInRange(index));
     ASSERT(InRangeInclusive(index + c, 0, count));
 
-    for (ssz i = 0; i < count; i++)
+    for (ssz i = 0; i < c; i++)
       { elements[index + i].~T(); }
 
     index += c;

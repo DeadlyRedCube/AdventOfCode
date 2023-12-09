@@ -141,6 +141,7 @@
     <ClInclude Include="D02.h" />
     <ClInclude Include="D03.h" />
     <ClInclude Include="D08.h" />
+    <ClInclude Include="D09.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Util\Containers\ArrayView.h" />
     <ClInclude Include="Util\Containers\BoundedArray.h" />

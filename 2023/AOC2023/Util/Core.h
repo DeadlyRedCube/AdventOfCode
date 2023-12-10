@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <bit>
 #include <cctype>
 #include <cmath>
 #include <concepts>
@@ -27,7 +28,7 @@ constexpr bool InRangeInclusive(auto v, auto minV, auto maxV)
   { return v >= minV && v <= maxV; }
 
 constexpr bool InRangeArray(auto v, auto count)
-  { return v > 0 && v < count; }
+  { return v >= 0 && v < count; }
 
 constexpr bool IsPowerOfTwo(std::integral auto v)
   { return (v & (v - 1)) == 0; }

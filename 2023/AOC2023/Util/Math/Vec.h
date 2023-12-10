@@ -85,10 +85,6 @@ public:
 
   T x = T(0);
   T y = T(0);
-
-  static constexpr Vec2 Zero { 0, 0 };
-  static constexpr Vec2 UnitX { 1, 0 };
-  static constexpr Vec2 UnitY { 0, 1 };
 };
 
 

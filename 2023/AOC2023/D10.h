@@ -66,14 +66,14 @@ namespace D10
         { graph.Idx(entryPoint.x, entryPoint.y) |= dir; }
     }
 
-    // Now we're going to do the flood fill path finding thingy.
-    Array2D<s32> distances { charGrid.Width(), charGrid.Height() };
-    distances.Fill(std::numeric_limits<s32>::max());
-
-    // Distance to the entry point is 0.
-    distances.Idx(entryPoint.x, entryPoint.y) = 0;
-
+    auto maxDist = 0;
     {
+      // Now we're going to do the flood fill path finding thingy.
+      Array2D<s32> distances { charGrid.Width(), charGrid.Height() };
+      distances.Fill(std::numeric_limits<s32>::max());
+
+      // Distance to the entry point is 0.
+      distances.Idx(entryPoint.x, entryPoint.y) = 0;
       UnboundedArray<Vec2S32> positions;
 
       // Start at the entry
@@ -81,8 +81,8 @@ namespace D10
 
       while (!positions.IsEmpty())
       {
-        auto p = positions[FromEnd(-1)];
-        positions.SetCount(positions.Count() - 1);
+        auto p = positions[0];
+        positions.RemoveAt(0);
 
         auto exits = graph.Idx(p.x, p.y);
         auto neighboringDist = distances.Idx(p.x, p.y) + 1;
@@ -98,21 +98,10 @@ namespace D10
             {
               distances.Idx(n.x, n.y) = neighboringDist;
               positions.Append(n);
+              maxDist = std::max(maxDist, neighboringDist);
             }
           }
         }
-      }
-    }
-
-    // now just iterate the grid to find the longest distance found (distances found should only be in the loop)
-    auto maxDist = 0;
-    for (auto y = 0; y < charGrid.Height(); y++)
-    {
-      for (auto x = 0; x < charGrid.Width(); x++)
-      {
-        auto dist = distances.Idx(x, y);
-        if (dist != std::numeric_limits<s32>::max())
-          { maxDist = std::max(dist, maxDist); }
       }
     }
 

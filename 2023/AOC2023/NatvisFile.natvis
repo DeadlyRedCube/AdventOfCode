@@ -14,4 +14,17 @@
             </Synthetic>
         </Expand>
     </Type>
+
+    <Type Name="Array2D&lt;*&gt;>">
+        <DisplayString>Array[{width}, {height}]</DisplayString>
+        <Expand>
+            <CustomListItems>
+                <Variable Name="y" InitialValue="0"/>
+                <Loop Condition="y &lt; height">
+                    <Item Name="{y}">&amp;data[y * width],[width]na</Item>
+                    <Exec>++y</Exec>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
 </AutoVisualizer>

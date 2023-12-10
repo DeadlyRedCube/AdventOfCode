@@ -34,7 +34,6 @@ namespace D10
     Array2D<Exits> graph { charGrid.Width(), charGrid.Height() };
     graph.Fill(Exits::None);
 
-    UnboundedArray<Vec2S32> deadEnds;
     for (auto y = 0; y < charGrid.Height(); y++)
     {
       for (auto x = 0; x < charGrid.Width(); x++)
@@ -90,6 +89,58 @@ namespace D10
       { graph.Idx(entryPoint.x, entryPoint.y) = Exits(graph.Idx(entryPoint.x, entryPoint.y) | N); }
     if (graph.Idx(entryPoint.x, entryPoint.y + 1) & N)
       { graph.Idx(entryPoint.x, entryPoint.y) = Exits(graph.Idx(entryPoint.x, entryPoint.y) | S); }
+
+    UnboundedArray<Vec2S32> deadEnds;
+    bool keepRunning = true;
+    while (keepRunning)
+    {
+      keepRunning = false;
+      for (auto y = 0; y < charGrid.Height(); y++)
+      {
+        for (auto x = 0; x < charGrid.Width(); x++)
+        {
+          Vec2S32 p = {x, y};
+
+          auto &exits = graph.Idx(p.x, p.y);
+          if (exits == Exits::None)
+            { continue; }
+
+          if ((exits & W) != 0)
+          {
+            Vec2S32 n = { p.x - 1, p.y };
+            if ((graph.Idx(n.x, n.y) & E) == 0)
+              { exits = Exits(exits & ~W); }
+          }
+
+          if ((exits & E) != 0)
+          {
+            Vec2S32 n = { p.x + 1, p.y };
+            if ((graph.Idx(n.x, n.y) & W) == 0)
+              { exits = Exits(exits & ~E); }
+          }
+
+          if ((exits & N) != 0)
+          {
+            Vec2S32 n = { p.x, p.y - 1 };
+            if ((graph.Idx(n.x, n.y) & S) == 0)
+              { exits = Exits(exits & ~N); }
+          }
+
+          if ((exits & S) != 0)
+          {
+            Vec2S32 n = { p.x, p.y + 1};
+            if ((graph.Idx(n.x, n.y) & N) == 0)
+              { exits = Exits(exits & ~S); }
+          }
+
+          if (CountSetBits(s32(exits)) < 2)
+          {
+            exits = Exits::None;
+            keepRunning = true;
+          }
+        }
+      }
+    }
 
     Array2D<s32> distances { charGrid.Width(), charGrid.Height() };
     distances.Fill(std::numeric_limits<s32>::max());
@@ -158,5 +209,39 @@ namespace D10
       }
     }
     PrintFmt("Part 1: {}\n", maxDist);
+
+
+    // Painter's algorithm!
+    s32 containedCount = 0;
+
+    Array2D<s32> contained { charGrid.Width(), charGrid.Height() };
+    contained.Fill(0);
+    for (auto y = 0; y < charGrid.Height(); y++)
+    {
+      for (auto x = 0; x < charGrid.Width(); x++)
+      {
+        if (graph.Idx(x, y) != Exits::None)
+          { continue; }
+        s32 nCount = 0;
+        s32 sCount = 0;
+        for (auto i = 0; i < x; i++)
+        {
+          if ((graph.Idx(i, y) & N) != 0)
+            { nCount++; }
+
+          if ((graph.Idx(i, y) & S) != 0)
+            { sCount++; }
+        }
+
+        s32 crossingCount = std::min(nCount, sCount);
+        if ((crossingCount & 1) != 0)
+        {
+          containedCount++;
+          contained.Idx(x, y) = 1;
+        }
+      }
+    }
+
+    PrintFmt("Part 2: {}\n", containedCount);
   }
 }

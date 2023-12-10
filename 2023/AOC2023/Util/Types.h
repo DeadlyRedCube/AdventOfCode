@@ -30,3 +30,54 @@ template <typename T, typename FuncSig>
 concept callable_as = k_isCallableAs<T, FuncSig>;
 
 template <typename T> concept numeric = (std::integral<T> || std::floating_point<T>) && !std::same_as<T, bool>;
+
+
+template <typename T> concept enum_class = std::is_enum_v<T> && !std::is_convertible_v<T, std::underlying_type_t<T>>;
+template <typename T> concept flag_enum_class =
+  enum_class<T>
+  && std::is_same_v<decltype(T::None), T>
+  && std::is_same_v<decltype(T::All), T>;
+
+template <flag_enum_class T>
+inline constexpr T operator|(T a, T b)
+  { return T(std::underlying_type_t<T>(a) | std::underlying_type_t<T>(b)); }
+
+template <flag_enum_class T>
+inline constexpr T &operator|=(T &a, T b)
+{
+  a = a | b;
+  return a;
+}
+
+
+template <flag_enum_class T>
+inline constexpr T operator&(T a, T b)
+  { return T(std::underlying_type_t<T>(a) & std::underlying_type_t<T>(b)); }
+
+template <flag_enum_class T>
+inline constexpr T &operator&=(T &a, T b)
+{
+  a = a & b;
+  return a;
+}
+
+
+template <flag_enum_class T>
+inline constexpr T operator^(T a, T b)
+  { return T(std::underlying_type_t<T>(a) ^ std::underlying_type_t<T>(b)); }
+
+template <flag_enum_class T>
+inline constexpr T &operator^=(T &a, T b)
+{
+  a = a ^ b;
+  return a;
+}
+
+
+template <flag_enum_class T>
+inline constexpr T operator~(T v)
+  { return T(~std::underlying_type_t<T>(v)); }
+
+template <flag_enum_class T>
+inline constexpr bool operator!(T v)
+  { return std::underlying_type_t<T>(v) == 0; }

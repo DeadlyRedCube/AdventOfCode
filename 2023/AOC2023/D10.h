@@ -162,7 +162,7 @@ namespace D10
       }
     }
 
-    // Painter's algorithm!
+    // Ray cast algorithm!
     // We're going to track to the left from each point and count how many North/South crossings there are. If there
     //  is an odd number, we're contained within the loop! if there's an odd number (including 0), we are outside the
     //  loop (think about this as determining if a point is in a circle: if you draw a ray in some direction from the

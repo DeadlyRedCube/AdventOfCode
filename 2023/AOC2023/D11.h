@@ -6,6 +6,7 @@ namespace D11
   {
     auto grid = ReadFileAsCharArray(path);
 
+    // Y-coordinate adders updated on blank linkes
     s64 yAdd1 = 0;
     s64 yAdd2 = 0;
 
@@ -26,11 +27,15 @@ namespace D11
 
       if (!anyGalaxy)
       {
+        // If there were no galaxies, part 1 says each line becomes 2 and part 2 says each line becomes a million
+        //  (yes, that -1 is there because I was off by one the first time, whoops)
         yAdd1++;
         yAdd2 += 1000000 - 1;
       }
     }
 
+    // Now scan through each column from right to left and update our galaxy coordinates to take into account the
+    //  empty columns
     for (auto x = grid.Width() - 1; x >= 0; x--)
     {
       bool anyGalaxy = false;

@@ -6,9 +6,11 @@ namespace D11
   {
     auto grid = ReadFileAsCharArray(path);
 
-    int yAdd = 0;
+    s64 yAdd1 = 0;
+    s64 yAdd2 = 0;
 
-    UnboundedArray<Vec2S32> galaxies;
+    UnboundedArray<Vec2S64> galaxies1;
+    UnboundedArray<Vec2S64> galaxies2;
     for (auto y = 0; y < grid.Height(); y++)
     {
       bool anyGalaxy = false;
@@ -17,12 +19,16 @@ namespace D11
         if (grid.Idx(x, y) == '#')
         {
           anyGalaxy = true;
-          galaxies.Append({x, y + yAdd});
+          galaxies1.Append({x, y + yAdd1});
+          galaxies2.Append({x, y + yAdd2});
         }
       }
 
       if (!anyGalaxy)
-        { yAdd++; }
+      {
+        yAdd1++;
+        yAdd2 += 1000000 - 1;
+      }
     }
 
     for (auto x = grid.Width() - 1; x >= 0; x--)
@@ -39,26 +45,37 @@ namespace D11
 
       if (!anyGalaxy)
       {
-        for (auto &gal : galaxies)
+        for (auto &gal : galaxies1)
         {
           if (gal.x >= x)
             { gal.x++; }
         }
+
+        for (auto &gal : galaxies2)
+        {
+          if (gal.x >= x)
+            { gal.x += 1000000 - 1; }
+        }
       }
     }
 
-    s64 sum = 0;
-    for (auto i = 0; i < galaxies.Count(); i++)
+    s32 part = 1;
+    for (auto &gals : { galaxies1, galaxies2 })
     {
-      auto &galA = galaxies[i];
-      for (auto j = i + 1; j < galaxies.Count(); j++)
+      s64 sum = 0;
+      for (auto i = 0; i < gals.Count(); i++)
       {
-        auto &galB = galaxies[j];
-        s32 dist = std::abs(galA.x - galB.x) + std::abs(galA.y - galB.y);
-        sum += dist;
+        auto &galA = gals[i];
+        for (auto j = i + 1; j < gals.Count(); j++)
+        {
+          auto &galB = gals[j];
+          s64 dist = std::abs(galA.x - galB.x) + std::abs(galA.y - galB.y);
+          sum += dist;
+        }
       }
-    }
 
-    PrintFmt("{}\n", sum);
+      PrintFmt("Part {}: {}\n", part, sum);
+      part++;
+    }
   }
 }

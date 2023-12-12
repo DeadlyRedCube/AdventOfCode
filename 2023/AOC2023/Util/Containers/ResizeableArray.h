@@ -57,6 +57,13 @@ public:
     }
   }
 
+  void AppendMultiple(const std::vector<T> &v)
+  {
+    T *vStart = const_cast<T*>(&v[0]);
+    AppendMultiple(ArrayView<T>{vStart, ssz(v.size())});
+  }
+
+
   void AppendMultiple(const std::initializer_list<T> &v)
     { AppendMultiple(ArrayView{const_cast<T *>(v.begin()), ssz(v.size())}); }
 

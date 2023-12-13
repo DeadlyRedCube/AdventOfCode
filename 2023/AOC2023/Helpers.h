@@ -126,6 +126,27 @@ public:
     , data(new T[w * h])
     { }
 
+  Array2D(const Array2D &) = delete;
+  auto operator=(const Array2D &) = delete;
+
+  Array2D(Array2D &&other)
+    : width(std::exchange(other.width, 0))
+    , height(std::exchange(other.height, 0))
+    , data(std::exchange(other.data, nullptr))
+    { }
+
+
+  Array2D &operator=(Array2D &&other)
+  {
+    delete[] data;
+
+    width = std::exchange(other.width, 0);
+    height = std::exchange(other.height, 0);
+    data = std::exchange(other.data, nullptr);
+
+    return *this;
+  }
+
   ~Array2D()
     { delete[] data; }
 

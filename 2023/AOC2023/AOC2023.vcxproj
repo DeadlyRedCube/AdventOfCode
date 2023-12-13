@@ -154,6 +154,7 @@
     <ClInclude Include="D04.h" />
     <ClInclude Include="D05.h" />
     <ClInclude Include="D12.h" />
+    <ClInclude Include="D13.h" />
     <ClInclude Include="Util\Debug.h" />
     <ClInclude Include="D06.h" />
     <ClInclude Include="D07.h" />

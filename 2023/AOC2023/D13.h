@@ -41,7 +41,7 @@ namespace D13
     s64 p2VReflections = 0;
     for (auto &grid : grids)
     {
-      PrintFmt("GRID : {} x {}\n", grid.Width(), grid.Height());
+      // Test every possible horizontal reflection point
       for (ssz reflPoint = 1; reflPoint < grid.Width(); reflPoint++)
       {
         s32 failCount = 0;
@@ -53,7 +53,7 @@ namespace D13
             {
               failCount++;
               if (failCount >= 2)
-                { break; }
+                { break; }  // We only allow a single flip to be fine so if we reach 2 wrong, we're done.
             }
           }
 
@@ -62,17 +62,12 @@ namespace D13
         }
 
         if (failCount == 0)
-        {
-          PrintFmt("H:  {}\n", reflPoint);
-          horizontalReflections += reflPoint;
-        }
+          { horizontalReflections += reflPoint; } // This was an original reflection
         if (failCount == 1)
-        {
-          PrintFmt("H2: {} !!! \n", reflPoint);
-          p2HReflections += reflPoint;
-        }
+          { p2HReflections += reflPoint; }  // This was a newly-found reflection with exactly one error
       }
 
+      // Now do the same but for vertical reflection points
       for (ssz reflPoint = 1; reflPoint < grid.Height(); reflPoint++)
       {
         s32 failCount = 0;
@@ -93,15 +88,9 @@ namespace D13
         }
 
         if (failCount == 0)
-        {
-          PrintFmt("V:  {}\n", reflPoint);
-          verticalReflections += reflPoint;
-        }
+          { verticalReflections += reflPoint; }
         if (failCount == 1)
-        {
-          PrintFmt("V2: {} !!! \n", reflPoint);
-          p2VReflections += reflPoint;
-        }
+          { p2VReflections += reflPoint; }
       }
     }
 

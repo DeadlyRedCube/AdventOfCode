@@ -3,6 +3,9 @@
 
 using ssize_t = std::make_signed_t<size_t>;
 
+s64 StrToNum(const std::string &s)
+  { return std::atoll(s.c_str()); }
+
 std::vector<std::string> split(const std::string& s, char delimiter)
 {
   std::vector<std::string> tokens;
@@ -317,3 +320,17 @@ std::vector<std::smatch> FindAllMatchesOverlapping(const std::regex &re, const s
   }
   return matches;
 }
+
+
+template <typename InT, typename AccT>
+AccT AccumulateRange(InT &&range, AccT &&initial)
+  { return std::accumulate(range.begin(), range.end(), initial); }
+
+
+template <typename InT, typename AccT, typename PredicateType>
+AccT AccumulateRange(InT &&range, AccT &&initial, PredicateType &&pred)
+  { return std::accumulate(range.begin(), range.end(), initial, pred); }
+
+
+std::string Join(std::initializer_list<std::string> strings, const char *joiner)
+  { return AccumulateRange(strings, std::string{}, [&joiner](auto &&a, auto &&b) { return a.empty() ? b : a + joiner + b; }); }

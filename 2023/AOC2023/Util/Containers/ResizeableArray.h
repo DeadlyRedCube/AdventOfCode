@@ -57,10 +57,11 @@ public:
     }
   }
 
-  void AppendMultiple(const std::vector<T> &v)
+  template <std::ranges::viewable_range R>
+  void AppendMultiple(R &&v)
   {
-    T *vStart = const_cast<T*>(&v[0]);
-    AppendMultiple(ArrayView<T>{vStart, ssz(v.size())});
+    for (auto &&e : v)
+      { Append(e); }
   }
 
 

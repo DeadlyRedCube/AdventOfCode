@@ -1,9 +1,14 @@
 namespace D16
 {
-  void Run(const char *path)
+  struct Beam
   {
-    auto grid = ReadFileAsCharArray(path);
+    Vec2S32 coord = { 0, 0 };
+    Vec2S32 dir = { 1, 0 };
+  };
 
+
+  s32 CalculateEnergization(const Array2D<char> &grid, Beam start)
+  {
     enum class Dir
     {
       N = 0x01,
@@ -19,15 +24,9 @@ namespace D16
     energized.Fill(Dir::None);
 
 
-    struct Beam
-    {
-      Vec2S32 coord = { 0, 0 };
-      Vec2S32 dir = { 1, 0 };
-    };
-
     UnboundedArray<Beam> beams;
 
-    beams.Append({ .coord = { 0, 0 }, .dir = { 1, 0 } });
+    beams.Append(start);
 
     for (ssz i = 0; i < beams.Count(); i++)
     {
@@ -45,24 +44,27 @@ namespace D16
         if (beam->dir.y > 0)
           { d = Dir::S; }
 
+        // If we already were energized in this direction we already know the rest
         if ((energized.Idx(beam->coord.x, beam->coord.y) & d) != Dir::None)
           { break; }
 
+        // Add energy from this direction to this square
         energized.Idx(beam->coord.x, beam->coord.y) |= d;
+
         switch (grid.Idx(beam->coord.x, beam->coord.y))
         {
         case '.':
           break;
 
-        case '/':
+        case '/': // Reflect 90
           beam->dir = { -beam->dir.y, -beam->dir.x };
           break;
 
-        case '\\':
+        case '\\': // Reflect 90, the other way
           beam->dir = { beam->dir.y, beam->dir.x };
           break;
 
-        case '|':
+        case '|': // Split if horizontal
           if (beam->dir.x == 0)
             { break; }
 
@@ -72,10 +74,12 @@ namespace D16
             if (newBeam.coord.x >= 0 && newBeam.coord.x < grid.Width() && newBeam.coord.y >= 0 && newBeam.coord.y < grid.Height())
               { beams.Append(newBeam); }
           }
+
+          // adding to the array may have caused it to reallocate so re-grab our pointer to our current beam.
           beam = &beams[i];
           break;
 
-        case '-':
+        case '-': // Split if vertical
           if (beam->dir.y == 0)
             { break; }
 
@@ -85,14 +89,17 @@ namespace D16
             if (newBeam.coord.x >= 0 && newBeam.coord.x < grid.Width() && newBeam.coord.y >= 0 && newBeam.coord.y < grid.Height())
               { beams.Append(newBeam); }
           }
+
           beam = &beams[i];
           break;
+
         default:
           ASSERT(false);
         }
 
         beam->coord += beam->dir;
 
+        // If we beamed off the edge we're done.
         if (beam->coord.x < 0 || beam->coord.x >= grid.Width() || beam->coord.y < 0 || beam->coord.y >= grid.Height())
           { break; }
       }
@@ -105,11 +112,33 @@ namespace D16
       {
         if (energized.Idx(x, y) != Dir::None)
           { count++; }
-        //PrintFmt("{}", (energized.Idx(x, y) != Dir::None) ? '#' : '.');
       }
-      //PrintFmt("\n");
     }
 
-    PrintFmt("{}\n", count);
+    return count;
+  }
+
+  void Run(const char *path)
+  {
+    auto grid = ReadFileAsCharArray(path);
+
+    // Part 1
+    PrintFmt("{}\n", CalculateEnergization(grid, { .coord = { 0, 0 }, .dir = { 1, 0 } }));
+
+    // Part 2: calculate the max from every side
+    s32 maxCount = 0;
+    for (s32 y = 0; y < grid.Height(); y++)
+    {
+      maxCount = std::max(CalculateEnergization(grid, { .coord = { 0, y }, .dir = { 1, 0 } }), maxCount);
+      maxCount = std::max(CalculateEnergization(grid, { .coord = { s32(grid.Width()) - 1, y }, .dir = { -1, 0 } }), maxCount);
+    }
+
+    for (s32 x = 0; x < grid.Width(); x++)
+    {
+      maxCount = std::max(CalculateEnergization(grid, { .coord = { x, 0 }, .dir = { 0, 1 } }), maxCount);
+      maxCount = std::max(CalculateEnergization(grid, { .coord = { x, s32(grid.Height()) - 1 }, .dir = { 0, -1 } }), maxCount);
+    }
+
+    PrintFmt("{}\n", maxCount);
   }
 }

@@ -10,10 +10,8 @@ namespace D17
     W
   };
 
-  void Run(const char *path)
+  s64 RunPart(const Array2D<char> &grid, s32 minStraightDistance, s32 maxStraightDistrance)
   {
-    auto grid = ReadFileAsCharArray(path);
-
     struct Graph
     {
       Vec2S32 pos;
@@ -70,6 +68,10 @@ namespace D17
           continue;
         }
 
+        // If we reached the end but we didn't have enough stopping room, we can't actually register this spot.
+        if (e.space.pos.x == grid.Width() - 1 && e.space.pos.y == grid.Height() - 1 && e.space.travelLength < minStraightDistance)
+          { continue; }
+
         // We have a new node in the graph
         ssz graphIndex = graph.Count();
         graph.Append({ .pos = e.space.pos, .heatLoss = grid[e.space.pos] - '0' });
@@ -78,8 +80,12 @@ namespace D17
         if (e.originatingIndex >= 0)
           { graph[e.originatingIndex].outs.Append(graphIndex); }
 
+        // If we hit the exit we don't have to keep tracing around
+        if (e.space.pos.x == grid.Width() - 1 && e.space.pos.y == grid.Height() - 1)
+           { continue; }
+
         // We haven't been in this spot before, but we have (at most) 3 options
-        if (e.space.travelLength < 3)
+        if (e.space.travelLength < maxStraightDistrance)
         {
           // Only can move forward if we have enough forward moves
           auto p = e.space.pos + dirAdd[s32(e.space.d)];
@@ -87,18 +93,21 @@ namespace D17
             { graphQueue.Append({ .space = { .pos = p, .d = e.space.d, .travelLength = e.space.travelLength + 1}, .originatingIndex = graphIndex }); }
         }
 
+        if (e.space.travelLength >= minStraightDistance)
         {
-          auto nd = leftTurnFromDir[s32(e.space.d)];
-          auto p = e.space.pos + dirAdd[s32(nd)];
-          if (grid.PositionInRange(p))
-            { graphQueue.Append({ .space = { .pos = p, .d = nd, .travelLength = 1}, .originatingIndex = graphIndex }); }
-        }
+          {
+            auto nd = leftTurnFromDir[s32(e.space.d)];
+            auto p = e.space.pos + dirAdd[s32(nd)];
+            if (grid.PositionInRange(p))
+              { graphQueue.Append({ .space = { .pos = p, .d = nd, .travelLength = 1}, .originatingIndex = graphIndex }); }
+          }
 
-        {
-          auto nd = rightTurnFromDir[s32(e.space.d)];
-          auto p = e.space.pos + dirAdd[s32(nd)];
-          if (grid.PositionInRange(p))
-            { graphQueue.Append({ .space = { .pos = p, .d = nd, .travelLength = 1}, .originatingIndex = graphIndex }); }
+          {
+            auto nd = rightTurnFromDir[s32(e.space.d)];
+            auto p = e.space.pos + dirAdd[s32(nd)];
+            if (grid.PositionInRange(p))
+              { graphQueue.Append({ .space = { .pos = p, .d = nd, .travelLength = 1}, .originatingIndex = graphIndex }); }
+          }
         }
       }
     }
@@ -139,6 +148,14 @@ namespace D17
         { minHeatLoss = std::min(minHeatLoss, heatLoss[i]); }
     }
 
-    PrintFmt("{}\n", minHeatLoss);
+    return minHeatLoss;
+  }
+
+  void Run(const char *path)
+  {
+    auto grid = ReadFileAsCharArray(path);
+
+    PrintFmt("Part 1: {}\n", RunPart(grid, 0, 3));
+    PrintFmt("Part 2: {}\n", RunPart(grid, 4, 10));
   }
 }

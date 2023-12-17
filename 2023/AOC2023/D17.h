@@ -10,146 +10,125 @@ namespace D17
     W
   };
 
-  s64 RunPart(const Array2D<char> &grid, s32 minStraightDistance, s32 maxStraightDistrance)
+
+  // Helper to store information about whether we've visited a given position with a given travel direction and
+  //  distance. Cuts 1.4 seconds off of the runtime vs. just using a std::set with an equivalent Visit struct.
+  class VisitSet
   {
-    struct Graph
+  public:
+    VisitSet(ssz width, ssz height, s32 maxStraightDistance)
+      : w(width)
+      , h(height)
+      , msd(maxStraightDistance)
+      , visiteds((w * h * 4 * maxStraightDistance + 7) / 8)
+      { visiteds.Fill(0); }
+
+
+    bool TestAndSet(Vec2S32 pos, Dir d, s32 currentStraightLength)
+    {
+      ssz bitIndex = ((pos.y * w + pos.x) * 4 + s32(d)) * msd + currentStraightLength;
+      ssz byteIndex = bitIndex / 8;
+      u8 bitMask = u8(1 << (bitIndex & 7));
+      return (std::exchange(visiteds[byteIndex], visiteds[byteIndex] | bitMask) & bitMask) != 0;
+    }
+
+
+  private:
+    ssz w;
+    ssz h;
+    s32 msd;
+
+    FixedArray<u8> visiteds;
+  };
+
+
+  s64 RunPart(const Array2D<char> &grid, s32 minStraightDistance, s32 maxStraightDistance)
+  {
+    struct Step
     {
       Vec2S32 pos;
-      s32 heatLoss;
-      UnboundedArray<ssz> outs;
+      s64 heatLoss;
+      Dir d;
+      s32 currentStraightLength;
+
+      // These go in a priority queue by distance
+      bool operator < (const Step &other) const
+        { return heatLoss > other.heatLoss; }
     };
-    UnboundedArray<Graph> graph;
 
+    constexpr Dir leftTurnFromDir[] = { Dir::W, Dir::E, Dir::N, Dir::S };
+    constexpr Dir rightTurnFromDir[] = { Dir::E, Dir::W, Dir::S, Dir::N };
+    constexpr Vec2S32 dirAdd[] = { { 0, -1 }, { 0, 1 }, { 1, 0 }, { -1, 0 } };
+
+
+    // Keep track of which nodes we've visited from
+    VisitSet visits { grid.Width(), grid.Height(), maxStraightDistance };
+
+    std::priority_queue<Step> stepQueue;
+    stepQueue.push({ .pos = { 0, 0 }, .heatLoss = 0, .d = Dir::E, .currentStraightLength = 0});
+    stepQueue.push({ .pos = { 0, 0 }, .heatLoss = 0, .d = Dir::S, .currentStraightLength = 0});
+
+    while (!stepQueue.empty())
     {
-      struct SSpace
+      auto s = stepQueue.top();
+      stepQueue.pop();
+
+      // If we've already been here then whenever we got here last was better than this time (thanks to the priority
+      //  queue)
+      if (visits.TestAndSet(s.pos, s.d, s.currentStraightLength))
+        { continue; }
+
+      if (s.pos.x == grid.Width() - 1 && s.pos.y == grid.Height() - 1)
       {
-        bool operator==(const SSpace &) const = default;
-        auto operator<=>(const SSpace &) const = default;
+        // If we've reached the exit with the requisite minimum straight distance we're done, otherwise, don't step
+        //  more from here, it'll only be worse.
+        if (s.currentStraightLength >= minStraightDistance)
+          { return s.heatLoss; }
+        continue;
+      }
 
-        Vec2S32 pos;
-        Dir d;
-        s32 travelLength;
-      };
-
-
-
-      // Map from SSpace to the corresponding graph node
-      std::map<SSpace, ssz> spaceCache;
-
-      struct QueueEntry
+      // Only can move forward if we have enough forward moves
+      if (s.currentStraightLength < maxStraightDistance)
       {
-        SSpace space;
-        ssz originatingIndex = -1;
-      };
-
-      UnboundedArray<QueueEntry> graphQueue;
-
-      graphQueue.Append({ .space = { .pos = { 0, 0 }, .d = Dir::E, .travelLength = 0 }, .originatingIndex = -1 });
-      graphQueue.Append({ .space = { .pos = { 0, 0 }, .d = Dir::S, .travelLength = 0 }, .originatingIndex = -1 });
-
-      Dir leftTurnFromDir[] = { Dir::W, Dir::E, Dir::N, Dir::S };
-      Dir rightTurnFromDir[] = { Dir::E, Dir::W, Dir::S, Dir::N };
-
-      Vec2S32 dirAdd[] = { { 0, -1 }, { 0, 1 }, { 1, 0 }, { -1, 0 } };
-
-      while (!graphQueue.IsEmpty())
-      {
-        QueueEntry e = graphQueue[0];
-        graphQueue.RemoveAt(0);
-
-        if (auto it = spaceCache.find(e.space); it != spaceCache.end())
+        auto d = s.d;
+        auto p = s.pos + dirAdd[s32(d)];
+        if (grid.PositionInRange(p))
         {
-          if (e.originatingIndex >= 0)
-          {
-            // ASSERT(!graph[e.originatingIndex].outs.Contains(it->second));
-            graph[e.originatingIndex].outs.Append(it->second);
-          }
-
-          continue;
+          auto hl = s.heatLoss + (grid[p] - '0');
+          stepQueue.push({ .pos = p, .heatLoss = hl, .d = d, .currentStraightLength = s.currentStraightLength + 1 });
         }
+      }
 
-        // If we reached the end but we didn't have enough stopping room, we can't actually register this spot.
-        if (e.space.pos.x == grid.Width() - 1 && e.space.pos.y == grid.Height() - 1 && e.space.travelLength < minStraightDistance)
-          { continue; }
+      if (s.currentStraightLength >= minStraightDistance)
+      {
+        // We have moved enough that we are allowed to turn
 
-        // We have a new node in the graph
-        ssz graphIndex = graph.Count();
-        graph.Append({ .pos = e.space.pos, .heatLoss = grid[e.space.pos] - '0' });
-        spaceCache[e.space] = graphIndex;
-
-        if (e.originatingIndex >= 0)
-          { graph[e.originatingIndex].outs.Append(graphIndex); }
-
-        // If we hit the exit we don't have to keep tracing around
-        if (e.space.pos.x == grid.Width() - 1 && e.space.pos.y == grid.Height() - 1)
-           { continue; }
-
-        // We haven't been in this spot before, but we have (at most) 3 options
-        if (e.space.travelLength < maxStraightDistrance)
         {
-          // Only can move forward if we have enough forward moves
-          auto p = e.space.pos + dirAdd[s32(e.space.d)];
+          auto d = leftTurnFromDir[s32(s.d)];
+          auto p = s.pos + dirAdd[s32(d)];
           if (grid.PositionInRange(p))
-            { graphQueue.Append({ .space = { .pos = p, .d = e.space.d, .travelLength = e.space.travelLength + 1}, .originatingIndex = graphIndex }); }
+          {
+            auto hl = s.heatLoss + (grid[p] - '0');
+            stepQueue.push({ .pos = p, .heatLoss = hl, .d = d, .currentStraightLength = 1 });
+          }
         }
 
-        if (e.space.travelLength >= minStraightDistance)
         {
+          auto d = rightTurnFromDir[s32(s.d)];
+          auto p = s.pos + dirAdd[s32(d)];
+          if (grid.PositionInRange(p))
           {
-            auto nd = leftTurnFromDir[s32(e.space.d)];
-            auto p = e.space.pos + dirAdd[s32(nd)];
-            if (grid.PositionInRange(p))
-              { graphQueue.Append({ .space = { .pos = p, .d = nd, .travelLength = 1}, .originatingIndex = graphIndex }); }
-          }
-
-          {
-            auto nd = rightTurnFromDir[s32(e.space.d)];
-            auto p = e.space.pos + dirAdd[s32(nd)];
-            if (grid.PositionInRange(p))
-              { graphQueue.Append({ .space = { .pos = p, .d = nd, .travelLength = 1}, .originatingIndex = graphIndex }); }
+            auto hl = s.heatLoss + (grid[p] - '0');
+            stepQueue.push({ .pos = p, .heatLoss = hl, .d = d, .currentStraightLength = 1 });
           }
         }
       }
     }
 
-    FixedArray<s64> heatLoss { graph.Count() };
-    heatLoss.Fill(std::numeric_limits<s64>::max());
-
-    heatLoss[0] = 0;
-    heatLoss[1] = 0;
-
-    // Now do a standard distance fill using the heat loss values as we go using our two valid starting configurations
-    UnboundedArray<ssz> indices;
-    indices.Append(0);
-    indices.Append(1);
-
-    while (!indices.IsEmpty())
-    {
-      auto i = indices[0];
-      indices.RemoveAt(0);
-
-      for (auto next : graph[i].outs)
-      {
-        ssz l = heatLoss[i] + graph[next].heatLoss;
-        if (l < heatLoss[next])
-        {
-          heatLoss[next] = l;
-          indices.Append(next);
-        }
-      }
-    }
-
-    // Find all the exit nodes
-    s64 minHeatLoss = std::numeric_limits<s64>::max();
-    for (ssz i = 0; i < graph.Count(); i++)
-    {
-      auto &e = graph[i];
-      if (e.pos.x == grid.Width() - 1 && e.pos.y == grid.Height() - 1)
-        { minHeatLoss = std::min(minHeatLoss, heatLoss[i]); }
-    }
-
-    return minHeatLoss;
+    ASSERT(false);
+    return -1;
   }
+
 
   void Run(const char *path)
   {

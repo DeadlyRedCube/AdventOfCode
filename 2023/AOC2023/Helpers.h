@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Util/Math/Vec.h"
 
 using ssize_t = std::make_signed_t<size_t>;
 
@@ -177,6 +178,24 @@ public:
       { data[i] = v; }
   }
 
+
+  T &operator[](Vec2S32 v)
+    { return Idx(v.x, v.y); }
+
+  const T &operator[](Vec2S32 v) const
+    { return Idx(v.x, v.y); }
+
+  T &operator[](Vec2S64 v)
+    { return Idx(v.x, v.y); }
+
+  const T &operator[](Vec2S64 v) const
+    { return Idx(v.x, v.y); }
+
+  bool PositionInRange(Vec2S32 v) const
+    { return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height; }
+
+  bool PositionInRange(Vec2S64 v) const
+    { return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height; }
 
 private:
   ssize_t width = 0;

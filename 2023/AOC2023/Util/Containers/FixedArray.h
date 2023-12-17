@@ -18,8 +18,7 @@ public:
     { }
 
   FixedArray(ssz c)
-    : elements(new T[c]())
-    , count(c)
+    : Super{new T[c](), c}
     { }
 
   FixedArray &operator=(const FixedArray &) = delete;

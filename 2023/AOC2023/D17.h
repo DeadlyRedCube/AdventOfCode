@@ -30,7 +30,7 @@ namespace D17
 
         Vec2S32 pos;
         Dir d;
-        s32 remainingDir;
+        s32 travelLength;
       };
 
 
@@ -46,8 +46,8 @@ namespace D17
 
       UnboundedArray<QueueEntry> graphQueue;
 
-      graphQueue.Append({ .space = { .pos = { 0, 0 }, .d = Dir::E, .remainingDir = 3 }, .originatingIndex = -1 });
-      graphQueue.Append({ .space = { .pos = { 0, 0 }, .d = Dir::S, .remainingDir = 3 }, .originatingIndex = -1 });
+      graphQueue.Append({ .space = { .pos = { 0, 0 }, .d = Dir::E, .travelLength = 0 }, .originatingIndex = -1 });
+      graphQueue.Append({ .space = { .pos = { 0, 0 }, .d = Dir::S, .travelLength = 0 }, .originatingIndex = -1 });
 
       Dir leftTurnFromDir[] = { Dir::W, Dir::E, Dir::N, Dir::S };
       Dir rightTurnFromDir[] = { Dir::E, Dir::W, Dir::S, Dir::N };
@@ -79,26 +79,26 @@ namespace D17
           { graph[e.originatingIndex].outs.Append(graphIndex); }
 
         // We haven't been in this spot before, but we have (at most) 3 options
-        if (e.space.remainingDir > 0)
+        if (e.space.travelLength < 3)
         {
           // Only can move forward if we have enough forward moves
           auto p = e.space.pos + dirAdd[s32(e.space.d)];
           if (grid.PositionInRange(p))
-            { graphQueue.Append({ .space = { .pos = p, .d = e.space.d, .remainingDir = e.space.remainingDir - 1}, .originatingIndex = graphIndex }); }
+            { graphQueue.Append({ .space = { .pos = p, .d = e.space.d, .travelLength = e.space.travelLength + 1}, .originatingIndex = graphIndex }); }
         }
 
         {
           auto nd = leftTurnFromDir[s32(e.space.d)];
           auto p = e.space.pos + dirAdd[s32(nd)];
           if (grid.PositionInRange(p))
-            { graphQueue.Append({ .space = { .pos = p, .d = nd, .remainingDir = 2}, .originatingIndex = graphIndex }); }
+            { graphQueue.Append({ .space = { .pos = p, .d = nd, .travelLength = 1}, .originatingIndex = graphIndex }); }
         }
 
         {
           auto nd = rightTurnFromDir[s32(e.space.d)];
           auto p = e.space.pos + dirAdd[s32(nd)];
           if (grid.PositionInRange(p))
-            { graphQueue.Append({ .space = { .pos = p, .d = nd, .remainingDir = 2}, .originatingIndex = graphIndex }); }
+            { graphQueue.Append({ .space = { .pos = p, .d = nd, .travelLength = 1}, .originatingIndex = graphIndex }); }
         }
       }
     }

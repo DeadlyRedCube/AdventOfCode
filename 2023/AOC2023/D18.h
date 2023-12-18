@@ -2,236 +2,50 @@
 
 namespace D18
 {
-  struct GridSpot
-  {
-    Vec2S32 pos;
-  };
-
-
   void Run(const char *path)
   {
-    auto lines = ReadFileLines(path);
-
-    std::map<char, Vec2S64> directions =
-    {
-      {'R', { 1, 0 } },
-      {'L', { -1, 0 } },
-      {'D', { 0, 1 } },
-      {'U', { 0, -1 } },
-    };
-
-    struct Inst
-    {
-      char dir;
-      ssz count;
-    };
+    std::map<char, Vec2S64> directions = { {'R', { 1, 0 } }, {'L', { -1, 0 } }, {'D', { 0, 1 } }, {'U', { 0, -1 } } };
 
     // Merged parts 1 and 2 because the part 2 solution was faster than part 1, and the only actual difference is the
     //  instruction set.
-    UnboundedArray<Inst> partInsts[2];
     char dirMap[] = { 'R', 'D', 'L', 'U' };
-    for (auto &line : lines)
+    s64 shoelaces[2] {}; // Gonna use shoelace formula to get the area of this polygon!
+    s64 perimeters[2] {};
+    Vec2S64 positions[2] {};
+    for (auto &line : ReadFileLines(path))
     {
+      char dirs[2];
+      s64 counts[2];
       auto splits = Split(line, " #()", KeepEmpty::No);
-      auto instStr = splits[2];
 
       // Part 1 instruction: parse the first two parameters.
-      auto &inst1 = partInsts[0].AppendNew();
-      inst1.dir = splits[0][0];
-      inst1.count = std::atoi(splits[1].c_str());
+      dirs[0] = splits[0][0];
+      counts[0] = std::atoi(splits[1].c_str());
 
       // Part 2 instruction: parse the hex code per the instructions
-      auto &inst2 = partInsts[1].AppendNew();
-      inst2.dir = dirMap[instStr[instStr.length() - 1] - '0'];
+      dirs[1] = dirMap[splits[2][splits[2].length() - 1] - '0'];
       {
         char *end;
-        inst2.count = std::strtoll(instStr.substr(0, instStr.length() - 1).c_str(), &end, 16);
+        counts[1] = std::strtoll(splits[2].substr(0, splits[2].length() - 1).c_str(), &end, 16);
+      }
+
+      for (s32 i = 0; i < 2; i++)
+      {
+        Vec2S64 next = positions[i] + directions[dirs[i]] * counts[i];
+        shoelaces[i] += (next.x + positions[i].x) * (next.y - positions[i].y);
+        perimeters[i] += counts[i];
+        positions[i] = next;
       }
     }
 
-    for (s32 iteration = 0; iteration < 2; iteration++)
+    for (s32 i = 0; i < 2; i++)
     {
-      auto &insts = partInsts[iteration];
-
-      // Do a quick run through the instructions to find the min and max extents of our movement. Also get a list of
-      //  every unique x and y coordinate.
-      Vec2S64 minCoord { 0, 0 };
-      Vec2S64 maxCoord { 0, 0 };
-
-      UnboundedArray<s64> xCoords;
-      UnboundedArray<s64> yCoords;
-
-      {
-        Vec2S64 pos = { 0, 0 };
-        for (auto &inst : insts)
-        {
-          pos += directions[inst.dir] * inst.count;
-          minCoord.x = std::min(minCoord.x, pos.x);
-          minCoord.y = std::min(minCoord.y, pos.y);
-
-          maxCoord.x = std::max(maxCoord.x, pos.x);
-          maxCoord.y = std::max(maxCoord.y, pos.y);
-
-          // Just do this as a linear search, because I expect the unique space to be reasonably small.
-          if (!xCoords.Contains(pos.x))
-            { xCoords.Append(pos.x); }
-
-          if (!yCoords.Contains(pos.y))
-            { yCoords.Append(pos.y); }
-        }
-      }
-
-      // Append a buffer coordinate just to the top and left of our grid (to allow us to flood fill around the edges)
-      //  and then sort each array by coordinate space (so we can turn this into a smaller, manageable grid)
-      xCoords.Append(minCoord.x - 1);
-      yCoords.Append(minCoord.y - 1);
-      std::ranges::sort(xCoords);
-      std::ranges::sort(yCoords);
-
-      // Make a mapping from endpoint x and y coordinates to this new space
-      std::map<s64, s64> xCoordToGridSpace;
-      std::map<s64, s64> yCoordToGridSpace;
-      for (auto i = 0; i < xCoords.Count(); i++)
-        { xCoordToGridSpace[xCoords[i]] = i; }
-
-      for (auto i = 0; i < yCoords.Count(); i++)
-        { yCoordToGridSpace[yCoords[i]] = i; }
-
-      enum class Flags
-      {
-        Corner = 0x01,  // This space has a corner in the top-left (always the top left)
-        R = 0x02,       // This space has an edge from top-left to top-right (Right-leaving edge)
-        D = 0x04,       // This space has an edge from top-left to bottom-left (Down-leaving edge)
-        Flooded = 0x08, // This space has been hit by the flood fill
-
-        None = 0,
-        BothDirs = R | D,
-        All = R | D | Flooded | Corner,
-      };
-
-      // Build a "squish grid" where each grid space represents some rectangular section of the full-sized coordinate
-      //  space.
-      Array2D<Flags> squishGrid { xCoords.Count(), yCoords.Count() };
-      squishGrid.Fill(Flags::None);
-
-      // Now run through our instructions a second time, this time keeping track of both our full world position as
-      //  well as the squished-coordinate-system position.
-      Vec2S64 worldPos = { 0, 0 };
-      Vec2S64 gridPos = { xCoordToGridSpace[0], yCoordToGridSpace[0] };
-      squishGrid[gridPos]  = Flags::Corner;
-      for (auto &inst : insts)
-      {
-        // Update our world position to where we're traveling to.
-        auto dir = directions[inst.dir];
-        worldPos += dir * inst.count;
-
-        // Our target grid position is the world-to-squish mapping of that target point.
-        Vec2S64 nextGridPos = { xCoordToGridSpace[worldPos.x], yCoordToGridSpace[worldPos.y] };
-
-        // This space has at least a corner in it (we've entered it at all, at the top left)
-        squishGrid[nextGridPos] |= Flags::Corner;
-
-        // We're either dealing with R edges or D edges
-        Flags newExit = (inst.dir == 'R' || inst.dir == 'L') ? Flags::R : Flags::D;
-
-        // If the exit leaves this square through the Right or bottom (down) add this edge.
-        if (inst.dir == 'R' || inst.dir == 'D')
-          { squishGrid[gridPos] |= newExit; }
-
-        while (true)
-        {
-          gridPos += dir;
-
-          // If we are going to the right or down, we're done once we reach our final position (the edge doesn't
-          //  continue past the top-left of the target)
-          if ((inst.dir == 'R' || inst.dir == 'D') &&  gridPos == nextGridPos)
-            { break; }
-
-          // Add the edge to this square
-          squishGrid[gridPos] |= newExit;
-
-          if (gridPos == nextGridPos)
-            { break; }
-        }
-      }
-
-      // Time to flood fill! This time we can flood fill starting in the bottom right because at worst it's a corner
-      //  (with no R or D edges) so we'll 100% be able to fill out of this
-      UnboundedArray<Vec2S64> floodStack;
-      floodStack.Append({squishGrid.Width() - 1, squishGrid.Height() - 1});
-
-      while (!floodStack.IsEmpty())
-      {
-        auto f = floodStack[FromEnd(-1)];
-        floodStack.RemoveAt(floodStack.Count() - 1);
-
-        // If we already flooded this space we don't have to do it again.
-        if ((squishGrid[f] & Flags::Flooded) != Flags::None)
-          { continue; }
-
-        squishGrid[f] |= Flags::Flooded;
-
-        // Flood to the right if we're not at the right edge and the square to our right doesn't have a D edge
-        //  (which would block filling into it from the left)
-        if (f.x < squishGrid.Width() - 1 && (squishGrid[f + Vec2S64(1, 0)] & Flags::D) == Flags::None)
-          { floodStack.Append(f + Vec2S64(1, 0)); }
-
-        // Flood downward if we're not at the bottom edge and the square below us doesn't have a R edge (which would
-        //  block filling into it from above)
-        if (f.y < squishGrid.Height() - 1 && (squishGrid[f + Vec2S64(0, 1)] & Flags::R) == Flags::None)
-          { floodStack.Append(f + Vec2S64(0, 1)); }
-
-        // If we are not on the left edge and we don't have a D edge (Which would stop filling to the left), flood
-        //  to the left.
-        if (f.x > 0 && (squishGrid[f] & Flags::D) == Flags::None)
-          { floodStack.Append(f + Vec2S64(-1, 0)); }
-
-        // Similarly, if we're not on top edge and have no R edge (blocking filling up), flood up.
-        if (f.y > 0 && (squishGrid[f] & Flags::R) == Flags::None)
-          { floodStack.Append(f + Vec2S64(0, -1)); }
-      }
-
-      // Now we'll count up how many parts of the grid are dug out. Assume that the entire grid is dug out (note that
-      //  we'll skip the first row/column of our grid because we added that extra row/column before to allow flood
-      //  filling to go around the whole thing)
-      s64 fillCount = (maxCoord.x - minCoord.x + 1) * (maxCoord.y - minCoord.y + 1);
-      for (s64 y = 1; y < squishGrid.Height(); y++)
-      {
-        // Get the height of this grid square (if we're at the bottom, the height is 1)
-        auto gridH = (y == squishGrid.Height() - 1) ? 1 : yCoords[y + 1] - yCoords[y];
-        for (s64 x = 1; x < squishGrid.Width(); x++)
-        {
-          // Get the width of the grid square (at the right, it's 1)
-          auto gridW = (x == squishGrid.Width() - 1) ? 1 : xCoords[x + 1] - xCoords[x];
-
-          if ((squishGrid[Vec2S64{x, y}] & Flags::Flooded) != Flags::None)
-          {
-            // The flood fill touched this grid so remove its area from the dig count (we'll add some adjustements back
-            //  in later)
-            fillCount -= gridW * gridH;
-
-            // If this has both R and D edges, we need to add back the width and height (since there's an edge along
-            //  both the top and left sides), but don't count the top corner twice.
-            if ((squishGrid[Vec2S64{x, y}] & Flags::BothDirs) == Flags::BothDirs)
-              { fillCount += gridW + gridH - 1; }
-
-            // Otherwise, if we have just an R edge, add the width since the top row is dug out.
-            else if ((squishGrid[Vec2S64{x, y}] & Flags::R) == Flags::R)
-              { fillCount += gridW; }
-
-            // If we have just a D edge, add back the height since the left row is dug out.
-            else if ((squishGrid[Vec2S64{x, y}] & Flags::D) == Flags::D)
-              { fillCount += gridH; }
-
-            // If we have just a corner, we only touched this square in its top left so only one square needs to be
-            //  added back.
-            else if ((squishGrid[Vec2S64{x, y}] & Flags::Corner) == Flags::Corner)
-              { fillCount++; }
-          }
-        }
-      }
-
-      PrintFmt("Part {}: {}\n", iteration + 1, fillCount);
+      // The are from shoelace formula is abs(shoelace) / 2
+      // Okay so, Pick's Theorem states that: area = interiorPointCount + perimeter/2 - 1
+      // Our full grid-space solution, however, is: gridArea = interiorPointCount + perimeter
+      // If you solve Pick's Theorem for interiorPointCount and then solve for gridArea you get:
+      auto gridArea = std::abs(shoelaces[i]) / 2 + perimeters[i] / 2 + 1;
+      PrintFmt("Part {}: {}\n", i + 1, gridArea);
     }
   }
 }

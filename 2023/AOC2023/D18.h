@@ -20,109 +20,38 @@ namespace D18
       {'U', { 0, -1 } },
     };
 
-    // Part 1!
+    struct Inst
     {
-      Vec2S64 minCoord { 0, 0 };
-      Vec2S64 maxCoord { 0, 0 };
+      char dir;
+      ssz count;
+    };
 
+    // Merged parts 1 and 2 because the part 2 solution was faster than part 1, and the only actual difference is the
+    //  instruction set.
+    UnboundedArray<Inst> partInsts[2];
+    char dirMap[] = { 'R', 'D', 'L', 'U' };
+    for (auto &line : lines)
+    {
+      auto splits = Split(line, " #()", KeepEmpty::No);
+      auto instStr = splits[2];
 
-      // Make a set of all the grid spots we encounter
-      std::set<Vec2S64> gridSpots;
-      gridSpots.insert({0, 0});
+      // Part 1 instruction: parse the first two parameters.
+      auto &inst1 = partInsts[0].AppendNew();
+      inst1.dir = splits[0][0];
+      inst1.count = std::atoi(splits[1].c_str());
 
-      // Track our world position
-      Vec2S64 pos = { 0, 0 };
-      for (auto &line : lines)
+      // Part 2 instruction: parse the hex code per the instructions
+      auto &inst2 = partInsts[1].AppendNew();
+      inst2.dir = dirMap[instStr[instStr.length() - 1] - '0'];
       {
-        auto splits = Split(line, " ", KeepEmpty::No);
-
-        // Turns out we can ignore the RGB codes - but know that I tracked them in the original Part 1 implementation
-        auto dirCh = splits[0][0];
-        auto count = std::atoi(splits[1].c_str());
-
-        // Add grid coordinates along the entire movement span to the next spot
-        auto dir = directions[dirCh];
-        for (s32 c = 0; c < count; c++)
-        {
-          pos += dir;
-
-          gridSpots.insert(pos);
-
-          minCoord.x = std::min(minCoord.x, pos.x);
-          minCoord.y = std::min(minCoord.y, pos.y);
-
-          maxCoord.x = std::max(maxCoord.x, pos.x);
-          maxCoord.y = std::max(maxCoord.y, pos.y);
-        }
+        char *end;
+        inst2.count = std::strtoll(instStr.substr(0, instStr.length() - 1).c_str(), &end, 16);
       }
-
-      // Now time to flood fill - make an array that's extended 1 in each direction from our grid (so there's a ring
-      //  of empty space around it)
-      Array2D<bool> fillArray { maxCoord.x - minCoord.x + 3, maxCoord.y - minCoord.y + 3 };
-      fillArray.Fill(false);
-
-      // We'll start flooding in the upper-left corner
-      UnboundedArray<Vec2S64> flood;
-      flood.Append({0, 0});
-
-      ssz count = fillArray.Width() * fillArray.Height();
-      while (!flood.IsEmpty())
-      {
-        auto f = flood[FromEnd(-1)];
-        flood.RemoveAt(flood.Count() - 1);
-
-        if (f.x >= 0 && f.x < fillArray.Width() && f.y >= 0 && f.y < fillArray.Height())
-        {
-          // If it's already filled, we're done
-          if (fillArray[f])
-            { continue; }
-
-          // Also we can't flood fill into a grid spot
-          if (gridSpots.contains(f + minCoord - Vec2S64(1, 1)))
-            { continue; }
-
-          // Fill in and prepare to flood all the neighbors
-          fillArray[f] = true;
-          flood.Append(f + Vec2S64({1, 0}));
-          flood.Append(f + Vec2S64({-1, 0}));
-          flood.Append(f + Vec2S64({0, 1}));
-          flood.Append(f + Vec2S64({0, -1}));
-
-          // We flooded a new space, so one more square is removed from the polygon count
-          count--;
-        }
-      }
-
-      PrintFmt("Part 1: {}\n", count);
     }
 
-
-
-    // Part 2!
+    for (s32 iteration = 0; iteration < 2; iteration++)
     {
-      struct Inst
-      {
-        char dir;
-        ssz count;
-      };
-
-      // New rule: Parse the "color" as an instruction, lol
-      UnboundedArray<Inst> insts;
-      char dirMap[] = { 'R', 'D', 'L', 'U' };
-      for (auto &line : lines)
-      {
-        auto splits = Split(line, " #()", KeepEmpty::No);
-        auto instStr = splits[2];
-
-        auto &inst = insts.AppendNew();
-
-        inst.dir = dirMap[instStr[instStr.length() - 1] - '0'];
-
-        {
-          char *end;
-          inst.count = std::strtoll(instStr.substr(0, instStr.length() - 1).c_str(), &end, 16);
-        }
-      }
+      auto &insts = partInsts[iteration];
 
       // Do a quick run through the instructions to find the min and max extents of our movement. Also get a list of
       //  every unique x and y coordinate.
@@ -302,7 +231,7 @@ namespace D18
         }
       }
 
-      PrintFmt("Part 2: {}\n", fillCount);
+      PrintFmt("Part {}: {}\n", iteration + 1, fillCount);
     }
   }
 }

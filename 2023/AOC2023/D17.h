@@ -16,27 +16,25 @@ namespace D17
   class VisitSet
   {
   public:
-    VisitSet(ssz width, ssz height, s32 maxStraightDistance)
+    VisitSet(ssz width, ssz height)
       : w(width)
       , h(height)
-      , msd(maxStraightDistance)
-      , visiteds((w * h * 4 * maxStraightDistance + 7) / 8)
+      , visiteds((w * h * 4 + 7) / 8)
       { visiteds.Fill(0); }
 
 
-    bool TestAndSet(Vec2S32 pos, Dir d, s32 currentStraightLength)
+    bool TestAndSet(Vec2S32 pos, Dir d)
     {
-      ssz bitIndex = ((pos.y * w + pos.x) * 4 + s32(d)) * msd + currentStraightLength;
+      ssz bitIndex = (pos.y * w + pos.x) * 4 + s32(d);
       ssz byteIndex = bitIndex / 8;
       u8 bitMask = u8(1 << (bitIndex & 7));
-      return (std::exchange(visiteds[byteIndex], visiteds[byteIndex] | bitMask) & bitMask) != 0;
+      return (std::exchange(visiteds[byteIndex], u8(visiteds[byteIndex] | bitMask)) & bitMask) != 0;
     }
 
 
   private:
     ssz w;
     ssz h;
-    s32 msd;
 
     FixedArray<u8> visiteds;
   };
@@ -49,7 +47,6 @@ namespace D17
       Vec2S32 pos;
       s64 heatLoss;
       Dir d;
-      s32 currentStraightLength;
 
       // These go in a priority queue by distance
       bool operator < (const Step &other) const
@@ -62,11 +59,27 @@ namespace D17
 
 
     // Keep track of which nodes we've visited from
-    VisitSet visits { grid.Width(), grid.Height(), maxStraightDistance };
+    VisitSet visits { grid.Width(), grid.Height() };
+
 
     std::priority_queue<Step> stepQueue;
-    stepQueue.push({ .pos = { 0, 0 }, .heatLoss = 0, .d = Dir::E, .currentStraightLength = 0});
-    stepQueue.push({ .pos = { 0, 0 }, .heatLoss = 0, .d = Dir::S, .currentStraightLength = 0});
+
+    auto EnqueueSteps = [&](Vec2S32 pos, s64 loss, Dir d)
+    {
+      for (s32 i = 1; i <= maxStraightDistance; i++)
+      {
+        pos += dirAdd[s32(d)];
+        if (!grid.PositionInRange(pos))
+          { break; }
+
+        loss += grid[pos] - '0';
+        if (i >= minStraightDistance)
+          { stepQueue.push({ .pos = pos, .heatLoss = loss, .d = d }); }
+      }
+    };
+
+    for (Dir d : { Dir::E, Dir::S })
+      { EnqueueSteps({0, 0}, 0, d); }
 
     while (!stepQueue.empty())
     {
@@ -75,54 +88,18 @@ namespace D17
 
       // If we've already been here then whenever we got here last was better than this time (thanks to the priority
       //  queue)
-      if (visits.TestAndSet(s.pos, s.d, s.currentStraightLength))
+      if (visits.TestAndSet(s.pos, s.d))
         { continue; }
 
       if (s.pos.x == grid.Width() - 1 && s.pos.y == grid.Height() - 1)
       {
         // If we've reached the exit with the requisite minimum straight distance we're done, otherwise, don't step
         //  more from here, it'll only be worse.
-        if (s.currentStraightLength >= minStraightDistance)
-          { return s.heatLoss; }
-        continue;
+        return s.heatLoss;
       }
 
-      // Only can move forward if we have enough forward moves
-      if (s.currentStraightLength < maxStraightDistance)
-      {
-        auto d = s.d;
-        auto p = s.pos + dirAdd[s32(d)];
-        if (grid.PositionInRange(p))
-        {
-          auto hl = s.heatLoss + (grid[p] - '0');
-          stepQueue.push({ .pos = p, .heatLoss = hl, .d = d, .currentStraightLength = s.currentStraightLength + 1 });
-        }
-      }
-
-      if (s.currentStraightLength >= minStraightDistance)
-      {
-        // We have moved enough that we are allowed to turn
-
-        {
-          auto d = leftTurnFromDir[s32(s.d)];
-          auto p = s.pos + dirAdd[s32(d)];
-          if (grid.PositionInRange(p))
-          {
-            auto hl = s.heatLoss + (grid[p] - '0');
-            stepQueue.push({ .pos = p, .heatLoss = hl, .d = d, .currentStraightLength = 1 });
-          }
-        }
-
-        {
-          auto d = rightTurnFromDir[s32(s.d)];
-          auto p = s.pos + dirAdd[s32(d)];
-          if (grid.PositionInRange(p))
-          {
-            auto hl = s.heatLoss + (grid[p] - '0');
-            stepQueue.push({ .pos = p, .heatLoss = hl, .d = d, .currentStraightLength = 1 });
-          }
-        }
-      }
+      for (auto d : { leftTurnFromDir[s32(s.d)], rightTurnFromDir[s32(s.d)] })
+        { EnqueueSteps(s.pos, s.heatLoss, d); }
     }
 
     ASSERT(false);

@@ -48,6 +48,9 @@ public:
       { _aligned_free(elements); }
   }
 
+  void EnsureCapacity(ssz cap)
+    { EnsureCapacity(cap, false); }
+
 protected:
   void EnsureCapacity(ssz cap, [[maybe_unused]] bool preferExactSize) override
   {

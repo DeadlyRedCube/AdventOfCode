@@ -12,10 +12,13 @@
 #include <numeric>
 #include <optional>
 #include <queue>
+#include <ranges>
 #include <regex>
 #include <set>
 #include <tuple>
-#include <ranges>
+#include <unordered_map>
+#include <unordered_set>
+
 
 
 #pragma warning (push)

@@ -31,7 +31,8 @@
 //#include "D15.h"
 //#include "D16.h"
 //#include "D17.h"
-#include "D18.h"
+//#include "D18.h"
+#include "D19.h"
 
 int main()
 {
@@ -54,7 +55,8 @@ int main()
   //D15::Run("D15.txt");
   //D16::Run("D16.txt");
   //D17::Run("D17.txt");
-  D18::Run("D18.txt");
+  //D18::Run("D18.txt");
+  D19::Run("D19.txt");
 
   auto time = t.SecondsSinceLastCheckpoint();
   PrintFmt("Finished in {:.02} seconds", time);

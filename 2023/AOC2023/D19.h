@@ -30,7 +30,7 @@ namespace D19
     s64 a;
     s64 s;
 
-    s64 Val(const std::string_view &st)
+    s64 Val(const std::string_view &st) const
     {
       if (st == "x") { return x; }
       else if (st == "m") { return m; }
@@ -91,51 +91,142 @@ namespace D19
       }
     }
 
-
-    s64 sum = 0;
-    for (auto &part : parts)
     {
-      std::string workflow = "in";
-
-      while (true)
+      s64 sum = 0;
+      for (auto &part : parts)
       {
+        std::string workflow = "in";
+
+        while (true)
+        {
+          auto &flow = flows[workflow];
+
+          for (auto &test : flow.tests)
+          {
+            std::string target;
+            switch (test.op)
+            {
+            case Op::Gt:
+              if (part.Val(test.cat) > test.val)
+                { target = test.result; }
+              break;
+            case Op::Lt:
+              if (part.Val(test.cat) < test.val)
+                { target = test.result; }
+              break;
+            case Op::Else:
+              target = test.result;
+              break;
+            }
+
+            if (!target.empty())
+            {
+              workflow = target;
+              break;
+            }
+          }
+
+          if (workflow == "A")
+          {
+            sum += part.x + part.a + part.m + part.s;
+            break;
+          }
+          else if (workflow == "R")
+            { break; }
+        }
+      }
+
+      PrintFmt("Part 1: {}\n", sum);
+    }
+
+    // Part 2!
+
+    {
+      using Interval = ::Interval<s64>;
+
+      struct PartInterval
+      {
+        Interval x = Interval::FromFirstAndLast(1, 4000);
+        Interval m = Interval::FromFirstAndLast(1, 4000);
+        Interval s = Interval::FromFirstAndLast(1, 4000);
+        Interval a = Interval::FromFirstAndLast(1, 4000);
+
+        Interval &Get(const std::string_view &st)
+        {
+          if (st == "x") { return x; }
+          else if (st == "m") { return m; }
+          else if (st == "a") { return a; }
+          else { ASSERT(st == "s"); return s; }
+        }
+
+        s64 Count() const
+          { return x.Length() * m.Length() * a.Length() * s.Length(); }
+
+        bool IsEmpty() const
+          { return x.Length() == 0 || m.Length() == 0 || s.Length() == 0 || a.Length() == 0; }
+
+        bool operator==(const PartInterval &) const = default;
+        auto operator<=>(const PartInterval &) const = default;
+      };
+
+
+      struct S
+      {
+        PartInterval i;
+        std::string t;
+      };
+
+      s64 count = 0;
+      UnboundedArray<S> stack;
+      stack.Append({ {}, "in" });
+      while (!stack.IsEmpty())
+      {
+        auto [cur, workflow] = stack[FromEnd(-1)];
+        stack.RemoveAt(FromEnd(-1));
         auto &flow = flows[workflow];
 
         for (auto &test : flow.tests)
         {
-          std::string target;
           switch (test.op)
           {
           case Op::Gt:
-            if (part.Val(test.cat) > test.val)
-              { target = test.result; }
+            if (cur.Get(test.cat).Last() > test.val)
+            {
+              auto sub = cur;
+              sub.Get(test.cat) = Interval::FromFirstAndLast(test.val + 1, cur.Get(test.cat).Last());
+              if (test.result == "A")
+                { count += sub.Count(); }
+              else if (test.result != "R")
+                { stack.Append({sub, test.result}); }
+              cur.Get(test.cat) = Interval::FromFirstAndLast(cur.Get(test.cat).Start(), test.val);
+            }
             break;
           case Op::Lt:
-            if (part.Val(test.cat) < test.val)
-              { target = test.result; }
+            if (cur.Get(test.cat).First() < test.val)
+            {
+              auto sub = cur;
+              sub.Get(test.cat) = Interval::FromStartAndEnd(cur.Get(test.cat).Start(), test.val);
+              if (test.result == "A")
+                { count += sub.Count(); }
+              else if (test.result != "R")
+                { stack.Append({sub, test.result}); }
+              cur.Get(test.cat) = Interval::FromFirstAndLast(test.val, cur.Get(test.cat).Last());
+            }
             break;
           case Op::Else:
-            target = test.result;
+            if (test.result == "A")
+              { count += cur.Count(); }
+            else if (test.result != "R")
+              { stack.Append({cur, test.result}); }
             break;
           }
 
-          if (!target.empty())
-          {
-            workflow = target;
-            break;
-          }
+          if (cur.IsEmpty())
+            { break; }
         }
-
-        if (workflow == "A")
-        {
-          sum += part.x + part.a + part.m + part.s;
-          break;
-        }
-        else if (workflow == "R")
-          { break; }
       }
-    }
 
-    PrintFmt("Part 1: {}\n", sum);
+      PrintFmt("Part 2: {}\n", count);
+    }
   }
 }

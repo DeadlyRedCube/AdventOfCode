@@ -69,6 +69,8 @@ public:
     return std::nullopt;
   }
 
+  bool operator==(const Interval &) const = default;
+  auto operator<=>(const Interval &) const = default;
 protected:
   Interval(T s, T e)
     : start(s)

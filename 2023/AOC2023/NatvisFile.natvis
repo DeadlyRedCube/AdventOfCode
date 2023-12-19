@@ -27,4 +27,8 @@
             </CustomListItems>
         </Expand>
     </Type>
+
+    <Type Name="D19::PartInterval">
+        <DisplayString>[x:[{x.start}, {x.end - 1}], m:[{m.start}, {m.end - 1}], a:[{a.start}, {a.end - 1}], s:[{s.start}, {s.end - 1}]</DisplayString>
+    </Type>
 </AutoVisualizer>

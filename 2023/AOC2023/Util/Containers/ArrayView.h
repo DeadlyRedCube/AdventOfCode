@@ -20,6 +20,8 @@ struct Wrapped
 };
 
 
+template <typename T> concept array_view_index = std::integral<T> || std::same_as<T, FromEnd> || std::same_as<T, Wrapped>;
+
 template <typename T>
 class ArrayView
 {
@@ -53,19 +55,18 @@ public:
     { return count == 0; }
 
   ssz WrapIndex(ssz i) const
-    { return ((i % count) + count) % count; }
-
-  T &operator[] (ssz i) const
   {
-    ASSERT(IndexInRange(i));
-    return elements[i];
+    // equivalent to: return (index < 0) ? (m_count - 1 + ((index + 1) % m_count)) : index % m_count,
+    constexpr size_t k_shift = std::numeric_limits<size_t>::digits - 1;
+    ssz index = ssz(i);
+    return ((count - 1) & (index >> k_shift)) + ((index + ssz(usz(index) >> k_shift)) % count);
   }
 
-  T &operator[] (FromEnd f) const
-    { return (*this)[count + f.index]; }
-
-  T &operator[] (Wrapped w) const
-    { return (*this)[WrapIndex(w.index)]; }
+  T &operator[] (array_view_index auto i) const
+  {
+    ASSERT(IndexInRange(EvaluateIndex(i)));
+    return elements[EvaluateIndex(i)];
+  }
 
   bool IndexInRange(ssz i) const
     { return i >= 0 && i < count; }
@@ -93,11 +94,11 @@ public:
   bool IsMember(const T *e) const
     { return IndexFromElement(e) >= 0; }
 
-  T *GetBuffer(ssz i, ssz c)
+  T *GetBuffer(array_view_index auto i, ssz c)
   {
-    ASSERT(InRangeInclusive(i, 0, count));
-    ASSERT(InRangeInclusive(i + c, 0, count));
-    return &elements[i];
+    ASSERT(InRangeInclusive(EvaluateIndex(i), 0, count));
+    ASSERT(InRangeInclusive(EvaluateIndex(i) + c, 0, count));
+    return &elements[EvaluateIndex(i)];
   }
 
   ssz FindFirst(const T &v) const
@@ -156,6 +157,18 @@ public:
   {
     for (ssz i = 0; i < count / 2; i++)
       { std::swap(elements[i], elements[count - 1 - i]); }
+  }
+
+
+  template <array_view_index I>
+  ssz EvaluateIndex(I i) const
+  {
+    if constexpr (std::is_same_v<I, FromEnd>)
+      { return count + i.index; }
+    else if constexpr (std::is_same_v<I, Wrapped>)
+      { return WrapIndex(i.index); }
+    else
+      { return ssz(i); }
   }
 
 protected:

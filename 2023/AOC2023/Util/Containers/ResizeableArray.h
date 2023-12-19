@@ -68,8 +68,9 @@ public:
   void AppendMultiple(const std::initializer_list<T> &v)
     { AppendMultiple(ArrayView{const_cast<T *>(v.begin()), ssz(v.size())}); }
 
-  void Insert(ssz index, const T &v)
+  void Insert(array_view_index auto idx, const T &v)
   {
+    ssz index = EvaluateIndex(idx);
     ASSERT(InRangeInclusive(index, 0, count));
     if (index == count)
     {
@@ -88,8 +89,9 @@ public:
     count++;
   }
 
-  void Insert(ssz index, T &&v)
+  void Insert(array_view_index auto idx, T &&v)
   {
+    ssz index = EvaluateIndex(idx);
     ASSERT(InRangeInclusive(index, 0, count));
     if (index == count)
     {
@@ -111,8 +113,9 @@ public:
   void RemoveLast(ssz c = 1)
     { RemoveAt(count - c, c); }
 
-  void RemoveAt(ssz index, ssz c = 1)
+  void RemoveAt(array_view_index auto idx, ssz c = 1)
   {
+    ssz index = EvaluateIndex(idx);
     ASSERT(c >= 0);
 
     ASSERT(this->IndexInRange(index));
@@ -176,6 +179,8 @@ public:
       start = index;
     }
   }
+
+  using Super::EvaluateIndex;
 
 protected:
   ResizeableArray() = default;

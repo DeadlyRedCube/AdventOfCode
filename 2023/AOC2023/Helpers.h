@@ -127,13 +127,13 @@ public:
   Array2D(ssize_t w, ssize_t h)
     : width(w)
     , height(h)
-    , data(new T[w * h])
+    , data(new T[w * h] {})
     { }
 
   Array2D(const Array2D &) = delete;
   auto operator=(const Array2D &) = delete;
 
-  Array2D(Array2D &&other)
+  Array2D(Array2D &&other) noexcept
     : width(std::exchange(other.width, 0))
     , height(std::exchange(other.height, 0))
     , data(std::exchange(other.data, nullptr))
@@ -174,7 +174,7 @@ public:
 
   void Fill(const T &v)
   {
-    for (ssize_t i = 0; i < width* height; i++)
+    for (ssize_t i = 0; i < width * height; i++)
       { data[i] = v; }
   }
 

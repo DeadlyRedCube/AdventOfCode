@@ -50,7 +50,7 @@ namespace D19
 
       if (!line.starts_with('{'))
       {
-        // First section
+        // Parse a workflow
         Flow flow;
         auto splits = Split(line, "{,}", KeepEmpty::No);
         flow.name = splits[0];
@@ -60,6 +60,7 @@ namespace D19
 
           if (t.contains(':'))
           {
+            // This is a < or > comparison
             auto opTarg = Split(t, ":", KeepEmpty::No);
             test.result = opTarg[1];
             test.op = opTarg[0].contains('<') ? Op::Lt : Op::Gt;
@@ -69,6 +70,7 @@ namespace D19
           }
           else
           {
+            // No ':' means this is an "else" statement
             test.result = t;
             test.op = Op::Else;
           }
@@ -78,9 +80,8 @@ namespace D19
       }
       else
       {
-        // Second section
+        // Part!
         auto splits = Split(line, "{=,}", KeepEmpty::No);
-
         parts.Append(
           {
             .x = StrToNum(splits[1]),
@@ -103,6 +104,7 @@ namespace D19
 
           for (auto &test : flow.tests)
           {
+            // Find the target of this test (if we match any)
             std::string target;
             switch (test.op)
             {
@@ -121,6 +123,7 @@ namespace D19
 
             if (!target.empty())
             {
+              // We matched this test, so we're going to go to whatever its target is.
               workflow = target;
               break;
             }
@@ -128,11 +131,12 @@ namespace D19
 
           if (workflow == "A")
           {
+            // This was accepted!
             sum += part.x + part.a + part.m + part.s;
             break;
           }
           else if (workflow == "R")
-            { break; }
+            { break; } // Rejected, move on to the next part.
         }
       }
 
@@ -140,11 +144,10 @@ namespace D19
     }
 
     // Part 2!
-
     {
       using Interval = ::Interval<s64>;
 
-      struct PartInterval
+      struct PartRange // A range of part numbers
       {
         Interval x = Interval::FromFirstAndLast(1, 4000);
         Interval m = Interval::FromFirstAndLast(1, 4000);
@@ -165,14 +168,14 @@ namespace D19
         bool IsEmpty() const
           { return x.Length() == 0 || m.Length() == 0 || s.Length() == 0 || a.Length() == 0; }
 
-        bool operator==(const PartInterval &) const = default;
-        auto operator<=>(const PartInterval &) const = default;
+        bool operator==(const PartRange &) const = default;
+        auto operator<=>(const PartRange &) const = default;
       };
 
 
       struct S
       {
-        PartInterval i;
+        PartRange range;
         std::string t;
       };
 
@@ -185,6 +188,8 @@ namespace D19
         stack.RemoveAt(FromEnd(-1));
         auto &flow = flows[workflow];
 
+        // We're going to filter our current range through the tests (adding any that are split off into the queue)
+        //  until we get a result.
         for (auto &test : flow.tests)
         {
           switch (test.op)
@@ -192,37 +197,44 @@ namespace D19
           case Op::Gt:
             if (cur.Get(test.cat).Last() > test.val)
             {
+              // Make a sub-range with all the parts of the current range where the category is > the value
               auto sub = cur;
               sub.Get(test.cat) = Interval::FromFirstAndLast(test.val + 1, cur.Get(test.cat).Last());
+
+              // See if it was accepted, rejected, or needs to be fed to a new result
               if (test.result == "A")
                 { count += sub.Count(); }
               else if (test.result != "R")
                 { stack.Append({sub, test.result}); }
+
+              // Clip our current range to whatever remains.
               cur.Get(test.cat) = Interval::FromFirstAndLast(cur.Get(test.cat).Start(), test.val);
             }
             break;
           case Op::Lt:
             if (cur.Get(test.cat).First() < test.val)
             {
+              // Same as above, but a subrange where the current range < value
               auto sub = cur;
               sub.Get(test.cat) = Interval::FromStartAndEnd(cur.Get(test.cat).Start(), test.val);
               if (test.result == "A")
                 { count += sub.Count(); }
               else if (test.result != "R")
                 { stack.Append({sub, test.result}); }
+
+              // Clip to the remaining area
               cur.Get(test.cat) = Interval::FromFirstAndLast(test.val, cur.Get(test.cat).Last());
             }
             break;
           case Op::Else:
+            // The whole range is going somewhere - if it's accepted, add its count, otherwise put it back in the stack
+            //  if not rejected.
             if (test.result == "A")
               { count += cur.Count(); }
             else if (test.result != "R")
               { stack.Append({cur, test.result}); }
             break;
           }
-
-          if (cur.IsEmpty())
-            { break; }
         }
       }
 

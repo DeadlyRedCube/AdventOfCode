@@ -14,48 +14,71 @@
 #include "Helpers.h"
 
 
-//#include "D01.h"
-//#include "D02.h"
-//#include "D03.h"
-//#include "D04.h"
-//#include "D05.h"
-//#include "D06.h"
-//#include "D07.h"
-//#include "D08.h"
-//#include "D09.h"
-//#include "D10.h"
-//#include "D11.h"
-//#include "D12.h"
-//#include "D13.h"
-//#include "D14.h"
-//#include "D15.h"
-//#include "D16.h"
-//#include "D17.h"
-//#include "D18.h"
+#if 0
+#include "D01.h"
+#include "D02.h"
+#include "D03.h"
+#include "D04.h"
+#include "D05.h"
+#include "D06.h"
+#include "D07.h"
+#include "D08.h"
+#include "D09.h"
+#include "D10.h"
+#include "D11.h"
+#include "D12.h"
+#include "D13.h"
+#include "D14.h"
+#include "D15.h"
+#include "D16.h"
+#include "D17.h"
+#include "D18.h"
+#endif
 #include "D19.h"
 
 int main()
 {
   Timer t;
 
-  //D01::Run("D01.txt");
-  //D02::Run("D02.txt");
-  //D03::Run("D03.txt");
-  //D04::Run("D04.txt");
-  //D05::Run("D05.txt");
-  //D06::Run("D06.txt");
-  //D07::Run("D07.txt");
-  //D08::Run("D08.txt");
-  //D09::Run("D09.txt");
-  //D10::Run("D10.txt");
-  //D11::Run("D11.txt");
-  //D12::Run("D12.txt");
-  //D13::Run("D13.txt");
-  //D14::Run("D14.txt");
-  //D15::Run("D15.txt");
-  //D16::Run("D16.txt");
-  //D17::Run("D17.txt");
-  //D18::Run("D18.txt");
+  #if 0
+  std::puts("-- Day 01:");
+  D01::Run("D01.txt");
+  std::puts("-- Day 02:");
+  D02::Run("D02.txt");
+  std::puts("-- Day 03:");
+  D03::Run("D03.txt");
+  std::puts("-- Day 04:");
+  D04::Run("D04.txt");
+  std::puts("-- Day 05:");
+  D05::Run("D05.txt");
+  std::puts("-- Day 06:");
+  D06::Run("D06.txt");
+  std::puts("-- Day 07:");
+  D07::Run("D07.txt");
+  std::puts("-- Day 08:");
+  D08::Run("D08.txt");
+  std::puts("-- Day 09:");
+  D09::Run("D09.txt");
+  std::puts("-- Day 10:");
+  D10::Run("D10.txt");
+  std::puts("-- Day 11:");
+  D11::Run("D11.txt");
+  std::puts("-- Day 12:");
+  D12::Run("D12.txt");
+  std::puts("-- Day 13:");
+  D13::Run("D13.txt");
+  std::puts("-- Day 14:");
+  D14::Run("D14.txt");
+  std::puts("-- Day 15:");
+  D15::Run("D15.txt");
+  std::puts("-- Day 16:");
+  D16::Run("D16.txt");
+  std::puts("-- Day 17:");
+  D17::Run("D17.txt");
+  std::puts("-- Day 18:");
+  D18::Run("D18.txt");
+  #endif
+  std::puts("-- Day 19:");
   D19::Run("D19.txt");
 
   auto time = t.SecondsSinceLastCheckpoint();

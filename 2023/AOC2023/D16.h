@@ -123,7 +123,7 @@ namespace D16
     auto grid = ReadFileAsCharArray(path);
 
     // Part 1
-    PrintFmt("{}\n", CalculateEnergization(grid, { .coord = { 0, 0 }, .dir = { 1, 0 } }));
+    PrintFmt("Part 1: {}\n", CalculateEnergization(grid, { .coord = { 0, 0 }, .dir = { 1, 0 } }));
 
     // Part 2: calculate the max from every side
     s32 maxCount = 0;
@@ -139,6 +139,6 @@ namespace D16
       maxCount = std::max(CalculateEnergization(grid, { .coord = { x, s32(grid.Height()) - 1 }, .dir = { 0, -1 } }), maxCount);
     }
 
-    PrintFmt("{}\n", maxCount);
+    PrintFmt("Part 2: {}\n", maxCount);
   }
 }

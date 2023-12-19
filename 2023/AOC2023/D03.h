@@ -146,7 +146,7 @@ namespace D03
       }
     }
 
-    PrintFmt("SUM: {}\n", sum);
-    PrintFmt("GearSum: {}\n", gearSum);
+    PrintFmt("Part 1: {}\n", sum);
+    PrintFmt("Part 2: {}\n", gearSum);
   }
 }

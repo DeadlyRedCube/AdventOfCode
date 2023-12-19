@@ -37,7 +37,7 @@ namespace D06
       int winCount = 0;
       for (int i = 1; i < race.time; i++)
       {
-        int dist = i * (race.time - i);
+        s64 dist = i * (race.time - i);
         if (dist > race.dist)
           { winCount++; }
       }

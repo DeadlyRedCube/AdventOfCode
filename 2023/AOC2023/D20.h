@@ -12,30 +12,37 @@ namespace D20
 
   struct Pulse
   {
-    std::string source;
-    std::string destination;
+    s64 srcIndex;
+    s64 dstIndex;
     bool val;
   };
 
   struct Module
   {
     std::string name;
+    s64 index;
     Type type = Type::Untyped;
 
     bool state = false;
 
-    std::map<std::string, bool> inputs;
+    struct Input
+    {
+      s64 modIndex;
+      bool state;
+    };
 
+    UnboundedArray<Input> inputs;
     UnboundedArray<std::string> outputNames;
+    UnboundedArray<s64> outputIndices;
 
     void Reset()
     {
       state = false;
-      for (auto &&[n, v] : inputs)
-        { v = false; }
+      for (auto &input : inputs)
+        { input.state = false; }
     }
 
-    void SendPulse(std::queue<Pulse> &pulseQueue, std::string inputName, bool pulse)
+    void SendPulse(std::queue<Pulse> &pulseQueue, s64 srcIndex, bool pulse)
     {
       switch (type)
       {
@@ -48,36 +55,28 @@ namespace D20
         {
           // ... and what it does is flip its state and push that state out to every output.
           state = !state;
-          for (auto module : outputNames)
-            { pulseQueue.push({ .source = name, .destination = module, .val = state }); }
+          for (auto outInd : outputIndices)
+            { pulseQueue.push({ .srcIndex = index, .dstIndex = outInd, .val = state }); }
         }
         break;
 
       case Type::Conjunction:
         // Update the corresponding input's value
-        inputs[inputName] = pulse;
+        inputs[inputs.FindFirst(&Input::modIndex, srcIndex)].state = pulse;
         {
           // Conjunction has a low state if all of the inputs are high (otherwise it has a high state)
-          state = false;
-          for (auto &&[inName, val] : inputs)
-          {
-            if (!val)
-            {
-              state = true;
-              break;
-            }
-          }
+          state = !std::ranges::all_of(inputs, [](auto &&v) { return v.state; });
 
           // Send the corresponding pulse along (no matter what the pulse value is)
-          for (auto module : outputNames)
-            { pulseQueue.push({ .source = name, .destination = module, .val = state }); }
+          for (auto outInd : outputIndices)
+            { pulseQueue.push({ .srcIndex = index, .dstIndex = outInd, .val = state }); }
         }
         break;
 
       case Type::Broadcast:
         // Broadcast just zoops the pulse on through directly.
-        for (auto module : outputNames)
-          { pulseQueue.push({ .source = name, .destination = module, .val = pulse }); }
+          for (auto outInd : outputIndices)
+            { pulseQueue.push({ .srcIndex = index, .dstIndex = outInd, .val = pulse }); }
         break;
       }
     }
@@ -86,11 +85,13 @@ namespace D20
 
   void Run(const char *path)
   {
-    std::map<std::string, Module> modules;
+    UnboundedArray<Module> modules;
     for (auto line : ReadFileLines(path))
     {
       auto splits = Split(line, " ,->", KeepEmpty::No);
 
+      // Figure out the type based on the start of the first string (and then cull the type info from the string so
+      //  we can use the name directly)
       auto t = Type::Broadcast;
       if (splits[0].starts_with('&'))
       {
@@ -103,93 +104,97 @@ namespace D20
         t = Type::FlipFlop;
       }
 
-      Module &m = modules[splits[0]];
-      m.type = t;
-      m.name = splits[0];
+      modules.Append({ .name = splits[0], .index = modules.Count(), .type = t });
       for (auto o : splits | std::views::drop(1))
-        { m.outputNames.Append(o); }
+        { modules[FromEnd(-1)].outputNames.Append(o); }
     }
 
-    for (auto &&[name, mod] : modules)
+    for (auto &mod : modules)
     {
       for (auto oName : mod.outputNames)
       {
-        auto &oMod = modules[oName];
-        oMod.inputs[mod.name] = false;
+        ssz oInd = modules.FindFirst(&Module::name, oName);
+        if (oInd < 0)
+        {
+          // We have an output that wasn't explicitly in our list, so just add a new untyped module.
+          oInd = modules.Count();
+          modules.Append({ .name = oName, .index = oInd, .type = Type::Untyped });
+        }
+
+        // Add the output's index into the module's index list, and add this node as an input to the output module
+        //  (needed for conjunction nodes and useful for part 2)
+        mod.outputIndices.Append(oInd);
+        modules[oInd].inputs.Append({ .modIndex = mod.index, .state = false });
       }
     }
 
     std::queue<Pulse> pulseQueue;
-    s64 high = 0;
-    s64 low = 0;
+    s64 highCount = 0;
+    s64 lowCount = 0;
+
+    // Cache the broadcaster's index so we don't have to look it up each time we push the button.
+    s64 broadcasterIndex = modules.FindFirst(&Module::name, "broadcaster");
     for (s32 i = 0; i < 1000; i++)
     {
-      pulseQueue.push({ "button", "broadcaster", false });
+      pulseQueue.push({ .srcIndex = -1, .dstIndex = broadcasterIndex, .val = false });
 
       while (!pulseQueue.empty())
       {
         auto pulse = pulseQueue.front();
         pulseQueue.pop();
 
+        // Record the pulse value for the part 1 answer
         if (pulse.val)
-          { high++; }
+          { highCount++; }
         else
-          { low++; }
+          { lowCount++; }
 
-        modules[pulse.destination].SendPulse(pulseQueue, pulse.source, pulse.val);
+        modules[pulse.dstIndex].SendPulse(pulseQueue, pulse.srcIndex, pulse.val);
       }
     }
 
-    PrintFmt("Part 1: {}\n", high * low);
+    PrintFmt("Part 1: {}\n", highCount * lowCount);
 
     // For part 2, rx needs to get a low pulse. I looked at the input and only one node is outputting to it (which is
     //  what I expected), and it's a conjunction node, so we're going to find cycles in the input high pulses (to
     //  figure out where they all line up for rx)
-    ASSERT(modules["rx"].inputs.size() == 1);
-    auto rxSrcName = modules["rx"].inputs.begin()->first;
-    auto &rcSrcMod = modules[rxSrcName];
+    const auto &rxMod = modules[modules.FindFirst(&Module::name, "rx")];
+    ASSERT(rxMod.inputs.Count() == 1);
+    ssz rxSrcIndex = rxMod.inputs[0].modIndex;
+    auto &rxSrcMod = modules[rxSrcIndex];
 
     // Reset the modules back to factory settings.
     for (auto &mod : modules)
-      { mod.second.Reset(); }
+      { mod.Reset(); }
 
-    std::map<std::string, s64> loopPrevs;
-    std::map<std::string, s64> loopLengths;
-    UnboundedArray<s64> loopLengthArray;
+    UnboundedArray<s64> highModuleIndicesFound;
+    UnboundedArray<s64> loopLengths;
     for (s64 i = 1;; i++)
     {
-      pulseQueue.push({ "button", "broadcaster", false });
+      pulseQueue.push({ -1, broadcasterIndex, false });
 
       bool done = false;
       while (!pulseQueue.empty())
       {
         auto pulse = pulseQueue.front();
         pulseQueue.pop();
-        modules[pulse.destination].SendPulse(pulseQueue, pulse.source, pulse.val);
+        modules[pulse.dstIndex].SendPulse(pulseQueue, pulse.srcIndex, pulse.val);
 
-        if (pulse.destination == rxSrcName && pulse.val)
+        if (pulse.dstIndex == rxSrcIndex && pulse.val)
         {
-          if (!loopLengths.contains(pulse.source))
+          // Okay we got a high pulse to our output's source, record it (if we haven't already seen a high pulse from
+          //  this node)
+          if (highModuleIndicesFound.FindFirst(pulse.srcIndex) < 0)
           {
-            // We don't have the loop length for this source yet - see if we can calculate it.
-            if (loopPrevs.contains(pulse.source))
+            highModuleIndicesFound.Append(pulse.srcIndex);
+            loopLengths.Append(i);
+
+            if (loopLengths.Count() == ssz(rxSrcMod.inputs.Count()))
             {
-              // The length of the loop is how long since the last time this input went high.
-              loopLengths[pulse.source] = i - loopPrevs[pulse.source];
-              loopLengthArray.Append(loopLengths[pulse.source]);
-
-              // Wasn't sure if this was going to be the case (my intuition says it has to be the case but I couldn't
-              //  prove it), but it looks like the loops are perfect (which means, yay, LCM again)
-              ASSERT(loopLengths[pulse.source] == loopPrevs[pulse.source]);
-
-              if (loopLengthArray.Count() == ssz(rcSrcMod.inputs.size()))
-              {
-                done = true;
-                break;
-              }
+              // We have now seen a high pulse from every input.
+              done = true;
+              break;
             }
-            else
-              { loopPrevs[pulse.source] = i; } // Hadn't seen a high signal from this one yet, so now we have!
           }
         }
       }
@@ -198,6 +203,6 @@ namespace D20
         { break; }
     }
 
-    PrintFmt("Part 2: {}\n", LeastCommonMultiple(loopLengthArray));
+    PrintFmt("Part 2: {}\n", LeastCommonMultiple(loopLengths));
   }
 }

@@ -122,6 +122,21 @@ public:
     return -1;
   }
 
+  template <typename MemberType, typename ClassType, typename ValueType>
+    requires std::is_same_v<ClassType, T>
+      && std::is_class_v<ClassType>
+      && std::equality_comparable_with<MemberType, ValueType>
+  ssz FindFirst(MemberType ClassType::*member, const ValueType &value) const
+  {
+    for (ssz i = 0; i < count; i++)
+    {
+      if (elements[i].*member == value)
+        { return i; }
+    }
+
+    return -1;
+  }
+
   ssz FindLast(const T &v) const
   {
     for (ssz i = count - 1; i >= 0; i--)
@@ -139,6 +154,21 @@ public:
     for (ssz i = count - 1; i >= 0; i--)
     {
       if (pred(elements[i]))
+        { return i; }
+    }
+
+    return -1;
+  }
+
+  template <typename MemberType, typename ClassType, typename ValueType>
+    requires std::is_same_v<ClassType, T>
+      && std::is_class_v<ClassType>
+      && std::equality_comparable_with<MemberType, ValueType>
+  ssz FindLast(MemberType ClassType::*member, const MemberType &value) const
+  {
+    for (ssz i = count - 1; i >= 0; i--)
+    {
+      if (elements[i].*member == value)
         { return i; }
     }
 

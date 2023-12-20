@@ -33,8 +33,9 @@
 #include "D16.h"
 #include "D17.h"
 #include "D18.h"
-#endif
 #include "D19.h"
+#endif
+#include "D20.h"
 
 int main()
 {
@@ -77,9 +78,11 @@ int main()
   D17::Run("D17.txt");
   std::puts("-- Day 18:");
   D18::Run("D18.txt");
-  #endif
   std::puts("-- Day 19:");
   D19::Run("D19.txt");
+  #endif
+  std::puts("-- Day 20:");
+  D20::Run("D20.txt");
 
   auto time = t.SecondsSinceLastCheckpoint();
   PrintFmt("Finished in {:.02} seconds", time);

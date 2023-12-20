@@ -26,6 +26,15 @@ namespace D20
 
     std::map<std::string, bool> inputs;
 
+    UnboundedArray<std::string> outputNames;
+
+    void Reset()
+    {
+      state = false;
+      for (auto &&[n, v] : inputs)
+        { v = false; }
+    }
+
     void SendPulse(std::queue<Pulse> &pulseQueue, std::string inputName, bool pulse)
     {
       switch (type)
@@ -38,8 +47,8 @@ namespace D20
         {
           state = !state;
 
-          for (auto module : outputs)
-            { pulseQueue.push({ .source = name, .destination = module->name, .val = state }); }
+          for (auto module : outputNames)
+            { pulseQueue.push({ .source = name, .destination = module, .val = state }); }
         }
         break;
 
@@ -56,20 +65,17 @@ namespace D20
             }
           }
 
-          for (auto module : outputs)
-            { pulseQueue.push({ .source = name, .destination = module->name, .val = state }); }
+          for (auto module : outputNames)
+            { pulseQueue.push({ .source = name, .destination = module, .val = state }); }
         }
         break;
 
       case Type::Broadcast:
-        for (auto module : outputs)
-          { pulseQueue.push({ .source = name, .destination = module->name, .val = pulse }); }
+        for (auto module : outputNames)
+          { pulseQueue.push({ .source = name, .destination = module, .val = pulse }); }
         break;
       }
     }
-
-    UnboundedArray<std::string> outputNames;
-    UnboundedArray<Module *> outputs;
   };
 
 
@@ -104,13 +110,9 @@ namespace D20
       for (auto oName : mod.outputNames)
       {
         auto &oMod = modules[oName];
-        mod.outputs.Append(&oMod);
         oMod.inputs[mod.name] = false;
       }
     }
-
-    auto &broadcaster = modules["broadcaster"];
-
 
     std::queue<Pulse> pulseQueue;
     s64 high = 0;
@@ -134,5 +136,62 @@ namespace D20
     }
 
     PrintFmt("Part 1: {}\n", high * low);
+
+    ASSERT(modules["rx"].inputs.size() == 1);
+
+    auto rxSrcName = modules["rx"].inputs.begin()->first;
+
+    for (auto &mod : modules)
+      { mod.second.Reset(); }
+
+    std::map<std::string, s64> loopPrevs;
+    std::map<std::string, s64> loopLengths;
+    UnboundedArray<s64> loopLengthArray;
+    for (s64 i = 1;; i++)
+    {
+      pulseQueue.push({ "button", "broadcaster", false });
+
+      bool done = false;
+      while (!pulseQueue.empty())
+      {
+        auto pulse = pulseQueue.front();
+        pulseQueue.pop();
+
+        if (pulse.destination == rxSrcName && pulse.val)
+        {
+          if (!loopLengths.contains(pulse.source))
+          {
+            if (loopPrevs.contains(pulse.source))
+            {
+              loopLengths[pulse.source] = i - loopPrevs[pulse.source];
+              loopLengthArray.Append(loopLengths[pulse.source]);
+              ASSERT(loopLengths[pulse.source] == loopPrevs[pulse.source]);
+
+              done = true;
+              for (auto &&[rxSrcInputName, v] : modules[rxSrcName].inputs)
+              {
+                if (!loopLengths.contains(rxSrcInputName))
+                {
+                  done = false;
+                  break;
+                }
+              }
+
+              if (done)
+                { break; }
+            }
+            else
+              { loopPrevs[pulse.source] = i; }
+          }
+        }
+
+        modules[pulse.destination].SendPulse(pulseQueue, pulse.source, pulse.val);
+      }
+
+      if (done)
+        { break; }
+    }
+
+    PrintFmt("Part 2: {}\n", LeastCommonMultiple(loopLengthArray));
   }
 }

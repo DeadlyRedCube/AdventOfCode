@@ -40,21 +40,24 @@ namespace D20
       switch (type)
       {
       case Type::Untyped:
+        // There are pulses that don't do anything, for funsies.
         break;
 
       case Type::FlipFlop:
-        if (!pulse)
+        if (!pulse) // FlipFlop only does anything on a low pulse
         {
+          // ... and what it does is flip its state and push that state out to every output.
           state = !state;
-
           for (auto module : outputNames)
             { pulseQueue.push({ .source = name, .destination = module, .val = state }); }
         }
         break;
 
       case Type::Conjunction:
+        // Update the corresponding input's value
         inputs[inputName] = pulse;
         {
+          // Conjunction has a low state if all of the inputs are high (otherwise it has a high state)
           state = false;
           for (auto &&[inName, val] : inputs)
           {
@@ -65,12 +68,14 @@ namespace D20
             }
           }
 
+          // Send the corresponding pulse along (no matter what the pulse value is)
           for (auto module : outputNames)
             { pulseQueue.push({ .source = name, .destination = module, .val = state }); }
         }
         break;
 
       case Type::Broadcast:
+        // Broadcast just zoops the pulse on through directly.
         for (auto module : outputNames)
           { pulseQueue.push({ .source = name, .destination = module, .val = pulse }); }
         break;
@@ -137,10 +142,14 @@ namespace D20
 
     PrintFmt("Part 1: {}\n", high * low);
 
+    // For part 2, rx needs to get a low pulse. I looked at the input and only one node is outputting to it (which is
+    //  what I expected), and it's a conjunction node, so we're going to find cycles in the input high pulses (to
+    //  figure out where they all line up for rx)
     ASSERT(modules["rx"].inputs.size() == 1);
-
     auto rxSrcName = modules["rx"].inputs.begin()->first;
+    auto &rcSrcMod = modules[rxSrcName];
 
+    // Reset the modules back to factory settings.
     for (auto &mod : modules)
       { mod.second.Reset(); }
 
@@ -156,36 +165,33 @@ namespace D20
       {
         auto pulse = pulseQueue.front();
         pulseQueue.pop();
+        modules[pulse.destination].SendPulse(pulseQueue, pulse.source, pulse.val);
 
         if (pulse.destination == rxSrcName && pulse.val)
         {
           if (!loopLengths.contains(pulse.source))
           {
+            // We don't have the loop length for this source yet - see if we can calculate it.
             if (loopPrevs.contains(pulse.source))
             {
+              // The length of the loop is how long since the last time this input went high.
               loopLengths[pulse.source] = i - loopPrevs[pulse.source];
               loopLengthArray.Append(loopLengths[pulse.source]);
+
+              // Wasn't sure if this was going to be the case (my intuition says it has to be the case but I couldn't
+              //  prove it), but it looks like the loops are perfect (which means, yay, LCM again)
               ASSERT(loopLengths[pulse.source] == loopPrevs[pulse.source]);
 
-              done = true;
-              for (auto &&[rxSrcInputName, v] : modules[rxSrcName].inputs)
+              if (loopLengthArray.Count() == ssz(rcSrcMod.inputs.size()))
               {
-                if (!loopLengths.contains(rxSrcInputName))
-                {
-                  done = false;
-                  break;
-                }
+                done = true;
+                break;
               }
-
-              if (done)
-                { break; }
             }
             else
-              { loopPrevs[pulse.source] = i; }
+              { loopPrevs[pulse.source] = i; } // Hadn't seen a high signal from this one yet, so now we have!
           }
         }
-
-        modules[pulse.destination].SendPulse(pulseQueue, pulse.source, pulse.val);
       }
 
       if (done)

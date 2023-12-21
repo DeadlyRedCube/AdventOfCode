@@ -118,6 +118,14 @@ void PrintFmt(std::format_string<t_args...> fmt, t_args&&...args)
 }
 
 
+  inline ssz WrapIndex(ssz i, ssz count)
+  {
+    // equivalent to: return (index < 0) ? (m_count - 1 + ((index + 1) % m_count)) : index % m_count,
+    constexpr size_t k_shift = std::numeric_limits<size_t>::digits - 1;
+    ssz index = ssz(i);
+    return ((count - 1) & (index >> k_shift)) + ((index + ssz(usz(index) >> k_shift)) % count);
+  }
+
 
 template <typename T>
 class Array2D
@@ -170,6 +178,7 @@ public:
   T &operator[](Vec2<I> v)
     { return Idx(v.x, v.y); }
 
+
   template <std::integral I>
   const T &operator[](Vec2<I> v) const
     { return Idx(v.x, v.y); }
@@ -183,6 +192,15 @@ public:
     { ASSERT(v.size() == 2); return Idx(v.begin()[0], v.begin()[1]); }
 
 
+  template <std::integral I>
+  Vec2<I> Wrap(Vec2<I> v) const
+  {
+    return
+    {
+      WrapIndex(ssz(v.x), width),
+      WrapIndex(ssz(v.y), height),
+    };
+  }
 
   bool PositionInRange(Vec2S32 v) const
     { return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height; }

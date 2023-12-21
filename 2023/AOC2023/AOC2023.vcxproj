@@ -167,6 +167,7 @@
     <ClInclude Include="D07.h" />
     <ClInclude Include="Util\Math\Interval.h" />
     <ClInclude Include="Util\Math\MathHelper.h" />
+    <ClInclude Include="Util\Math\Polygons.h" />
     <ClInclude Include="Util\Math\Vec.h" />
     <ClInclude Include="Util\Timer.h" />
     <ClInclude Include="Util\Types.h" />

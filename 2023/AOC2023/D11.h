@@ -17,7 +17,7 @@ namespace D11
       bool anyGalaxy = false;
       for (auto x = 0; x < grid.Width(); x++)
       {
-        if (grid.Idx(x, y) == '#')
+        if (grid[{x, y}] == '#')
         {
           anyGalaxy = true;
           galaxies1.Append({x, y + yAdd1});
@@ -36,12 +36,12 @@ namespace D11
 
     // Now scan through each column from right to left and update our galaxy coordinates to take into account the
     //  empty columns
-    for (auto x = grid.Width() - 1; x >= 0; x--)
+    for (ssz x = grid.Width() - 1; x >= 0; x--)
     {
       bool anyGalaxy = false;
-      for (auto y = 0; y < grid.Height(); y++)
+      for (ssz y = 0; y < grid.Height(); y++)
       {
-        if (grid.Idx(x, y) == '#')
+        if (grid[{x, y}] == '#')
         {
           anyGalaxy = true;
           break;

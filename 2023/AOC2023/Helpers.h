@@ -160,24 +160,11 @@ public:
   ssize_t Height() const
     { return height; }
 
-  T &Idx(ssize_t x, ssize_t y)
-  {
-    ASSERT(x >= 0 && x < width && y >= 0 && y < height);
-    return data[x + y * width];
-  }
-
-  const T &Idx(ssize_t x, ssize_t y) const
-  {
-    ASSERT(x < width && y < height);
-    return data[x + y * width];
-  }
-
   void Fill(const T &v)
   {
     for (ssize_t i = 0; i < width * height; i++)
       { data[i] = v; }
   }
-
 
   template <std::integral I>
   T &operator[](Vec2<I> v)
@@ -204,6 +191,18 @@ public:
     { return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height; }
 
 private:
+  T &Idx(ssize_t x, ssize_t y)
+  {
+    ASSERT(x >= 0 && x < width && y >= 0 && y < height);
+    return data[x + y * width];
+  }
+
+  const T &Idx(ssize_t x, ssize_t y) const
+  {
+    ASSERT(x < width && y < height);
+    return data[x + y * width];
+  }
+
   ssize_t width = 0;
   ssize_t height = 0;
   T *data = nullptr;
@@ -216,9 +215,7 @@ Array2D<char> MakeCharArray(const std::vector<std::string> &v)
   for (ssize_t y = 0; y < ary.Height(); y++)
   {
     for (ssize_t x = 0; x < ary.Width(); x++)
-    {
-      ary.Idx(x, y) = v[y][x];
-    }
+      { ary[{x, y}] = v[y][x]; }
   }
 
   return ary;

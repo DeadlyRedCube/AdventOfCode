@@ -16,16 +16,16 @@ namespace D14
       for(s32 y = 0; y < grid.Height(); y++)
       {
         // Add walls to newGrid but not balls
-        newGrid.Idx(x, y) = (grid.Idx(x, y) == '#') ? '#' : '.';
-        if (grid.Idx(x, y) == 'O')
+        newGrid[{x, y}] = (grid[{x, y}] == '#') ? '#' : '.';
+        if (grid[{x, y}] == 'O')
         {
           // This was a ball, so roll it up to the next free space, calculate the corresponding load, and then
           //  bump the free space to the next spot.
-          newGrid.Idx(x, freeY) = 'O';
+          newGrid[{x, freeY}] = 'O';
           load += grid.Height() - freeY;
           freeY++;
         }
-        else if (grid.Idx(x, y) == '#')
+        else if (grid[{x, y}] == '#')
           { freeY = y + 1; }  // Next free space is now the space below this wall (balls won't roll past the wall)
       }
     }
@@ -43,13 +43,13 @@ namespace D14
         ssz freeY = 0;
         for(ssz y = 0; y < grid.Height(); y++)
         {
-          newGrid.Idx(x, y) = (grid.Idx(x, y) == '#') ? '#' : '.';
-          if (grid.Idx(x, y) == 'O')
+          newGrid[{x, y}] = (grid[{x, y}] == '#') ? '#' : '.';
+          if (grid[{x, y}] == 'O')
           {
-            newGrid.Idx(x, freeY) = 'O';
+            newGrid[{x, freeY}] = 'O';
             freeY++;
           }
-          else if (grid.Idx(x, y) == '#')
+          else if (grid[{x, y}] == '#')
             { freeY = y + 1; }
         }
       }
@@ -62,13 +62,13 @@ namespace D14
         ssz freeX = 0;
         for (ssz x = 0; x < grid.Width(); x++)
         {
-          newGrid.Idx(x, y) = (grid.Idx(x, y) == '#') ? '#' : '.';
-          if (grid.Idx(x, y) == 'O')
+          newGrid[{x, y}] = (grid[{x, y}] == '#') ? '#' : '.';
+          if (grid[{x, y}] == 'O')
           {
-            newGrid.Idx(freeX, y) = 'O';
+            newGrid[{freeX, y}] = 'O';
             freeX++;
           }
-          else if (grid.Idx(x, y) == '#')
+          else if (grid[{x, y}] == '#')
             { freeX = x + 1; }
         }
       }
@@ -81,13 +81,13 @@ namespace D14
         ssz freeY = grid.Height() - 1;
         for(ssz y = grid.Height() - 1; y >= 0; y--)
         {
-          newGrid.Idx(x, y) = (grid.Idx(x, y) == '#') ? '#' : '.';
-          if (grid.Idx(x, y) == 'O')
+          newGrid[{x, y}] = (grid[{x, y}] == '#') ? '#' : '.';
+          if (grid[{x, y}] == 'O')
           {
-            newGrid.Idx(x, freeY) = 'O';
+            newGrid[{x, freeY}] = 'O';
             freeY--;
           }
-          else if (grid.Idx(x, y) == '#')
+          else if (grid[{x, y}] == '#')
             { freeY = y - 1; }
         }
       }
@@ -101,14 +101,14 @@ namespace D14
         ssz freeX = grid.Width() - 1;
         for (ssz x = grid.Width() - 1; x >= 0; x--)
         {
-          newGrid.Idx(x, y) = (grid.Idx(x, y) == '#') ? '#' : '.';
-          if (grid.Idx(x, y) == 'O')
+          newGrid[{x, y}] = (grid[{x, y}] == '#') ? '#' : '.';
+          if (grid[{x, y}] == 'O')
           {
-            newGrid.Idx(freeX, y) = 'O';
+            newGrid[{freeX, y}] = 'O';
             load += grid.Height() - y;
             freeX--;
           }
-          else if (grid.Idx(x, y) == '#')
+          else if (grid[{x, y}] == '#')
             { freeX = x - 1; }
         }
       }
@@ -120,7 +120,7 @@ namespace D14
       for(ssz y = 0; y < grid.Height(); y++)
       {
         for (ssz x = 0; x < grid.Width(); x++)
-          { state += grid.Idx(x, y); }
+          { state += grid[{x, y}]; }
       }
 
       if (auto startIter = states.find(state); startIter != states.end())

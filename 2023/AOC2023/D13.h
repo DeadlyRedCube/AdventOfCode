@@ -17,7 +17,7 @@ namespace D13
         for (int y = 0; y < grid.Height(); y++)
         {
           for (int x = 0; x < grid.Width(); x++)
-            { grid.Idx(x, y) = lines[y + prevGridStart][x]; }
+            { grid[{x, y}] = lines[y + prevGridStart][x]; }
         }
 
         prevGridStart = i + 1;
@@ -30,7 +30,7 @@ namespace D13
       for (int y = 0; y < grid.Height(); y++)
       {
         for (int x = 0; x < grid.Width(); x++)
-          { grid.Idx(x, y) = lines[y + prevGridStart][x]; }
+          { grid[{x, y}] = lines[y + prevGridStart][x]; }
       }
     }
 
@@ -49,7 +49,7 @@ namespace D13
         {
           for (ssz i = 0; i < std::min(reflPoint, grid.Width() - reflPoint); i++)
           {
-            if (grid.Idx(reflPoint + i, y) != grid.Idx(reflPoint - i - 1, y))
+            if (grid[{reflPoint + i, y}] != grid[{reflPoint - i - 1, y}])
             {
               failCount++;
               if (failCount >= 2)
@@ -75,7 +75,7 @@ namespace D13
         {
           for (ssz i = 0; i < std::min(reflPoint, grid.Height() - reflPoint); i++)
           {
-            if (grid.Idx(x, reflPoint + i) != grid.Idx(x, reflPoint - i - 1))
+            if (grid[{x, reflPoint + i}] != grid[{x, reflPoint - i - 1}])
             {
               failCount++;
               if (failCount >= 2)

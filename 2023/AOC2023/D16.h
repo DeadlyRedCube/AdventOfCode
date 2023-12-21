@@ -45,13 +45,13 @@ namespace D16
           { d = Dir::S; }
 
         // If we already were energized in this direction we already know the rest
-        if ((energized.Idx(beam->coord.x, beam->coord.y) & d) != Dir::None)
+        if ((energized[beam->coord] & d) != Dir::None)
           { break; }
 
         // Add energy from this direction to this square
-        energized.Idx(beam->coord.x, beam->coord.y) |= d;
+        energized[beam->coord] |= d;
 
-        switch (grid.Idx(beam->coord.x, beam->coord.y))
+        switch (grid[beam->coord])
         {
         case '.':
           break;
@@ -110,7 +110,7 @@ namespace D16
     {
       for (s32 x = 0; x < energized.Width(); x++)
       {
-        if (energized.Idx(x, y) != Dir::None)
+        if (energized[{x, y}] != Dir::None)
           { count++; }
       }
     }

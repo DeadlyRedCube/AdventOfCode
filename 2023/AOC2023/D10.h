@@ -25,30 +25,30 @@ namespace D10
     {
       for (auto x = 0; x < charGrid.Width(); x++)
       {
-        switch (charGrid.Idx(x, y))
+        switch (charGrid[{ x, y }])
         {
-        case '|': graph.Idx(x, y) = Exits::N | Exits::S; break;
-        case '-': graph.Idx(x, y) = Exits::E | Exits::W; break;
-        case 'L': graph.Idx(x, y) = Exits::N | Exits::E; break;
-        case 'J': graph.Idx(x, y) = Exits::N | Exits::W; break;
-        case '7': graph.Idx(x, y) = Exits::S | Exits::W; break;
-        case 'F': graph.Idx(x, y) = Exits::S | Exits::E; break;
+        case '|': graph[{ x, y }] = Exits::N | Exits::S; break;
+        case '-': graph[{ x, y }] = Exits::E | Exits::W; break;
+        case 'L': graph[{ x, y }] = Exits::N | Exits::E; break;
+        case 'J': graph[{ x, y }] = Exits::N | Exits::W; break;
+        case '7': graph[{ x, y }] = Exits::S | Exits::W; break;
+        case 'F': graph[{ x, y }] = Exits::S | Exits::E; break;
         case '.': break;
         case 'S': entryPoint = { x, y }; break; // We don't know what exits are here yet but we can mark it for later.
         }
 
         // Remove any exits that point off the map.
         if (x == 0)
-          { graph.Idx(x, y) &= ~Exits::W; }
+          { graph[{ x, y }] &= ~Exits::W; }
 
         if (x == charGrid.Width() - 1)
-          { graph.Idx(x, y) &= ~Exits::E; }
+          { graph[{ x, y }] &= ~Exits::E; }
 
         if (y == 0)
-          { graph.Idx(x, y) &= ~Exits::N; }
+          { graph[{ x, y }] &= ~Exits::N; }
 
         if (y == charGrid.Height() - 1)
-          { graph.Idx(x, y) &= ~Exits::S; }
+          { graph[{ x, y }] &= ~Exits::S; }
       }
     }
 
@@ -62,8 +62,8 @@ namespace D10
       Vec2S32 n = entryPoint + neighborDirections[dirIndex];
 
       // If the neighbor in this direction points back to us, add an exit in that direction.
-      if ((graph.Idx(n.x, n.y) & oppositeDirections[dirIndex]) != Exits::None)
-        { graph.Idx(entryPoint.x, entryPoint.y) |= dir; }
+      if ((graph[n] & oppositeDirections[dirIndex]) != Exits::None)
+        { graph[entryPoint] |= dir; }
     }
 
     auto maxDist = 0;
@@ -72,7 +72,7 @@ namespace D10
     distances.Fill(std::numeric_limits<s32>::max());
 
     // Distance to the entry point is 0.
-    distances.Idx(entryPoint.x, entryPoint.y) = 0;
+    distances[entryPoint] = 0;
     UnboundedArray<Vec2S32> positions;
 
     // Start at the entry
@@ -83,8 +83,8 @@ namespace D10
       auto p = positions[0];
       positions.RemoveAt(0);
 
-      auto exits = graph.Idx(p.x, p.y);
-      auto neighboringDist = distances.Idx(p.x, p.y) + 1;
+      auto exits = graph[p];
+      auto neighboringDist = distances[p] + 1;
 
       // Update the distance in each direction from this point and, if we found a closer entry, add it to the list.
       for (s32 dirIndex = 0; dirIndex < 4; dirIndex++)
@@ -93,9 +93,9 @@ namespace D10
         if ((exits & dir) != Exits::None)
         {
           Vec2S32 n = p + neighborDirections[dirIndex];
-          if (neighboringDist < distances.Idx(n.x, n.y))
+          if (neighboringDist < distances[n])
           {
-            distances.Idx(n.x, n.y) = neighboringDist;
+            distances[n] = neighboringDist;
             positions.Append(n);
             maxDist = std::max(maxDist, neighboringDist);
           }
@@ -120,8 +120,8 @@ namespace D10
       //  - Any empty square we hit when we're "in" counts as a contained point.
       for (auto x = 0; x < charGrid.Width(); x++)
       {
-        auto e = graph.Idx(x, y);
-        if (distances.Idx(x, y) == std::numeric_limits<s32>::max())
+        auto e = graph[{ x, y }];
+        if (distances[{ x, y }] == std::numeric_limits<s32>::max())
         {
           // If it has no set distance value, it was not on the path, so we can treat it as empty and check whether
           //  it is contained or not.

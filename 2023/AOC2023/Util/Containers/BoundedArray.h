@@ -84,7 +84,7 @@ public:
   }
 
 protected:
-  void EnsureCapacity(ssz cap, [[maybe_unused]] bool preferExactSize) override
+  void EnsureCapacity([[maybe_unused]] ssz cap, [[maybe_unused]] bool preferExactSize) override
   {
     ASSERT(cap <= Cap);
   }

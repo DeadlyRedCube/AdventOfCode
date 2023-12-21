@@ -94,7 +94,7 @@ public:
   bool IsMember(const T *e) const
     { return IndexFromElement(e) >= 0; }
 
-  T *GetBuffer(array_view_index auto i, ssz c)
+  T *GetBuffer(array_view_index auto i, [[maybe_unused]] ssz c)
   {
     ASSERT(InRangeInclusive(EvaluateIndex(i), 0, count));
     ASSERT(InRangeInclusive(EvaluateIndex(i) + c, 0, count));

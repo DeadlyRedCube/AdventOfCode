@@ -179,17 +179,23 @@ public:
   }
 
 
-  T &operator[](Vec2S32 v)
+  template <std::integral I>
+  T &operator[](Vec2<I> v)
     { return Idx(v.x, v.y); }
 
-  const T &operator[](Vec2S32 v) const
+  template <std::integral I>
+  const T &operator[](Vec2<I> v) const
     { return Idx(v.x, v.y); }
 
-  T &operator[](Vec2S64 v)
-    { return Idx(v.x, v.y); }
+  template <std::integral I>
+  T &operator[](std::initializer_list<I> v)
+    { ASSERT(v.size() == 2); return Idx(v.begin()[0], v.begin()[1]); }
 
-  const T &operator[](Vec2S64 v) const
-    { return Idx(v.x, v.y); }
+  template <std::integral I>
+  const T &operator[](std::initializer_list<I> v) const
+    { ASSERT(v.size() == 2); return Idx(v.begin()[0], v.begin()[1]); }
+
+
 
   bool PositionInRange(Vec2S32 v) const
     { return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height; }

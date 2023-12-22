@@ -28,6 +28,24 @@
         </Expand>
     </Type>
 
+    <Type Name="Array3D&lt;*&gt;>">
+        <DisplayString>Array[{dims[0]}, {dims[1]}, {dims[2]}]</DisplayString>
+        <Expand>
+            <CustomListItems>
+                <Variable Name="z" InitialValue="0"/>
+                <Variable Name="y" InitialValue="0"/>
+                <Loop Condition="z &lt; dims[2]">
+                    <Exec>y = 0</Exec>
+                    <Loop Condition="y &lt; dims[1]">
+                        <Item Name="{z}, {y}">&amp;data[y * dims[0] + z * dims[0] * dims[1]],[dims[0]]na</Item>
+                        <Exec>++y</Exec>
+                    </Loop>
+                    <Exec>++z</Exec>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
     <Type Name="D19::PartInterval">
         <DisplayString>[x:[{x.start}, {x.end - 1}], m:[{m.start}, {m.end - 1}], a:[{a.start}, {a.end - 1}], s:[{s.start}, {s.end - 1}]</DisplayString>
     </Type>

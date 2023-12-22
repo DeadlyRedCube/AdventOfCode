@@ -374,3 +374,109 @@ AccT AccumulateRange(InT &&range, AccT &&initial, PredicateType &&pred)
 
 std::string Join(std::initializer_list<std::string> strings, const char *joiner)
   { return AccumulateRange(strings, std::string{}, [&joiner](auto &&a, auto &&b) { return a.empty() ? b : a + joiner + b; }); }
+
+
+
+template <typename T>
+class Array3D
+{
+public:
+  Array3D() = default;
+  Array3D(ssz xDim, ssz yDim, ssz zDim)
+    : dims { xDim, yDim, zDim }
+    , data(new T[xDim * yDim * zDim] {})
+    { }
+
+  Array3D(const Array3D &) = delete;
+  auto operator=(const Array3D &) = delete;
+
+  Array3D(Array3D &&other) noexcept
+    : data(std::exchange(other.data, nullptr))
+  {
+    for (auto i = 0; i < 3; i++)
+      { dims[i] = std::exchange(other.dims[i], 0); }
+  }
+
+
+  Array3D &operator=(Array3D &&other)
+  {
+    delete[] data;
+
+    for (auto i = 0; i < 3; i++)
+      { dims[i] = std::exchange(other.dims[i], 0); }
+    data = std::exchange(other.data, nullptr);
+
+    return *this;
+  }
+
+  ~Array3D()
+    { delete[] data; }
+
+  ssize_t XDim() const
+    { return dims[0]; }
+
+  ssize_t YDim() const
+    { return dims[1]; }
+
+  ssize_t ZDim() const
+    { return dims[2]; }
+
+  void Fill(const T &v)
+  {
+    for (ssize_t i = 0; i < dims[0] * dims[1] * dims[2]; i++)
+      { data[i] = v; }
+  }
+
+  template <std::integral I>
+  T &operator[](Vec3<I> v)
+    { return Idx(v.x, v.y, v.z); }
+
+
+  template <std::integral I>
+  const T &operator[](Vec3<I> v) const
+    { return Idx(v.x, v.y, v.z); }
+
+  template <std::integral I>
+  T &operator[](std::initializer_list<I> v)
+    { ASSERT(v.size() == 3); return Idx(v.begin()[0], v.begin()[1], v.begin()[2]); }
+
+  template <std::integral I>
+  const T &operator[](std::initializer_list<I> v) const
+    { ASSERT(v.size() == 3); return Idx(v.begin()[0], v.begin()[1], v.begin()[2]); }
+
+
+  template <std::integral I>
+  Vec3<I> Wrap(Vec3<I> v) const
+  {
+    return
+    {
+      WrapIndex(ssz(v.x), dims[0]),
+      WrapIndex(ssz(v.y), dims[1]),
+      WrapIndex(ssz(v.z), dims[2]),
+    };
+  }
+
+  bool PositionInRange(Vec3S32 v) const
+    { return v.x >= 0 && v.x < dims[0] && v.y >= 0 && v.y < dims[1] && v.z >= 0 && v.z < dims[2]; }
+
+  bool PositionInRange(Vec3S64 v) const
+    { return v.x >= 0 && v.x < dims[0] && v.y >= 0 && v.y < dims[1] && v.z >= 0 && v.z < dims[2]; }
+
+private:
+  T &Idx(ssz x, ssz y, ssz z)
+  {
+    ASSERT(x >= 0 && x < dims[0] && y >= 0 && y < dims[1] && z >= 0 && z < dims[2]);
+    return data[x + y * dims[0] + z * dims[0] * dims[1]];
+  }
+
+  const T &Idx(ssz x, ssz y, ssz z) const
+  {
+    ASSERT(x >= 0 && x < dims[0] && y >= 0 && y < dims[1] && z >= 0 && z < dims[2]);
+    return data[x + y * dims[0] + z * dims[0] * dims[1]];
+  }
+
+  ssz dims[3];
+  T *data = nullptr;
+};
+
+

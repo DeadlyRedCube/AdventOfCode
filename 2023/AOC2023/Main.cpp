@@ -12,6 +12,7 @@
 
 #include "Util/Core.h"
 #include "Helpers.h"
+#include "Util/BitmapVis.h"
 
 
 #if 0
@@ -35,8 +36,9 @@
 #include "D18.h"
 #include "D19.h"
 #include "D20.h"
-#endif
 #include "D21.h"
+#endif
+#include "D22.h"
 
 int main()
 {
@@ -83,9 +85,11 @@ int main()
   D19::Run("D19.txt");
   std::puts("\n-- Day 20:");
   D20::Run("D20.txt");
-  #endif
   std::puts("\n-- Day 21:");
   D21::Run("D21.txt");
+  #endif
+  std::puts("\n-- Day 22:");
+  D22::Run("D22.txt");
 
   auto time = t.SecondsSinceLastCheckpoint();
   PrintFmt("Finished in {:.02} seconds", time);

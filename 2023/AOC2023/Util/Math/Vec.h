@@ -175,11 +175,6 @@ public:
   T x = T(0);
   T y = T(0);
   T z = T(0);
-
-  static constexpr Vec3 Zero { 0, 0, 0 };
-  static constexpr Vec3 UnitX { 1, 0, 0 };
-  static constexpr Vec3 UnitY { 0, 1, 0 };
-  static constexpr Vec3 UnitZ { 0, 0, 1 };
 };
 
 

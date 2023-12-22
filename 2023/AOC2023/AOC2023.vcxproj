@@ -156,6 +156,7 @@
     <ClInclude Include="D19.h" />
     <ClInclude Include="D20.h" />
     <ClInclude Include="D21.h" />
+    <ClInclude Include="D22.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Util\BitmapVis.h" />
     <ClInclude Include="Util\ComPtr.h" />

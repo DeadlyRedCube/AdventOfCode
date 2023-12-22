@@ -34,7 +34,7 @@ public:
     { return v >= start && v < end; }
 
   bool Overlaps(Interval b) const
-    { return end > b.start && start < b.FromStartAndEnd; }
+    { return end > b.start && start < b.end; }
 
   std::optional<Interval> PartBefore(Interval b) const
   {

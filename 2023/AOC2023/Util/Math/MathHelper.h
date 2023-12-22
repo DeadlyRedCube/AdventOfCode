@@ -95,3 +95,8 @@ T LeastCommonMultiple(ArrayView<T> list)
 template <std::integral T>
 u32 CountSetBits(T v)
   { return s32(std::popcount(std::make_unsigned_t<T>(v))); }
+
+
+template <numeric T>
+T Square(T v)
+  { return v * v; }

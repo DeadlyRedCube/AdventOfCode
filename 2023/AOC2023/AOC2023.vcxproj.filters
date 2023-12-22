@@ -129,6 +129,12 @@
     <ClInclude Include="D21.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Util\BitmapVis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Util\ComPtr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

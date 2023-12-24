@@ -18,22 +18,21 @@ namespace D23
   };
 
 
-  s64 FindLongestPath(ArrayView<Node> nodes, ArrayView<Edge> edges, s32 exitNodeIndex)
+  s32 FindLongestPath(ArrayView<Node> nodes, ArrayView<Edge> edges, s32 exitNodeIndex)
   {
     ASSERT(nodes.Count() <= 64); // Gonna use a 64-bit number to store a visited
     ASSERT(exitNodeIndex >= 0);
-    //struct
 
     struct PathFind
     {
       s32 currentNode = 0;
-      s64 distanceTraveled = 0;
-      u64 visitedNodes = 0;
+      s32 distanceTraveled = 0;
+      u64 visitedNodes = 0;       // Keep a bitmask of visited nodes
     };
 
 
-    // Start at node 0
-    s64 bestDistance = 0;
+    // Start at node 0 (always the entrance)
+    s32 bestDistance = 0;
     std::queue<PathFind> pathFindQueue;
     pathFindQueue.push({});
 
@@ -44,6 +43,7 @@ namespace D23
 
       if (pf.currentNode == exitNodeIndex)
       {
+        // We reached the exit so update our best travel distance.
         bestDistance = std::max(bestDistance, pf.distanceTraveled);
         continue;
       }
@@ -56,6 +56,7 @@ namespace D23
         if (edges[ei].oneWay && edges[ei].startNodeIndex != pf.currentNode)
           { continue; }
 
+        // Get the destination node index given our direction of travel.
         s32 dest = (edges[ei].startNodeIndex == pf.currentNode) ? edges[ei].endNodeIndex : edges[ei].startNodeIndex;
 
         // Can't turn to a path we've reached before.
@@ -108,16 +109,23 @@ namespace D23
 
     const Vec2S32 directions[] = { { 0, -1 }, { 0, 1 }, { 1, 0 }, { -1, 0 } };
 
-    std::map<char, Vec2S32> oneWayDirection = { { '^', { 0, -1 } }, { 'v', { 0, 1 } }, { '>', { 1, 0 } }, { '<', { -1, 0 } } };
+    std::map<char, Vec2S32> oneWayDirection =
+    {
+      { '^', { 0, -1 } },
+      { 'v', { 0, 1 } },
+      { '>', { 1, 0 } },
+      { '<', { -1, 0 } }
+    };
 
-    // Build a node graph!
+    // Build a node graph! Every intersection (plus start and end) are nodes, the paths between are edges, which can
+    //  be one-way.
     s32 exitNodeIndex = -1;
     while (!stepQueue.empty())
     {
       auto step = stepQueue.front();
       stepQueue.pop();
 
-      // We may have approached this edge from another direction
+      // We may have approached this edge from another direction, so don't keep tracing if we've already done it.
       if (edgeLookup.contains(step.step))
         { continue; }
 
@@ -129,15 +137,14 @@ namespace D23
 
       s32 distance = 1;
 
-      // Trace this
       for (;;)
       {
         if (auto f = oneWayDirection.find(grid[pos]); f != oneWayDirection.end())
         {
           // Found a one-way, see if it's in the direction we want
           oneWay = true;
-          if (pos + f->second  == prevPos)
-            { flip = true; }
+          if (pos + f->second == prevPos)
+            { flip = true; } // This path is going the opposite direction as we're tracing it, so flip it when done
         }
 
         bool hasExit[4] {};
@@ -145,6 +152,7 @@ namespace D23
         Vec2S32 lastExit = pos;
         for (s32 i = 0; i < 4; i++)
         {
+          // Check for any ways out from this node that aren't the way we came in.
           if (grid.PositionInRange(pos + directions[i])
             && pos + directions[i] != prevPos
             && grid[pos + directions[i]] != '#')
@@ -155,13 +163,15 @@ namespace D23
           }
         }
 
-        if (exitCount > 1 || pos.y == grid.Height() - 1) // If we found an intersection or we reached the bottom
+        if (exitCount > 1 || pos.y == grid.Height() - 1)
         {
+          // This had multiple exits so it's going to become a node in the graph (if it isn't already)
           s32 nodeIndex;
           if (auto n = nodeLookup.find(pos); n != nodeLookup.end())
             { nodeIndex = n->second; }
           else
           {
+            // Was not already in the graph, so add a new one (and note if it's the exit)
             nodeIndex = s32(nodes.Count());
             nodes.Append({ pos });
             nodeLookup[pos] = nodeIndex;
@@ -169,6 +179,7 @@ namespace D23
               { exitNodeIndex = nodeIndex; }
           }
 
+          // Add a new edge
           s32 edgeIndex = s32(edges.Count());
           auto &edge = edges.AppendNew();
 
@@ -176,15 +187,20 @@ namespace D23
           edge.startNodeIndex = step.startingNodeIndex;
           edge.endNodeIndex = nodeIndex;
           edge.distance = distance;
+
+          // If we traced it the wrong way, swap start/end so that they're correctly ordered for one-way travel.
           if (flip)
             { std::swap(edge.startNodeIndex, edge.endNodeIndex); }
 
+          // Update the ending nodes to know they connect through this edge.
           nodes[edge.startNodeIndex].edgeIndices.Append(edgeIndex);
           nodes[edge.endNodeIndex].edgeIndices.Append(edgeIndex);
 
+          // Update our edge lookup so we don't have duplicates.
           edgeLookup[step.step] = edgeIndex;
           edgeLookup[prevPos] = edgeIndex;
 
+          // If we added this node (it's at the end of the nodes list) trace all other exits.
           if (nodeIndex == nodes.Count() - 1)
           {
             for (s32 i = 0; i < 4; i++)
@@ -198,6 +214,8 @@ namespace D23
         }
         else
         {
+          // Otherwise, this was just another step along the edge path. Move us along the path and continue to count
+          //  our distance traveled.
           ASSERT(exitCount == 1);
           prevPos = pos;
           pos = lastExit;

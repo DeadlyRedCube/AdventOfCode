@@ -2,13 +2,77 @@
 
 namespace D23
 {
-  enum class Dir
+  struct Node
   {
-    N,
-    S,
-    E,
-    W
+    Vec2S32 pos;
+    UnboundedArray<s32> edgeIndices;
   };
+
+  struct Edge
+  {
+    bool oneWay = false;
+    s32 startNodeIndex; // A one way node must be entered from this node (or else cannot be entered)
+    s32 endNodeIndex;
+
+    s32 distance = 0;
+  };
+
+
+  s64 FindLongestPath(ArrayView<Node> nodes, ArrayView<Edge> edges, s32 exitNodeIndex)
+  {
+    ASSERT(nodes.Count() <= 64); // Gonna use a 64-bit number to store a visited
+    ASSERT(exitNodeIndex >= 0);
+    //struct
+
+    struct PathFind
+    {
+      s32 currentNode = 0;
+      s64 distanceTraveled = 0;
+      u64 visitedNodes = 0;
+    };
+
+
+    // Start at node 0
+    s64 bestDistance = 0;
+    std::queue<PathFind> pathFindQueue;
+    pathFindQueue.push({});
+
+    while (!pathFindQueue.empty())
+    {
+      auto pf = pathFindQueue.front();
+      pathFindQueue.pop();
+
+      if (pf.currentNode == exitNodeIndex)
+      {
+        bestDistance = std::max(bestDistance, pf.distanceTraveled);
+        continue;
+      }
+
+      pf.visitedNodes |= (u64(1) << pf.currentNode);
+
+      for (auto ei : nodes[pf.currentNode].edgeIndices)
+      {
+        // Can't go up a one-way
+        if (edges[ei].oneWay && edges[ei].startNodeIndex != pf.currentNode)
+          { continue; }
+
+        s32 dest = (edges[ei].startNodeIndex == pf.currentNode) ? edges[ei].endNodeIndex : edges[ei].startNodeIndex;
+
+        // Can't turn to a path we've reached before.
+        if ((pf.visitedNodes & (u64(1) << dest)) != 0)
+          { continue; }
+
+        pathFindQueue.push(
+          {
+            .currentNode = dest,
+            .distanceTraveled = pf.distanceTraveled + edges[ei].distance,
+            .visitedNodes = pf.visitedNodes,
+          });
+      }
+    }
+
+    return bestDistance;
+  }
 
 
   void Run(const char *path)
@@ -24,21 +88,6 @@ namespace D23
         break;
       }
     }
-
-    struct Node
-    {
-      Vec2S32 pos;
-      UnboundedArray<s32> edgeIndices;
-    };
-
-    struct Edge
-    {
-      bool oneWay = false;
-      s32 startNodeIndex; // A one way node must be entered from this node (or else cannot be entered)
-      s32 endNodeIndex;
-
-      s32 distance = 0;
-    };
 
     UnboundedArray<Node> nodes;
     UnboundedArray<Edge> edges;
@@ -157,59 +206,12 @@ namespace D23
       }
     }
 
-    // Could just brute force this first part?
-    ASSERT(nodes.Count() <= 64); // Gonna use a 64-bit number to store a visited
-    ASSERT(exitNodeIndex >= 0);
-    //struct
+    PrintFmt("Part 1: {}\n", FindLongestPath(nodes, edges, exitNodeIndex));
 
-    struct PathFind
-    {
-      s32 currentNode = 0;
-      s64 distanceTraveled = 0;
-      u64 visitedNodes = 0;
-    };
+    // For part 2, remove the one-ways
+    for (auto &e : edges)
+      { e.oneWay = false; }
 
-
-
-    // Start at node 0
-    s64 bestDistance = 0;
-    std::queue<PathFind> pathFindQueue;
-    pathFindQueue.push({});
-
-    while (!pathFindQueue.empty())
-    {
-      auto pf = pathFindQueue.front();
-      pathFindQueue.pop();
-
-      if (pf.currentNode == exitNodeIndex)
-      {
-        bestDistance = std::max(bestDistance, pf.distanceTraveled);
-        continue;
-      }
-
-      pf.visitedNodes |= (u64(1) << pf.currentNode);
-
-      for (auto ei : nodes[pf.currentNode].edgeIndices)
-      {
-        // Can't go up a one-way
-        if (edges[ei].oneWay && edges[ei].startNodeIndex != pf.currentNode)
-          { continue; }
-
-        s32 dest = (edges[ei].startNodeIndex == pf.currentNode) ? edges[ei].endNodeIndex : edges[ei].startNodeIndex;
-
-        // Can't turn to a path we've reached before.
-        if ((pf.visitedNodes & (u64(1) << dest)) != 0)
-          { continue; }
-
-        pathFindQueue.push(
-          {
-            .currentNode = dest,
-            .distanceTraveled = pf.distanceTraveled + edges[ei].distance,
-            .visitedNodes = pf.visitedNodes,
-          });
-      }
-    }
-
-    PrintFmt("Part 1: {}\n", bestDistance);
+    PrintFmt("Part 2: {}\n", FindLongestPath(nodes, edges, exitNodeIndex));
   }
 }

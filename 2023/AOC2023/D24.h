@@ -2,50 +2,6 @@
 
 namespace D24
 {
-  struct Mat3x3
-  {
-    double data[3][3];
-
-    Vec3F64 operator* (const Vec3F64 &v) const
-    {
-      return
-      {
-        data[0][0] * v.x + data[0][1] * v.y + data[0][2] * v.z,
-        data[1][0] * v.x + data[1][1] * v.y + data[1][2] * v.z,
-        data[2][0] * v.x + data[2][1] * v.y + data[2][2] * v.z,
-      };
-    }
-  };
-
-
-  double Determinant(const Mat3x3 &m)
-  {
-    return (m.data[0][0] * (m.data[1][1] * m.data[2][2] - m.data[2][1] * m.data[1][2]) -
-            m.data[1][0] * (m.data[0][1] * m.data[2][2] - m.data[2][1] * m.data[0][2]) +
-            m.data[2][0] * (m.data[0][1] * m.data[1][2] - m.data[1][1] * m.data[0][2]));
-  }
-
-  Mat3x3 Inverse(const Mat3x3 &m)
-  {
-    auto det = Determinant(m);
-    double invDet = 1.0 / det;
-
-    Mat3x3 out;
-    out.data[0][0] = (m.data[1][1] * m.data[2][2] - m.data[2][1] * m.data[1][2]) * invDet;
-    out.data[0][1] = (m.data[2][1] * m.data[0][2] - m.data[0][1] * m.data[2][2]) * invDet;
-    out.data[0][2] = (m.data[0][1] * m.data[1][2] - m.data[1][1] * m.data[0][2]) * invDet;
-
-    out.data[1][0] = (m.data[2][0] * m.data[1][2] - m.data[1][0] * m.data[2][2]) * invDet;
-    out.data[1][1] = (m.data[0][0] * m.data[2][2] - m.data[2][0] * m.data[0][2]) * invDet;
-    out.data[1][2] = (m.data[1][0] * m.data[0][2] - m.data[0][0] * m.data[1][2]) * invDet;
-
-    out.data[2][0] = (m.data[1][0] * m.data[2][1] - m.data[2][0] * m.data[1][1]) * invDet;
-    out.data[2][1] = (m.data[2][0] * m.data[0][1] - m.data[0][0] * m.data[2][1]) * invDet;
-    out.data[2][2] = (m.data[0][0] * m.data[1][1] - m.data[1][0] * m.data[0][1]) * invDet;
-    return out;
-  }
-
-
   void Run(const char *path)
   {
     struct Stone
@@ -361,7 +317,7 @@ namespace D24
     //
     // where did i mess up
     //
-    //
+    // WHY IS THE DENOMENATOR ZERO WHAT DID I DO TO DESERVE THIS, IT'S CHRISTMAS
     double Qz = ((Qx1*Qy0 - Qx0*Qy1)*(Qx2*r0 - Qx0*r2) - (Qx2*Qy0 - Qx0*Qy2)*(Qx1*r0 - Qx0*r1))
       / ((Qx2*Qy0 - Qx0*Qy2)*(Qx0*Qz1 - Qx1*Qz0) - (Qx1*Qy0 - Qx0*Qy1)*(Qx0*Qz2 - Qx2*Qz0));
   }

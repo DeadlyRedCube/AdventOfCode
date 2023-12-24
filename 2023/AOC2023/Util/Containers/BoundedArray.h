@@ -49,7 +49,7 @@ public:
     { return capacity; }
 
 protected:
-  void EnsureCapacity(ssz cap, [[maybe_unused]] bool preferExactSize) override
+  void EnsureCapacity([[maybe_unused]] ssz cap, [[maybe_unused]] bool preferExactSize) override
   {
     ASSERT(cap <= capacity);
   }
@@ -71,8 +71,41 @@ public:
     : Super(reinterpret_cast<T *>(storage), 0)
     { }
 
-  BoundedArray(const BoundedArray &) = delete;
-  BoundedArray &operator=(const BoundedArray &) = delete;
+  BoundedArray(const BoundedArray &other)
+    : Super(reinterpret_cast<T *>(storage), other.count)
+  {
+    for (ssz i = 0; i < count; i++)
+      { new (&elements[i]) T(other.elements[i]); }
+  }
+
+  BoundedArray &operator=(const BoundedArray &other)
+  {
+    this->SetCount(0);
+    AppendMultiple(other.elements);
+    return *this;
+  }
+
+  BoundedArray(BoundedArray &&other)
+    : Super(reinterpret_cast<T *>(storage), other.count)
+  {
+    for (ssz i = 0; i < count; i++)
+      { new (&elements[i]) T(std::move(other.elements[i])); }
+
+    other.SetCount(0);
+  }
+
+  BoundedArray &operator=(BoundedArray &&other)
+  {
+    this->SetCount(0);
+
+    count = other.count;
+    for (ssz i = 0; i < count; i++)
+      { new (&elements[i]) T(std::move(other.elements[i])); }
+
+    other.SetCount(0);
+    return *this;
+  }
+
 
   constexpr ssz Capacity() const
     { return Cap; }

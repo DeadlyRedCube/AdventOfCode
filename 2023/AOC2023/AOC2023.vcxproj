@@ -158,6 +158,7 @@
     <ClInclude Include="D21.h" />
     <ClInclude Include="D22.h" />
     <ClInclude Include="D23.h" />
+    <ClInclude Include="D24.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Util\BitmapVis.h" />
     <ClInclude Include="Util\ComPtr.h" />

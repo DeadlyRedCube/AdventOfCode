@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stack>
 namespace D23
 {
   struct Node
@@ -28,27 +29,44 @@ namespace D23
       s32 currentNode = 0;
       s32 distanceTraveled = 0;
       u64 visitedNodes = 0;       // Keep a bitmask of visited nodes
+
+      bool operator< (const PathFind &other) const
+        { return distanceTraveled < other.distanceTraveled; }
     };
 
 
-    // Start at node 0 (always the entrance)
+    // Use a pre(over-)allocated array as the stack so there are no runtime allocations.
+    BoundedArray<PathFind> pathFindStack { edges.Count() * nodes.Count() };
     s32 bestDistance = 0;
-    std::queue<PathFind> pathFindQueue;
-    pathFindQueue.push({});
 
-    while (!pathFindQueue.empty())
+    // Start at node 0 (always the entrance)
+    pathFindStack.Append({});
+
+    while (!pathFindStack.IsEmpty())
     {
-      auto pf = pathFindQueue.front();
-      pathFindQueue.pop();
-
-      if (pf.currentNode == exitNodeIndex)
-      {
-        // We reached the exit so update our best travel distance.
-        bestDistance = std::max(bestDistance, pf.distanceTraveled);
-        continue;
-      }
+      auto pf = pathFindStack[FromEnd(-1)];
+      pathFindStack.RemoveAt(FromEnd(-1));
 
       pf.visitedNodes |= (u64(1) << pf.currentNode);
+
+      s32 exitEdgeIndex = -1;
+      for (auto ei : nodes[pf.currentNode].edgeIndices)
+      {
+        if (edges[ei].startNodeIndex == exitNodeIndex || edges[ei].endNodeIndex == exitNodeIndex)
+        {
+          exitEdgeIndex = ei;
+          break;
+        }
+      }
+
+      if (exitEdgeIndex >= 0)
+      {
+        // If an edge goes to the exit from here, we cannot choose any other locations (Because we would never be able
+        //  to get back to the exit if we skip going out this way), so we're done! Add our current distance to the
+        //  distance to the exit node and that's our new candidate best distance.
+        bestDistance = std::max(bestDistance, pf.distanceTraveled + edges[exitEdgeIndex].distance);
+        continue;
+      }
 
       for (auto ei : nodes[pf.currentNode].edgeIndices)
       {
@@ -63,7 +81,7 @@ namespace D23
         if ((pf.visitedNodes & (u64(1) << dest)) != 0)
           { continue; }
 
-        pathFindQueue.push(
+        pathFindStack.Append(
           {
             .currentNode = dest,
             .distanceTraveled = pf.distanceTraveled + edges[ei].distance,

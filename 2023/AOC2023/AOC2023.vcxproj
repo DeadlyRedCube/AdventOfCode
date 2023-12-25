@@ -159,6 +159,7 @@
     <ClInclude Include="D22.h" />
     <ClInclude Include="D23.h" />
     <ClInclude Include="D24.h" />
+    <ClInclude Include="D25.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Util\BitmapVis.h" />
     <ClInclude Include="Util\ComPtr.h" />
@@ -176,6 +177,7 @@
     <ClInclude Include="D06.h" />
     <ClInclude Include="D07.h" />
     <ClInclude Include="Util\Math\Interval.h" />
+    <ClInclude Include="Util\Math\Mat.h" />
     <ClInclude Include="Util\Math\MathHelper.h" />
     <ClInclude Include="Util\Math\Polygons.h" />
     <ClInclude Include="Util\Math\Vec.h" />

@@ -15,7 +15,6 @@
 #include "Util/BitmapVis.h"
 
 
-#if 0
 #include "D01.h"
 #include "D02.h"
 #include "D03.h"
@@ -39,14 +38,13 @@
 #include "D21.h"
 #include "D22.h"
 #include "D23.h"
-#endif
 #include "D24.h"
+#include "D25.h"
 
 int main()
 {
   Timer t;
 
-  #if 0
   std::puts("\n-- Day 01:");
   D01::Run("D01.txt");
   std::puts("\n-- Day 02:");
@@ -93,9 +91,10 @@ int main()
   D22::Run("D22.txt");
   std::puts("\n-- Day 23:");
   D23::Run("D23.txt");
-#endif
   std::puts("\n-- Day 24:");
   D24::Run("D24.txt");
+  std::puts("\n-- Day 25:");
+  D25::Run("D25.txt");
 
   auto time = t.SecondsSinceLastCheckpoint();
   PrintFmt("Finished in {:.02} seconds", time);

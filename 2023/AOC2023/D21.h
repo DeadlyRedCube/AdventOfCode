@@ -113,8 +113,8 @@ namespace D21
       //  (p2CenterOnParityCount), how many reachable even-step squares there are "p2CenterOffParityCount", and then
       //  how many of both odds and evens we can touch in the remaining regions. More on that later.
 
-      ASSERT(grid.Width() == grid.Height());                      // Square!
-      ASSERT(targetStepCount % grid.Width() == grid.Width() / 2); // For this fast solution to work, this must be true.
+      ASSERT(grid.Width() == grid.Height());                        // Square!
+      ASSERT(p2TargetStepCount % grid.Width() == grid.Width() / 2); // For the fast solution to work, this must be.
 
       // Every grid.Width steps we add an additional ring of the diamonds we've measured to the list.
       const s64 stepExtent = p2TargetStepCount / grid.Width();

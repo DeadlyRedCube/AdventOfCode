@@ -63,96 +63,92 @@ namespace D25
       auto operator<=>(const Edge &) const = default;
     };
 
-    std::set<Edge> edges;
+    std::map<Edge, s32> edgeFrequencies;
     for (auto &n : nodes)
     {
       for (auto &c : n.connections)
-        { edges.insert({ c, n.index }); }
+        { edgeFrequencies[{c, n.index}] = 0; }
     }
 
-    // Now we're going to whittle down the number of edges we have to check, by removing edges that are part of any
-    //  small cycles (increasing the small cycle threshold until we remove enough)
+    // Pick a bunch of random pairs of nodes and track how often we see any given edge on the shortest path between
+    //  them.
+    std::random_device rd;
+    std::mt19937_64 mt { rd() };
     {
       FixedArray<ssz> distances { nodes.Count() };
-      BoundedArray<ssz> reachedIndices { nodes.Count() };
-      std::queue<ssz> nodeQueue;
-
-      u32 maxStep = 2;
-      while (edges.size() > 100) // We can easily brute-force 100 edges
+      std::queue<ssz> indexQueue;
+      for (s32 iter = 0; iter < 200; iter++)
       {
-        for (auto &n : nodes)
+        distances.Fill(std::numeric_limits<ssz>::max());
+
+        // Pick a random pair of graph nodes
+        ssz nodeA = ssz(mt() % usz(nodes.Count()));
+        ssz nodeB = nodeA;
+        while (nodeB == nodeA)
+          { nodeB = ssz(mt() % usz(nodes.Count())); }
+
+        // Do a BFS to find the shortest path from A to B
+        distances[nodeA] = 0;
+        indexQueue.push(nodeA);
+        while (!indexQueue.empty())
         {
-          // Set up our structures
-          reachedIndices.SetCount(0);
-          distances.Fill(std::numeric_limits<ssz>::max());
+          ssz i = indexQueue.front();
+          indexQueue.pop();
 
-          // Gonna start at our current node
-          distances[n.index] = 0;
-          nodeQueue.push(n.index);
-
-          while (!nodeQueue.empty())
+          for (auto c : nodes[i].connections)
           {
-            ssz i = nodeQueue.front();
-            nodeQueue.pop();
-
-            for (auto c : nodes[i].connections)
+            if (c == nodeB)
             {
-              // If we've already found a closer distance, do nothing.
-              if (distances[c] < distances[i] + 1)
-                { continue; }
-
-              // If this is our first time reaching this node, add it to the reached list.
-              if (distances[c] == std::numeric_limits<ssz>::max())
-                { reachedIndices.Append(c); }
-
-              // Update the distance and, if we can take more steps, add it to the queue.
-              distances[c] = distances[i] + 1;
-              if (distances[c] < maxStep)
-                { nodeQueue.push(c); }
-            }
-          }
-
-          // Once we've built up our distance list, we can remove any edges from nodes that have more than one
-          //  connection to nodes with a lower or equal distance to itself.
-          for (auto i : reachedIndices)
-          {
-            ssz lowerCount = 0;
-            for (auto c : nodes[i].connections)
-            {
-              if (distances[c] <= distances[i])
-                { lowerCount++; }
+              // We reached the exit, we're done with this scan.
+              indexQueue = {};
+              break;
             }
 
-            if (lowerCount > 1)
-            {
-              for (auto c : nodes[i].connections)
-              {
-                if (distances[c] <= distances[i])
-                  { edges.erase({i, c}); }
-              }
-            }
+            if (distances[c] != std::numeric_limits<ssz>::max())
+              { continue; }
+
+            distances[c] = distances[i] + 1;
+            indexQueue.push(c);
           }
         }
 
-        maxStep++;
+        // Now trace back from nodeB to nodeA along the distances, incrementing all the edge frequencies.
+        ssz cur = nodeB;
+        while (cur != nodeA)
+        {
+          for (auto c : nodes[cur].connections)
+          {
+            if (distances[c] < distances[cur])
+            {
+              edgeFrequencies[{c, cur}]++;
+              cur = c;
+              break;
+            }
+          }
+        }
       }
     }
 
-    // Flatten the edges to make indexing them easier.
-    auto edgeVec = edges | std::ranges::to<std::vector>();
+    // Flatten the edges to make indexing them easier, then sort them in decreasing frequency.
+    BoundedArray<Edge> edges { ssz(edgeFrequencies.size()) };
+    for (auto [e, d] : edgeFrequencies)
+      { edges.Append(e); }
+    std::ranges::sort(edges, [&](auto &&a, auto &&b) { return edgeFrequencies[a] > edgeFrequencies[b]; });
 
+    FixedArray<bool> filled { ssz(nodes.Count()) };
     ssz groupSize = 0;
 
-    // Preallocate a buffer to make this step faster
-    FixedArray<bool> filled { ssz(nodes.Count()) };
-
-    // Now, for the edges that are left, brute-force check every triple of edges to see if they're the correct
-    //  ones to remove.
-    for (usz i = 0; i < edgeVec.size(); i++)
+    // Now iterate through the edges from highest frequency to lowest frequency checking every triple along the way
+    //  to see if that is the triple that splits the graph. We'll iterate in such a way that we push the worst
+    //  (lowest-frequency) node at the lowest rate, so we will exhaust all higher-frequency choices before pushing our
+    //  worst-case node farther up.
+    for (ssz i = 2; i < edges.Count(); i++)
     {
-      for (usz j = i + 1; j < edgeVec.size(); j++)
+      // This is the highest-frequency node, always starts at 0, iterates next-slowest
+      for (ssz j = 0; j < i - 1; j++)
       {
-        for (usz k = j + 1; k < edgeVec.size(); k++)
+        // Then this is the middle node, exhausting all middle choices before moving the highest-frequency one up.
+        for (ssz k = j + 1; k < i; k++)
         {
           filled.Fill(false);
           std::queue<ssz> q;
@@ -175,7 +171,7 @@ namespace D25
             {
               // Don't follow edges if they're one of our three.
               Edge e = { n, c };
-              if (edgeVec[i] == e || edgeVec[j] == e || edgeVec[k] == e)
+              if (edges[i] == e || edges[j] == e || edges[k] == e)
                 { continue; }
 
               q.push(c);
@@ -186,17 +182,13 @@ namespace D25
           {
             // We got two groups!
             groupSize = fillCount;
-            break;
+            goto endLoop; // if C++ has breaking out of outer loops I'd use that instead.
           }
         }
-
-        if (groupSize > 0)
-          { break; }
       }
-
-      if (groupSize > 0)
-        { break; }
     }
+
+    endLoop:;
 
     // whatever group we found was one of two, and the other nodes are in the other group.
     PrintFmt("Part 1: {}\n", groupSize * (nodes.Count() - groupSize));

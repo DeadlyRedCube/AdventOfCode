@@ -49,6 +49,7 @@ constexpr bool IsPowerOfTwo(std::integral auto v)
 
 #include "Util/Math/MathHelper.h"
 #include "Util/Math/Vec.h"
+#include "Util/Math/Mat.h"
 #include "Util/Timer.h"
 #include "Util/Math/Interval.h"
 #include "Util/Math/Polygons.h"

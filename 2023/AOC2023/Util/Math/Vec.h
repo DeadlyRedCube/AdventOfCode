@@ -330,3 +330,143 @@ using Vec2S64 = Vec2<s64>;
 using Vec3S64 = Vec3<s64>;
 using Vec4S64 = Vec4<s64>;
 
+
+template <numeric T, ssz N>
+class VecN
+{
+public:
+  constexpr VecN() noexcept = default;
+
+  constexpr VecN(const std::initializer_list<T> &l)
+  {
+    ASSERT(l.size() == usz(N));
+    const T *inT = l.begin();
+
+    for (ssz i = 0; i < N; i++)
+      { data[i] = inT[i]; }
+  }
+
+  T data[N];
+
+  T LengthSqr() const
+  {
+    T sum = 0;
+    for (ssz i = 0; i < N; i++)
+      { sum += data[i] * data[i]; }
+    return sum;
+  }
+
+  T Length() const requires (std::floating_point<T>)
+    { return std::sqrt(LengthSqr()); }
+
+  T MinComponent() const
+    { return std::ranges::min_element(data); }
+
+  T MaxComponent() const
+    { return std::ranges::max_element(data); }
+
+  T &operator[](ssz i)
+  {
+    ASSERT(InRangeArray(i, N));
+    return data[i];
+  }
+
+  T operator[](ssz i) const
+  {
+    ASSERT(InRangeArray(i, N));
+    return data[i];
+  }
+
+  constexpr bool operator==(const VecN &) const = default;
+  constexpr auto operator<=>(const VecN &) const = default;
+
+  VecN operator-() const requires (std::signed_integral<T> || std::floating_point<T>)
+  {
+    VecN o;
+    for (ssz i = 0; i < N; i++)
+      { o[i] = -data[i]; }
+    return o;
+  }
+
+  VecN operator+(VecN other) const
+  {
+    VecN o;
+    for (ssz i = 0; i < N; i++)
+      { o[i] = data[i] + other.data[i]; }
+    return o;
+  }
+
+  VecN operator-(VecN other) const
+  {
+    VecN o;
+    for (ssz i = 0; i < N; i++)
+      { o[i] = data[i] - other.data[i]; }
+    return o;
+  }
+
+  VecN operator*(T v) const
+  {
+    VecN o;
+    for (ssz i = 0; i < N; i++)
+      { o[i] = data[i] * v; }
+    return o;
+  }
+
+  VecN operator*(VecN v) const
+  {
+    VecN o;
+    for (ssz i = 0; i < N; i++)
+      { o[i] = data[i] + v.data[i]; }
+    return o;
+  }
+
+  VecN operator/(T v) const
+  {
+    VecN o;
+    for (ssz i = 0; i < N; i++)
+      { o[i] = data[i] / v; }
+    return o;
+  }
+
+  VecN operator/(VecN v) const
+  {
+    VecN o;
+    for (ssz i = 0; i < N; i++)
+      { o[i] = data[i] / v.data[i]; }
+    return o;
+  }
+
+  VecN &operator+=(VecN v)
+    { *this = *this + v; return *this; }
+
+  VecN &operator-=(VecN v)
+    { *this = *this - v; return *this; }
+
+  VecN &operator*=(T v)
+    { *this = *this * v; return *this; }
+
+  VecN &operator*=(VecN v)
+    { *this = *this * v; return *this; }
+
+  VecN &operator/=(T v)
+    { *this = *this / v; return *this; }
+
+  VecN &operator/=(VecN v)
+    { *this = *this / v; return *this; }
+};
+
+template <numeric T, ssz N>
+class Vec : public VecN<T, N>
+  { using VecN<T, N>::VecN; };
+
+template <numeric T>
+class Vec<T, 4> : public Vec4<T>
+  { using Vec4<T>::Vec4; };
+
+template <numeric T>
+class Vec<T, 3> : public Vec3<T>
+  { using Vec3<T>::Vec3; };
+
+template <numeric T>
+class Vec<T, 2> : public Vec2<T>
+  { using Vec2<T>::Vec2; };

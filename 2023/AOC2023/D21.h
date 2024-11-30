@@ -143,10 +143,10 @@ namespace D21
       // .eeeeeeeee. .EEEEEEEEE. .eeeeeeeee.
       // eeeeeeeeeee EEEEEEEEEEE eeeeeeeeeee
       // .eeeeeeeee. .EEEEEEEEE. .eeeeeeeee.
-      // -.eeeeeee.D C.EEEEEEE.D C.eeeeeee.-
-      // --.eeeee.DD CC.EEEEE.DD CC.eeeee.--
-      // ---.eee.DDD CCC.EEE.DDD CCC.eee.---
-      // ----.e.DDDD CCCC.E.DDDD CCCC.e.----
+      // -.eeeeeee.d C.EEEEEEE.D c.eeeeeee.-
+      // --.eeeee.dd CC.EEEEE.DD cc.eeeee.--
+      // ---.eee.ddd CCC.EEE.DDD ccc.eee.---
+      // ----.e.dddd CCCC.E.DDDD cccc.e.----
 
       // ----.-.BBBB aaaa.e.bbbb AAAA.-.----
       // ---.---.BBB aaa.eee.bbb AAA.---.---

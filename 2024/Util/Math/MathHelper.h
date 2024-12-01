@@ -100,3 +100,13 @@ u32 CountSetBits(T v)
 template <numeric T>
 T Square(T v)
   { return v * v; }
+
+// Wrapper around std::ranges::fold_left because it's easier to type and I cannot for the life of me remember the name
+//  fold_left
+template <std::ranges::viewable_range R> requires numeric<std::ranges::range_value_t<R>>
+auto Sum(const R &r)
+  -> std::ranges::range_value_t<R>
+{
+  using N = std::ranges::range_value_t<R>;
+  return std::ranges::fold_left(r, N(0), std::plus<N>{});
+}

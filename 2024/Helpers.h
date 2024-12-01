@@ -436,14 +436,11 @@ public:
   const T &operator[](Vec3<I> v) const
     { return Idx(v.x, v.y, v.z); }
 
-  template <std::integral I>
-  T &operator[](std::initializer_list<I> v)
-    { ASSERT(v.size() == 3); return Idx(v.begin()[0], v.begin()[1], v.begin()[2]); }
+  T &operator[](ssz x, ssz y, ssz z)
+    { return Idx(x, y, z); }
 
-  template <std::integral I>
-  const T &operator[](std::initializer_list<I> v) const
-    { ASSERT(v.size() == 3); return Idx(v.begin()[0], v.begin()[1], v.begin()[2]); }
-
+  const T &operator[](ssz x, ssz y, ssz z) const
+    { return Idx(x, y, z); }
 
   template <std::integral I>
   Vec3<I> Wrap(Vec3<I> v) const

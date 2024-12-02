@@ -22,9 +22,9 @@ namespace D02
 
   void Run(const char *path)
   {
-    auto lines = ReadFileLines(path);
-
-    std::vector<std::vector<s64>> entries = lines
+    s32 p1 = 0;
+    s32 p2 = 0;
+    for (auto &entry : ReadFileLines(path)
       | std::views::transform(
         [](auto &line)
         {
@@ -32,11 +32,7 @@ namespace D02
             | std::views::transform([](const auto &str) { char *end; return s64(std::strtoll(str.c_str(), &end, 10)); })
             | std::ranges::to<std::vector>();
         })
-      | std::ranges::to<std::vector>();
-
-    s32 p1 = 0;
-    s32 p2 = 0;
-    for (auto &entry : entries)
+      | std::ranges::to<std::vector>())
     {
       bool safe = IsSafe(entry) ? 1 : 0;
       p1 += safe;

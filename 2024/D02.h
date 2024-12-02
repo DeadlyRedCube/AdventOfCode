@@ -3,28 +3,11 @@
 
 namespace D02
 {
-  template <typename T>
-  bool IsSafe(T &&r)
-  {
-    if (!std::ranges::is_sorted(r, std::less{}) && !std::ranges::is_sorted(r, std::greater{}))
-      { return false; }
-
-    for (auto [a, b] : r | std::views::pairwise)
-    {
-      auto d = std::abs(a - b);
-      if (d < 1 || d > 3)
-        { return false; }
-    }
-
-    return true;
-  }
-
-
   void Run(const char *path)
   {
     s32 p1 = 0;
     s32 p2 = 0;
-    for (auto &entry : ReadFileLines(path)
+    for (auto &entries : ReadFileLines(path)
       | std::views::transform(
         [](auto &line)
         {
@@ -34,26 +17,54 @@ namespace D02
         })
       | std::ranges::to<std::vector>())
     {
-      bool safe = IsSafe(entry) ? 1 : 0;
-      p1 += safe;
-      p2 += safe;
+      // This is treated as increasing if two of the three first entries are increasing.
+      bool increasing
+        = (u32(entries[3] > entries[2]) + u32(entries[2] > entries[1]) + u32(entries[1] > entries[0])) >= 2;
 
-      if (safe)
-        { continue; }
+      bool p1Safe = true;
+      bool p2Safe = true;
 
-      // For p2 if it was not safe then we test every removal
-      for (u32 i = 0; i < entry.size(); i++)
-      {
-        if (
-          IsSafe(
-            std::views::zip(std::views::iota(size_t(0), entry.size()), entry)
-              | std::views::filter([&](auto v) { return std::get<0>(v) != i; })
-              | std::views::transform([](auto v) { return std::get<1>(v); })))
+      auto IsGood =
+        [=](s64 a, s64 b)
         {
-          p2++;
+          return ((increasing && b > a) || (!increasing && b < a))
+            && InRangeInclusive(std::abs(b - a), 1, 3);
+        };
+
+      for (size_t i = 1; i < entries.size(); i++)
+      {
+        if (IsGood(entries[i - 1], entries[i]))
+          { continue; }
+
+        if (!p1Safe)
+        {
+          // We hit a second error here, so p2 is invalid (and thus we can stop checking)
+          p2Safe = false;
+          break;
+        }
+
+        // Any wrong answer means p1 is not safe.
+        p1Safe = false;
+
+        // If we're either at the end or testing the next element against our previous one is good, skip the next
+        //  element and move on.
+        if (i == entries.size() - 1 || IsGood(entries[i - 1], entries[i + 1]))
+        {
+          i++;
+          continue;
+        }
+
+        // If we cannot remove *this* element, instead see what happens if we removed the previous element. If it's
+        //  *also* bad then there's no fix here and p2 is just wrong.
+        if (i > 1 && !IsGood(entries[i - 2], entries[i]))
+        {
+          p2Safe = false;
           break;
         }
       }
+
+      p1 += s32(p1Safe);
+      p2 += s32(p2Safe);
     }
 
     PrintFmt("Part 1: {}\n", p1);

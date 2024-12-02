@@ -16,16 +16,21 @@
 
 
 #include "D01.h"
+#include "D02.h"
 
 int main()
 {
   Timer t;
 
+  #if 0
   std::puts("\n-- Day 01:");
   D01::Run("D01.txt");
-  #if 0
+  #endif
+
   std::puts("\n-- Day 02:");
   D02::Run("D02.txt");
+
+  #if 0
   std::puts("\n-- Day 03:");
   D03::Run("D03.txt");
   std::puts("\n-- Day 04:");

@@ -58,6 +58,26 @@ void ReplaceAll(
   std::swap(*s, buf);
 }
 
+
+std::string ReadEntireFile(const char *filename)
+{
+  std::ifstream infile { filename };
+  ASSERT(!!infile);
+
+  std::string outStr;
+  while (!infile.eof())
+  {
+    if (!outStr.empty())
+      { outStr += "\n"; }
+    std::string s;
+    std::getline(infile, s);
+    outStr += s;
+  }
+
+  return outStr;
+}
+
+
 std::vector<std::string> ReadFileLines(const char *filename)
 {
   std::ifstream infile { filename };

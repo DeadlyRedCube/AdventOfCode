@@ -198,10 +198,19 @@ public:
   T &operator[](Vec2<I> v)
     { return Idx(v.x, v.y); }
 
+  template <std::integral I>
+  T &operator[](I x, I y)
+    { return Idx(x, y); }
+
 
   template <std::integral I>
   const T &operator[](Vec2<I> v) const
     { return Idx(v.x, v.y); }
+
+  template <std::integral I>
+  const T &operator[](I x, I y) const
+    { return Idx(x, y); }
+
 
   template <std::integral I>
   T &operator[](std::initializer_list<I> v)

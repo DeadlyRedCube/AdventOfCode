@@ -50,7 +50,7 @@ namespace D05
       else
       {
         // Use the rules to sort numbers - a number should come first if the latter's rule contains it.
-        std::ranges::sort(pg, [&](s64 l, s64 r) { return std::ranges::contains(rules[r], l); });
+        std::ranges::sort(pg, [&](s64 l, s64 r) { return std::ranges::contains(rules[l], r); });
         p2 += pg[pg.size() / 2];
       }
     }

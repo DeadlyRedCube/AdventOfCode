@@ -12,14 +12,14 @@
 
 #include "Util/Core.h"
 #include "Helpers.h"
-#include "Util/BitmapVis.h"
+//#include "Util/BitmapVis.h"
 
 
 //#include "D01.h"
 //#include "D02.h"
 //#include "D03.h"
 //#include "D04.h"
-// #include "D05.h"
+//#include "D05.h"
 #include "D06.h"
 
 int main()
@@ -83,7 +83,6 @@ int main()
   D25::Run("D25.txt");
   #endif
 
-  auto time = t.SecondsSinceLastCheckpoint();
-  PrintFmt("Finished in {:.02} seconds", time);
+  PrintFmt("Finished in {:.02f}ms", t.SecondsSinceLastCheckpoint() * 1000.0f);
   return 0;
 }

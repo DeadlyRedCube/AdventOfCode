@@ -83,6 +83,15 @@ public:
   Vec2 &operator/=(Vec2 v)
     { *this = *this / v; return *this; }
 
+  [[nodiscard]] Vec2 RotateRight() const
+    { return { -y, x }; }
+
+  [[nodiscard]] Vec2 RotateLeft() const
+    { return { y, -x }; }
+
+  [[nodiscard]] Vec2 Rotate180() const
+    { return { -x, -y }; }
+
   T x = T(0);
   T y = T(0);
 };

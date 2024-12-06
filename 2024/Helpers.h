@@ -146,6 +146,18 @@ void PrintFmt(std::format_string<t_args...> fmt, t_args&&...args)
     return ((count - 1) & (index >> k_shift)) + ((index + ssz(usz(index) >> k_shift)) % count);
   }
 
+// Out-Of-Bounds Zero means that the Array2D index will return 0 on an out-of-bounds access.
+template <std::integral T>
+class OOBZero
+{
+public:
+  explicit OOBZero(Vec2<T> tt) : t(tt) { }
+  OOBZero(T x, T y) : t(x, y) { }
+
+  operator Vec2<T>() const
+    { return t; }
+  Vec2<T> t;
+};
 
 template <typename T>
 class Array2D
@@ -211,6 +223,13 @@ public:
   const T &operator[](I x, I y) const
     { return Idx(x, y); }
 
+  template <std::integral I>
+  T operator[](OOBZero<I> v) const requires requires { T(0); }
+  {
+    if (!PositionInRange(v))
+      { return T(0); }
+    return (*this)[Vec2<I>{v}];
+  }
 
   template <std::integral I>
   T &operator[](std::initializer_list<I> v)
@@ -240,7 +259,7 @@ public:
 private:
   T &Idx(ssize_t x, ssize_t y)
   {
-    ASSERT(x >= 0 && x < width && y >= 0 && y < height);
+    ASSERT( x >= 0 && x < width && y >= 0 && y < height);
     return data[x + y * width];
   }
 

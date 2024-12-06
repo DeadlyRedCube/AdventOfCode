@@ -9,7 +9,12 @@ namespace D06
     E,
     S,
     W,
+
+    Unset = -1, // A special value for the visits array for spots that the guard never visits
   };
+
+  [[nodiscard]] Dir RotateDirRight(Dir d)
+    { return (d == Dir::W) ? Dir::N : Dir(s32(d) + 1); }
 
   enum class DirFlag
   {
@@ -39,6 +44,7 @@ namespace D06
       {
         if (grid[x, y] == '^')
         {
+          grid[x, y] = '.';
           initialGuardPos = { x, y };
           found = true;
           break;
@@ -49,44 +55,45 @@ namespace D06
         { break; }
     }
 
-    // Make a bool array that's the same size as our grid initially filled with false (We'll use this to track what's
-    //  visited)
-    auto visits = Array2D<bool>{grid.Width(), grid.Height()};
-    visits.Fill(false);
+    // Make an array of Dirs (all starting Unset) to track both where the guard visits and also which direction they
+    //  were going the first time they reached any given space.
+    auto visits = Array2D<Dir>{grid.Width(), grid.Height()};
+    visits.Fill(Dir::Unset);
 
     // Mark the initial position as visited (and increment our visit counter by 1)
-    visits[initialGuardPos] = true;
+    visits[initialGuardPos] = Dir::N;
     p1++;
 
     auto guardPos = initialGuardPos;
 
-    for (auto dirV = Vec2{0, -1};;)
+    for (auto [dir, dirV] = std::make_tuple(Dir::N, Vec2{0, -1});;)
     {
       auto n = guardPos + dirV;
-      if (!grid.PositionInRange(n))
-        { break; } // Out of range so we're done.
-
-      if (grid[n] == '#')
+      if (auto g = grid[OOBZero(n)]; g == 0)
+        { break; }
+      else if (g == '#')
       {
         // Next spot is a wall so rotate right and carry on.
         dirV = dirV.RotateRight();
+        dir = RotateDirRight(dir);
         continue;
       }
 
       // Move and update the visit grid and count if we hadn't already been here.
       guardPos = n;
-      if (!visits[guardPos])
+      if (visits[guardPos] == Dir::Unset)
       {
         p1++;
-        visits[guardPos] = true;
+        visits[guardPos] = dir;
       }
     }
 
-    auto visitDirs = Array2D<DirFlag>{grid.Width(), grid.Height()};
-    constexpr Vec2<s32> dirVecs[] = { { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, 0 } };
+    auto loopTestDirs = Array2D<DirFlag>{grid.Width(), grid.Height()};
 
     // We don't want to consider the initial guard post in this.
-    visits[initialGuardPos] = false;
+    visits[initialGuardPos] = Dir::Unset;
+
+    constexpr Vec2<s32> dirVecs[] = { { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, 0 } };
 
     // I tried a few ways and iterating the visits list and checking for "true"s was the fastest
     for (auto vy = 0; vy < visits.Height(); vy++)
@@ -94,35 +101,40 @@ namespace D06
       for (auto vx = 0; vx < visits.Width(); vx++)
       {
         auto t = Vec2{vx, vy};
-        if (!visits[t])
+        if (visits[t] == Dir::Unset)
           { continue; } // This isn't a location we visited so there's no point in trying a wall here.
 
         grid[t] = '#';
 
-        // Start at the beginning
-        guardPos = initialGuardPos;
-        auto dir = Dir::N;
+        // Start just before the guard would have reached this space.
+        guardPos = t - dirVecs[s32(visits[t])];
+
+        // ...but also, we can start facing to the right of this spot because we know we're going to turn (we literally
+        //  just put a block in front of the guard)
+        auto dir = RotateDirRight(visits[t]);
         auto dirV = dirVecs[s32(dir)];
 
-        visitDirs.Fill(DirFlag::None);
-
+        // Start with no directions in the loop test grid
+        loopTestDirs.Fill(DirFlag::None);
         while (true)
         {
           auto n = guardPos + dirV;
 
           // Move until we go out of range or reach a wall.
-          while (grid.PositionInRange(n) && grid[n] != '#')
+          auto g = grid[OOBZero(n)];
+          while (g == '.')
           {
             guardPos = n;
             n += dirV;
+            g = grid[OOBZero(n)];
           }
 
           // We're done if we went out of range, this isn't a loop.
-          if (!grid.PositionInRange(n))
+          if (g == 0)
             { break; }
 
           auto flag = DirFlag(1 << s32(dir));
-          if ((visitDirs[guardPos] & flag) == flag)
+          if ((loopTestDirs[guardPos] & flag) == flag)
           {
             // We already reached this block going this direction so this is a loop!
             p2++;
@@ -130,9 +142,9 @@ namespace D06
           }
 
           // Add our direction to the loop and rotate right.
-          visitDirs[guardPos] |= flag;
-          dir = (dir == Dir::W) ? Dir::N : Dir(s32(dir) + 1);
-          dirV = dirVecs[s32(dir)];
+          loopTestDirs[guardPos] |= flag;
+          dir = RotateDirRight(dir);
+          dirV = dirV.RotateRight();
         }
 
         // Now remove our temp addition of a wall.

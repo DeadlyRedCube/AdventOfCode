@@ -423,7 +423,11 @@ AccT AccumulateRange(InT &&range, AccT &&initial, PredicateType &&pred)
 std::string Join(std::initializer_list<std::string> strings, const char *joiner)
   { return AccumulateRange(strings, std::string{}, [&joiner](auto &&a, auto &&b) { return a.empty() ? b : a + joiner + b; }); }
 
-
+s64 AsS64(const std::string &s)
+{
+  char *end;
+  return std::strtoll(s.c_str(), &end, 10);
+}
 
 template <typename T>
 class Array3D

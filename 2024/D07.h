@@ -3,46 +3,33 @@
 
 namespace D07
 {
-  enum class Op
+  // Functions for the ops to pass to the recurse function as template parameters.
+  s64 Add(s64 l, s64 r)
+    { return l + r; }
+
+  s64 Mul(s64 l, s64 r)
+    { return l * r; }
+
+  s64 Concat(s64 l, s64 r)
   {
-    Add,
-    Mul,
-    Comb,
-  };
+    // Multiply l by 10 for every base-10 digit that r contains before summing them (effectively concatenating the digits)
+    for (auto d = r; d > 0; d /= 10)
+      { l *= 10; }
+    return l + r;
+  }
 
-
-  bool Recurse(Op op, Op opMax, const std::vector<s64> &v, u32 begin, u32 end, s64 prevV, s64 testV)
+  using Func = s64(*)(s64, s64);
+  template <Func ...funcs>
+  bool Recurse(const std::vector<s64> &v, u32 begin, s64 result)
   {
-    // Apply the op from our previous value and the current one.
-    s64 result;
-    if (op == Op::Add)
-      { result = prevV + v[begin]; }
-    else if (op == Op::Mul)
-      { result = prevV * v[begin]; }
-    else
-    {
-      // Scoot the previous value over as many digits as our new number has before adding them together.
-      result = prevV;
-      for (auto d = v[begin]; d > 0; d /= 10)
-        { result *= 10; }
-      result += v[begin];
-    }
+    // If we're at the end test to see if our previous result matches the test value.
+    if (begin == v.size())
+      { return result == v[0]; }
 
-    if (begin + 1 == end)
-    {
-      // Last one, check if it's good.
-      return result == testV;
-    }
-
-    for (Op oNext = Op::Add; oNext <= opMax; oNext = Op(u32(oNext) + 1))
-    {
-      auto succeeded = Recurse(oNext, opMax, v, begin + 1, end, result, testV);
-      if (succeeded)
-        { return succeeded; }
-    }
-
-    return false;
-  };
+    // Run the recurse function for every func template parameter as an || operator which will nicely early-out if
+    //  an earlier one succeeds.
+    return ((Recurse<funcs...>(v, begin + 1, funcs(result, v[begin]))) || ...);
+  }
 
 
   void Run(const char *path)
@@ -50,46 +37,21 @@ namespace D07
     s64 p1 = 0;
     s64 p2 = 0;
 
-    std::vector<s64> operands;
     for (auto line : ReadFileLines(path))
     {
-      auto toks = Split(line, " :", KeepEmpty::No);
-
-      char *end;
-      auto answer = std::strtoll(toks[0].c_str(), &end, 10);
-      operands.clear();
-
-      for (const auto &t : toks | std::views::drop(1))
-        { operands.push_back(std::strtoll(t.c_str(), &end, 10)); }
-
-      bool succeeded = false;
-      for (Op op = Op::Add; op <= Op::Mul; op = Op(u32(op) + 1))
+      auto vals = Split(line, " :", KeepEmpty::No) | std::views::transform(AsS64) | std::ranges::to<std::vector>();
+      if (Recurse<Add, Mul>(vals, 2, vals[1]))
       {
-        if (Recurse(op, Op::Mul, operands, 1U, u32(operands.size()), operands[0], answer))
-        {
-          succeeded = true;
-          break;
-        }
-      }
-
-      if (succeeded)
-      {
-        p1 += answer;
-        p2 += answer;
+        // If it's good for part 1 it's good for both parts
+        p1 += vals[0];
+        p2 += vals[0];
         continue;
       }
 
-      for (Op op = Op::Add; op <= Op::Comb; op = Op(u32(op) + 1))
-      {
-        if (Recurse(op, Op::Comb, operands, 1U, u32(operands.size()), operands[0], answer))
-        {
-          succeeded = true;
-          break;
-        }
-      }
-
-      if (succeeded)
-        { p2 += answer; }
+      // Try again with all of the ops enabled for P2 only. I thought it might run faster to put Concat first but
+      //  instead it's slightly slower (I think because it's the more complex op and frontloading it does more work)
+      if (Recurse<Add, Mul, Concat>(vals, 2, vals[1]))
+        { p2 += vals[0]; }
     }
 
     PrintFmt("P1: {}\n", p1);

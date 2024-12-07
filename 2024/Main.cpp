@@ -20,7 +20,8 @@
 //#include "D03.h"
 //#include "D04.h"
 //#include "D05.h"
-#include "D06.h"
+//#include "D06.h"
+#include "D07.h"
 
 int main()
 {
@@ -37,14 +38,14 @@ int main()
   D04::Run("D04.txt");
   std::puts("\n-- Day 05:");
   D05::Run("D05.txt");
-  #endif
-
   std::puts("\n-- Day 06:");
   D06::Run("D06.txt");
+  #endif
 
-  #if 0
   std::puts("\n-- Day 07:");
   D07::Run("D07.txt");
+
+  #if 0
   std::puts("\n-- Day 08:");
   D08::Run("D08.txt");
   std::puts("\n-- Day 09:");

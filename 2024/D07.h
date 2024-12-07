@@ -26,6 +26,10 @@ namespace D07
     if (begin == v.size())
       { return result == v[0]; }
 
+    // If we're already larger than the goal we can quit early.
+    if (result > v[0])
+      { return false; }
+
     // Run the recurse function for every func template parameter as an || operator which will nicely early-out if
     //  an earlier one succeeds.
     return ((Recurse<funcs...>(v, begin + 1, funcs(result, v[begin]))) || ...);

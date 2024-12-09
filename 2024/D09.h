@@ -8,104 +8,124 @@ namespace D09
     s64 p1 = 0;
     s64 p2 = 0;
 
-    auto line = ReadFileLines(path)[0];
+    // This is a straight id-by-id list of what's in memory for part 1.
+    std::vector<s32> ids;
 
     struct FileSpot
     {
-      std::optional<s32> index;
-      s32 size;
+      s32 id;
+      s32 position;
+      s32 length;
     };
 
-    std::vector<s32> ids;
+    std::vector<FileSpot> fileSpots;
 
-    ssize_t firstFree = -1;
-    s32 freeCount = 0;
+    // There are 10 possible length values (although we're ignoring 0, it still has a spot to make indexing easier),
+    //  so we're going to bucket the free spots by their length. priority_queue has the "maximum" element first so use
+    //  a "greater" comparator to reverse that and give us the minimum element as the top.
+    std::priority_queue<s32, std::vector<s32>, std::greater<s32>> freeSpacePositionsByLength[10];
+
+    auto line = ReadFileLines(path)[0];
+    ids.reserve(line.length() * 9);
+    for (auto [i, free] = std::tuple{ 0, false }; auto ch : line)
     {
-      s32 i = 0;
-      bool f = false;
-      for (auto ch : line)
+      s32 s = ch - '0';
+      if (s == 0)
       {
-        s32 s = ch - '0';
+        // Ignore empty lists (except the free polarity changes)
+        free = !free;
+        continue;
+      }
 
-        if (f && firstFree < 0)
-          { firstFree = ssize_t(ids.size()); }
+      s32 pos = s32(ids.size());
 
-        for (s32 j = 0; j < s; j++)
-          { ids.push_back(f ? -1 : i); }
+      // Build up the basic list for P1
+      for (s32 j = 0; j < s; j++)
+        { ids.push_back(free ? -1 : i); }
 
-        if (!f)
-          { ++i; }
+      // Now build the more complex structure for part 2, free spaces go into the free list bucketed by length, and
+      //  file "spots" (which is a weird name but it's what I went with) go into an in-order list.
+      if (free)
+        { freeSpacePositionsByLength[s].push(pos); }
+      else
+      {
+        fileSpots.push_back({ .id = i, .position = pos, .length = s });
+        i++;
+      }
 
-        freeCount += f ? 1 : 0;
-        f = !f;
+      free = !free;
+    }
+
+    // If the last element was free space, remove all of it from the list.
+    while (ids.back() < 0)
+      { ids.pop_back(); }
+
+    // Part 1, run through the list linearly moving one character at a time until the destination passes the remaining
+    //  list size.
+    {
+      s32 dst = 0;
+      while (ids[dst] >= 0)
+        { dst++; }
+
+      while (s32(ids.size()) > dst)
+      {
+        // Move one character
+        ids[dst] = ids.back();
+        ids.pop_back();
+
+        // Remove any empty space at the end
+        while (ids.back() < 0)
+          { ids.pop_back(); }
+
+        // Now bump the destination forward until we hit the end of the list or we hit another free spot.
+        dst++;
+        while (dst < s32(ids.size()) && ids[dst] >= 0)
+          { dst++; }
       }
     }
 
-    s32 origFirstFree = firstFree;
+    // Could have done this counting as we went but this was simpler.
+    for (s32 i = 0; i < s32(ids.size()); i++)
+      { p1 += i * ids[i]; }
+
+    // Part 2: moving whole blocks
+    for (auto &spot : fileSpots | std::views::reverse)
     {
-      auto p1IDs = ids;
+      // Check any (non-empty) buckets at or after our spot's length to see which one is the nearest to the front
+      //  (we will greedily insert into a larger space earlier in "memory").
+      // views::enumerate is going to give us an [index, value] tuple which maps to [length, position] so we need to
+      //  do the min using tup[1]
+      auto [length, position] = std::ranges::min(
+        freeSpacePositionsByLength
+          | std::views::transform([](const auto &v)  { return v.empty() ? std::numeric_limits<s32>::max() : v.top(); })
+          | std::views::enumerate
+          | std::views::drop(spot.length),
+        std::less{},
+        [](const auto &tup) { return std::get<1>(tup); });
 
-      while (true)
-      {
-        while (p1IDs.back() < 0)
-          { p1IDs.pop_back(); }
-
-        if (firstFree >= ssize_t(p1IDs.size()))
-          { break; }
-
-        s32 id = p1IDs.back();
-        p1IDs.pop_back();
-        p1IDs[firstFree] = id;
-        while (firstFree < ssize_t(p1IDs.size()) && p1IDs[firstFree] >= 0)
-          { firstFree++; }
-      }
-
-      for(u32 i = 0; i < p1IDs.size(); i++)
-      {
-        p1 += s64(i) * p1IDs[i];
-      }
-    }
-
-    PrintFmt("P1: {}\n", p1);
-
-    for(ssize_t i = size_t(ids.size()) - 1; i >= 0; i--)
-    {
-      if (ids[i] < 0)
+      // If we couldn't find a valid entry before our current spot, move on to the next one.
+      if (position >= spot.position)
         { continue; }
 
-      s32 scount = 1;
-      while (i > 0 && ids[i - 1] == ids[i])
-        { scount++; i--; }
+      // Remove our free space from the list.
+      freeSpacePositionsByLength[length].pop();
 
-      for (ssize_t j = 0; j < i; j++)
+      spot.position = position;
+      if (spot.length < length)
       {
-        if (ids[j] >= 0)
-          { continue; }
-
-        s32 dcount = 0;
-        while (ids[j] < 0)
-          { dcount++; j++; }
-
-        if (dcount >= scount)
-        {
-          j -= dcount;
-          for (ssize_t k = 0; k < scount; k++)
-          {
-            ids[j + k] = ids[i + k];
-            ids[i + k] = -1;
-          }
-          break;
-        }
+        // If the spot didn't fill the whole entry, push the remainder into the corresponding new heap.
+        length -= spot.length;
+        position += spot.length;
+        freeSpacePositionsByLength[length].push(position);
       }
     }
 
-      for(u32 i = 0; i < ids.size(); i++)
-      {
-        if (ids[i] < 0)
-          { continue; }
-        p2 += s64(i) * ids[i];
-      }
+    // Use the arithmetic sum formula to add all of the positions this covers together, then multiply that sum by the
+    //  id (as per the instructions).
+    for (auto &spot : fileSpots)
+      { p2 += s64((spot.position * 2 + spot.length - 1) * spot.length / 2) * spot.id; }
 
+    PrintFmt("P1: {}\n", p1);
     PrintFmt("P2: {}\n", p2);
   }
 }

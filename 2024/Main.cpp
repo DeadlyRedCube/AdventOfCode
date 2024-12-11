@@ -16,16 +16,17 @@
 //#include "Util/BitmapVis.h"
 
 
-//#include "D01.h"
-//#include "D02.h"
-//#include "D03.h"
-//#include "D04.h"
-//#include "D05.h"
-//#include "D06.h"
-//#include "D07.h"
-//#include "D08.h"
-//#include "D09.h"
+#include "D01.h"
+#include "D02.h"
+#include "D03.h"
+#include "D04.h"
+#include "D05.h"
+#include "D06.h"
+#include "D07.h"
+#include "D08.h"
+#include "D09.h"
 #include "D10.h"
+#include "D11.h"
 
 int main()
 {
@@ -50,14 +51,14 @@ int main()
   D08::Run("D08.txt");
   std::puts("\n-- Day 09:");
   D09::Run("D09.txt");
-  #endif
-
   std::puts("\n-- Day 10:");
   D10::Run("D10.txt");
+  #endif
 
-  #if 0
   std::puts("\n-- Day 11:");
   D11::Run("D11.txt");
+
+  #if 0
   std::puts("\n-- Day 12:");
   D12::Run("D12.txt");
   std::puts("\n-- Day 13:");

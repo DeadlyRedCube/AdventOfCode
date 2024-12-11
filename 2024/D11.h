@@ -27,11 +27,11 @@ namespace D11
     auto line = ReadFileLines(path)[0];
 
     // Make a maping from stone value to count of that value (order of the stones doesn't matter at all, thankfully)
-    std::map<s64, s64> stoneCounts;
+    std::unordered_map<s64, s64> stoneCounts;
     for (auto stone : Split(line, " ", KeepEmpty::No) | std::views::transform(AsS64) | std::ranges::to<std::vector>())
       { stoneCounts[stone]++; }
 
-    std::map<s64, s64> newCounts;
+    std::unordered_map<s64, s64> newCounts;
 
     auto Blink =
       [&]

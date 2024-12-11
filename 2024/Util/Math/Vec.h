@@ -479,3 +479,12 @@ class Vec<T, 3> : public Vec3<T>
 template <numeric T>
 class Vec<T, 2> : public Vec2<T>
   { using Vec2<T>::Vec2; };
+
+template<numeric T>
+struct std::hash<Vec2<T>>
+{
+  std::size_t operator()(const Vec2<T> &v) const noexcept
+  {
+    return std::hash<T>{}(v.x) ^ std::hash<T>{}(v.y);
+  }
+};

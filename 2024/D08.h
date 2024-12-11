@@ -9,7 +9,7 @@ namespace D08
 
     // Scan through the list for antennas (they're alphanumeric) and blop them into a map by type (which character it
     //  is).
-    std::map<char, std::vector<Vec2S32>> antennasByType;
+    std::unordered_map<char, std::vector<Vec2S32>> antennasByType;
     for (s32 y = 0; y < grid.Height(); y++)
     {
       for (s32 x = 0; x < grid.Width(); x++)
@@ -20,8 +20,8 @@ namespace D08
     }
 
     // Now we can scan through the anntena types to find antinodes
-    std::set<Vec2S32> antinodesP1;
-    std::set<Vec2S32> antinodesP2;
+    std::unordered_set<Vec2S32> antinodesP1;
+    std::unordered_set<Vec2S32> antinodesP2;
     for (auto [_, ants] : antennasByType)
     {
       // Nested loops was the lazy way to test every pair of antennas.

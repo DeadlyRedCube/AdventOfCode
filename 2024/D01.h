@@ -8,8 +8,8 @@ namespace D01
     auto lines = ReadFileLines(path);
 
     UnboundedArray<s64> leftList, rightList;
-    std::map<s64, s32> leftCounts;
-    std::map<s64, s32> rightCounts;
+    std::unordered_map<s64, s32> leftCounts;
+    std::unordered_map<s64, s32> rightCounts;
 
     for (auto [l, r] : lines
       | std::views::transform(

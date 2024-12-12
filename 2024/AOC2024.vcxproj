@@ -152,6 +152,7 @@
     <ClInclude Include="D09.h" />
     <ClInclude Include="D10.h" />
     <ClInclude Include="D11.h" />
+    <ClInclude Include="D12.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Util\BitmapVis.h" />
     <ClInclude Include="Util\ComPtr.h" />

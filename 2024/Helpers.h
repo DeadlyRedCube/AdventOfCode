@@ -159,6 +159,13 @@ public:
   Vec2<T> t;
 };
 
+enum class IterDir
+{
+  Horizontal,
+  Vertical,
+};
+
+
 template <typename T>
 class Array2D
 {
@@ -255,6 +262,68 @@ public:
 
   bool PositionInRange(Vec2S64 v) const
     { return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height; }
+
+  template <std::integral I, IterDir Dir = IterDir::Horizontal>
+  auto IterCoords()
+  {
+    struct Coord
+    {
+      Vec2<I> c;
+      Vec2<I> max;
+
+      Vec2<I> operator*() const
+        { return c; }
+
+      Coord &operator++()
+      {
+        if constexpr (Dir == IterDir::Horizontal)
+        {
+          c.x++;
+          if (c.x == max.x)
+          {
+            c.x = 0;
+            c.y++;
+          }
+        }
+        else
+        {
+          c.y++;
+          if (c.y == max.y)
+          {
+            c.y = 0;
+            c.x++;
+          }
+        }
+
+        return *this;
+      }
+
+      bool operator==(std::default_sentinel_t) const
+      {
+        if constexpr (Dir == IterDir::Horizontal)
+          { return c.x == 0 && c.y == max.y; }
+        else
+          { return c.y == 0 && c.x == max.x; }
+      }
+    };
+
+    struct Iterator
+    {
+      Iterator(Vec2<I> m)
+        : max(m)
+        { }
+
+      Coord begin() const
+        { return { .max = max }; }
+
+      std::default_sentinel_t end() const
+        { return {}; }
+
+      Vec2<I> max;
+    };
+
+    return Iterator{{I(Width()), I(Height())}};
+  }
 
 private:
   T &Idx(ssize_t x, ssize_t y)

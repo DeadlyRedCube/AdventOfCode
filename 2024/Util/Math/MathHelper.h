@@ -110,3 +110,29 @@ auto Sum(const R &r)
   using N = std::ranges::range_value_t<R>;
   return std::ranges::fold_left(r, N(0), std::plus<N>{});
 }
+
+
+// Wrap an integral value to be in [0, max)
+template <std::integral I>
+I WrapIndex(I v, I max)
+{
+  if constexpr (std::is_unsigned_v<I>)
+    { return v % max; } // Unsigned values are easy to wrap! A single modulo and we're done.
+  else
+  {
+    using U = std::make_unsigned_t<I>;
+
+    // The original logic was the following:
+    //   return ((v % max) + max) % max;
+    // However that uses two modulos, which are known to be *check's notes* not fast. There's another way to get
+    //  this result, though, and that's:
+    //   return (v < 0) ? (max - 1 + ((v + 1) % max)) : (v % max);
+    // That is, if it's positive (or zero), do a straight modulo, otherwise add one, do a modulo, then add that value
+    //  to max - 1 (I promise this logic works).
+    // The below logic is the equivalente of the above, but without the conditional, and runs considerably faster
+    //  than the two-modulo version.
+    constexpr u32 Shift = sizeof(I) * CHAR_BIT - 1; // Number of bits in the type - 1 (so, 63 for an s64)
+    return U(((max - 1) & (v >> Shift)) // == (max - 1) if index is negative, 0 if not
+      + ((v + I(U(v) >> Shift)) % max)); // Add 1 to index if signed, 0 if not, then modulo
+  }
+}

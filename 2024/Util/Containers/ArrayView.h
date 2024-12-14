@@ -55,12 +55,7 @@ public:
     { return count == 0; }
 
   ssz WrapIndex(ssz i) const
-  {
-    // equivalent to: return (index < 0) ? (m_count - 1 + ((index + 1) % m_count)) : index % m_count,
-    constexpr size_t k_shift = std::numeric_limits<size_t>::digits - 1;
-    ssz index = ssz(i);
-    return ((count - 1) & (index >> k_shift)) + ((index + ssz(usz(index) >> k_shift)) % count);
-  }
+    { return WrapIndex(i, ssz(count)); }
 
   T &operator[] (array_view_index auto i) const
   {

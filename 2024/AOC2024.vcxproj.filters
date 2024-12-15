@@ -117,6 +117,9 @@
     <ClInclude Include="D14.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="D15.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

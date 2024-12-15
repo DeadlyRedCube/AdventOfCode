@@ -344,7 +344,7 @@ private:
 };
 
 
-Array2D<char> MakeCharArray(const std::vector<std::string> &v)
+Array2D<char> MakeCharArray2D(const std::vector<std::string> &v)
 {
   Array2D<char> ary { ssize_t(v[0].length()), ssize_t(v.size()) };
   for (ssize_t y = 0; y < ary.Height(); y++)
@@ -356,8 +356,8 @@ Array2D<char> MakeCharArray(const std::vector<std::string> &v)
   return ary;
 }
 
-Array2D<char> ReadFileAsCharArray(const char *path)
-  { return MakeCharArray(ReadFileLines(path)); }
+Array2D<char> ReadFileAsCharArray2D(const char *path)
+  { return MakeCharArray2D(ReadFileLines(path)); }
 
 
 struct SSearchResult

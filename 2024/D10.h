@@ -8,7 +8,7 @@ namespace D10
     s64 p1 = 0;
     s64 p2 = 0;
 
-    auto grid = ReadFileAsCharArray(path);
+    auto grid = ReadFileAsCharArray2D(path);
 
     // Keep track of which spots were visited (as a grid of bools with the same dims as the map)
     auto visited = Array2D<bool>{grid.Width(), grid.Height()};

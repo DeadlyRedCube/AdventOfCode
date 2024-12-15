@@ -8,7 +8,7 @@ namespace D12
     s64 p1 = 0;
     s64 p2 = 0;
 
-    auto grid = ReadFileAsCharArray(path);
+    auto grid = ReadFileAsCharArray2D(path);
 
     // This is a second grid that gets filled with an index into a list of calculated areas (one per region). Start
     //  with all -1s which is the "we don't have an index for this space's region yet"

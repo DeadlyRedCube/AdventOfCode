@@ -5,7 +5,7 @@ namespace D08
 {
   void Run(const char *path)
   {
-    auto grid = ReadFileAsCharArray(path);
+    auto grid = ReadFileAsCharArray2D(path);
 
     // Scan through the list for antennas (they're alphanumeric) and blop them into a map by type (which character it
     //  is).

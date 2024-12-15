@@ -8,7 +8,7 @@ namespace D04
     s64 p1 = 0;
     s64 p2 = 0;
 
-    auto grid = ReadFileAsCharArray(path);
+    auto grid = ReadFileAsCharArray2D(path);
 
     for (s32 y = 0; y < grid.Height(); y++)
     {

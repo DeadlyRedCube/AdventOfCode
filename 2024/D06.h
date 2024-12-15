@@ -32,7 +32,7 @@ namespace D06
     s64 p1 = 0;
     s64 p2 = 0;
 
-    auto grid = ReadFileAsCharArray(path);
+    auto grid = ReadFileAsCharArray2D(path);
 
     Vec2<s32> initialGuardPos;
 

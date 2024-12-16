@@ -39,7 +39,6 @@ namespace D16
 
     Vec s;
     Vec e;
-    std::vector<Vec> startDirs;
     std::vector<Vec> endDirs;
 
     for (auto c : grid.IterCoords<s32>())
@@ -70,14 +69,13 @@ namespace D16
         { grid[c] = 'S'; }
       for (auto d : { X, -X, Y, -Y })
       {
-        if (grid[c + d] != '#')
-          { paths[{c, -d}] = {}; }
+        if (grid[c + d] != '#' || grid[c] == 'S')
+        {
+          paths[{c, -d}] = {};
 
-        if (grid[c] == 'S')
-          { startDirs.push_back(d); }
-
-        if (grid[c] == 'E')
-          { endDirs.push_back(-d); }
+          if (grid[c] == 'E')
+            { endDirs.push_back(-d); }
+        }
       }
     }
 
@@ -131,8 +129,7 @@ namespace D16
 
     std::priority_queue<Walk, std::vector<Walk>, decltype([](const Walk &a, const Walk &b) { return a.totalCost > b.totalCost; })> queue;
 
-    for (auto d : startDirs)
-      { queue.push({ .pos = { .pos = s, .enterDir = d } }); }
+    queue.push({ .pos = { .pos = s, .enterDir = X } });
 
     while (!queue.empty())
     {

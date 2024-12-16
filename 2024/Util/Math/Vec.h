@@ -94,6 +94,9 @@ public:
 
   T x = T(0);
   T y = T(0);
+
+  static consteval Vec2 XAxis() { return { 1, 0 }; }
+  static consteval Vec2 YAxis() { return { 0, 1 }; }
 };
 
 

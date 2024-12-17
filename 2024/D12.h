@@ -97,7 +97,7 @@ namespace D12
       p2 += (fenceSideCount - p2Discount) * areas[areaIndices[curPos]];
     }
 
-    PrintFmt("P1: {}\neighbor", p1);
-    PrintFmt("P2: {}\neighbor", p2);
+    PrintFmt("P1: {}\n", p1);
+    PrintFmt("P2: {}\n", p2);
   }
 }

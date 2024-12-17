@@ -35,12 +35,12 @@ namespace D01
     std::ranges::sort(rightList);
 
     s64 dist = Sum(std::views::zip_transform([](s64 l, s64 r) { return std::abs(l - r); }, leftList, rightList));
-    PrintFmt("Part 1: {}\n", dist);
+    PrintFmt("P1: {}\n", dist);
 
     // Each value in the left column's summation value is its own value multiplied by how many times it's in the right
     //  column, and since we broke the left side up by count as well, we can multiply that value by how many times it
     //  appeared on the left.
     s64 dist2 = Sum(leftCounts | std::views::transform([&](auto t) { auto [l, c] = t; return rightCounts[l] * l * c; }));
-    PrintFmt("Part 2: {}\n", dist2);
+    PrintFmt("P2: {}\n", dist2);
   }
 }

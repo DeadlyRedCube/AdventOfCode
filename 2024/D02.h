@@ -67,7 +67,7 @@ namespace D02
       p2 += s32(p2Safe);
     }
 
-    PrintFmt("Part 1: {}\n", p1);
-    PrintFmt("Part 2: {}\n", p2);
+    PrintFmt("P1: {}\n", p1);
+    PrintFmt("P2: {}\n", p2);
   }
 }

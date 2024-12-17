@@ -3,293 +3,331 @@
 
 namespace D16
 {
-  void Run(const char *path)
+  using Vec = Vec2S32;
+  constexpr auto X = Vec::XAxis();
+  constexpr auto Y = Vec::YAxis();
+
+
+  struct TraceResult
+  {
+    Vec ending;
+    Vec endFacing;
+    s32 cost;
+    s32 stepCount;
+  };
+
+  std::optional<TraceResult>TracePath(const Array2D<char> &grid, Vec start, Vec dir)
+  {
+    auto cur = start + dir;
+
+    s32 stepCount = 0;
+    s32 cost = 1;
+    while (true)
+    {
+      if (grid[cur] == 'E' || grid[cur] == 'S') // remove S test
+      {
+        // We actually reached the end so we're done.
+        return TraceResult{ cur, dir, cost, stepCount };
+      }
+
+      s32 exitCount = 0;
+      for (auto testDir : { X, -X, Y, -Y })
+        { exitCount += (grid[cur + testDir] != '#') ? 1 : 0; }
+
+      if (exitCount == 1)
+        { return std::nullopt; }
+
+      // This is an intersection! Path tracing is done.
+      if (exitCount > 2)
+        { return TraceResult{ cur, dir, cost, stepCount }; }
+
+      for (auto testDir : { dir, dir.RotateLeft(), dir.RotateRight() })
+      {
+        auto next = cur + testDir;
+        if (grid[next] != '#')
+        {
+          stepCount++;
+          cost += 1 + ((dir == testDir) ? 0 : 1000);
+          cur = next;
+          dir = testDir;
+          break;
+        }
+      }
+    }
+  }
+
+
+  void Run(const char *filePath)
   {
     s32 p1 = 0;
     s32 p2 = 0;
 
-    auto grid = ReadFileAsCharArray2D(path);
+    auto grid = ReadFileAsCharArray2D(filePath);
+    auto pathGrid = Array2D<s32> { grid.Width(), grid.Height() };
 
-    using Vec = Vec2S32;
-    constexpr auto X = Vec::XAxis();
-    constexpr auto Y = Vec::YAxis();
-    std::vector<Vec> endDirs;
-
-    // Start by finding the start and ending positions.
-    Vec s, e;
-    for (auto c : grid.IterCoords<s32>())
+    Vec startPos;
+    for (s32 y = s32(grid.Height()) - 1; y >= 0; y--)
     {
-      if (grid[c] == 'S')
+      for (s32 x = 0; x < s32(grid.Width()); x++)
       {
-        s = c;
-        if (e != Vec{})
-          { break; }
-      }
-
-      if (grid[c] == 'E')
-      {
-        e = c;
-
-        for (auto d : { X, -X, Y, -Y })
+        if (grid[x, y] == 'S')
         {
-          // Along with the end positions, it's helpful for part 2 to keep a list of which directions can enter the
-          //  end.
-          if (grid[c + d] != '#')
-            { endDirs.push_back(-d); }
+          startPos = {x, y};
+          break;
         }
-        if (s != Vec{})
-          { break; }
       }
     }
 
-    struct NodeKey
+    struct EnterCost
+    {
+      Vec srcFacing;
+      s32 totalCost;
+    };
+
+    struct Path
+    {
+      bool committed = false;
+      Vec in;
+      Vec inDir;
+      Vec out;
+      Vec outDir;
+      s32 stepCount;
+      s32 cost;
+      BoundedArray<EnterCost, 4> enterCosts;
+    };
+
+    std::vector<Path> paths;
+    static constexpr s32 Unpathed = 0;
+    paths.emplace_back(); // Put a dummy value at 0 because 0 in the path grid means "not connected yet"
+
+    paths.reserve(grid.Width() * grid.Height() / 8); // Just a guess as to a good initial size to avoid reallocation
+
+    struct WalkEntry
     {
       Vec pos;
       Vec facing;
-      bool operator==(const NodeKey &) const = default;
+      Vec prePathFacing;
+      s32 postPathCost = 0;
     };
 
-    auto HashNodeKey = [](const auto &v) { return std::hash<Vec>{}(v.pos) ^ std::hash<Vec>{}(v.facing); };
+    auto CmpWalk = [](const WalkEntry &a, const WalkEntry &b)
+      { return a.postPathCost > b.postPathCost; };
+    std::priority_queue<WalkEntry, std::vector<WalkEntry>, decltype(CmpWalk)> traceQueue;
 
-    struct NodePath
-    {
-      NodeKey src;
-      NodeKey dst;
-      s32 cost;
-      s32 stepCount;
-    };
+    traceQueue.push({ .pos = startPos, .facing = X });
 
-    struct NodeVal
-    {
-      s32 lowestCostTo = std::numeric_limits<s32>::max();
-      std::vector<NodePath> entrancePaths;
-      std::vector<NodePath> exitPaths;
-    };
-
-    std::unordered_map<NodeKey, NodeVal, decltype(HashNodeKey)> graph;
-
-    struct PathKey
-    {
-      Vec src;
-      Vec exitDir;
-      bool operator==(const PathKey &) const = default;
-    };
-
-    auto HashPathKey = [](const auto &v) { return std::hash<Vec>{}(v.src) ^ std::hash<Vec>{}(v.exitDir); };
-
-    enum class ExitType
-    {
-      Untraced,
-      DeadEnd,
-      Traced,
-    };
-
-    struct PathVal
-    {
-      ExitType type = ExitType::Untraced;
-      NodeKey dst;
-      s32 cost;      // The cost of traveling along this path (from start to end)
-      s32 stepCount; // The number of steps along this path (not counting the endpoints)
-    };
-
-
-    std::unordered_map<PathKey, PathVal, decltype(HashPathKey)> paths;
-
-    struct Walk
-    {
-      NodeKey nodeKey;
-      s32 totalCost = 0;
-    };
-
-    auto CmpWalk = [](const Walk &a, const Walk &b) { return a.totalCost > b.totalCost; };
-    std::priority_queue<Walk, std::vector<Walk>, decltype(CmpWalk)> traceQueue;
-
-    // Start at the start, facing east.
-    traceQueue.push({ .nodeKey = { .pos = s, .facing = X } });
-
+    Vec endPos;
     p1 = std::numeric_limits<s32>::max();
+
     while (!traceQueue.empty())
     {
       auto walk = traceQueue.top();
       traceQueue.pop();
 
-      auto &nodeVal = graph[walk.nodeKey];
-
-      // If we've walked farther than the last time it took to get to this node (or farther than the shortest distance
-      //  to the exit) we can stop early.
-      if (walk.totalCost > nodeVal.lowestCostTo || walk.totalCost > p1)
+      // If we've already walked farther than the shortest path to the exit we've found we can stop now.
+      if (walk.postPathCost > p1)
         { continue; }
 
-      nodeVal.lowestCostTo = walk.totalCost;
-
-      if (walk.nodeKey.pos == e)
+      if (auto pathIndex = pathGrid[walk.pos - walk.facing]; pathIndex != Unpathed)
       {
-        // We'll only set this on shortest paths, and we don't have to keep tracing out from here.
-        p1 = nodeVal.lowestCostTo;
+        auto &path = paths[pathIndex];
+
+        if (!path.committed)
+        {
+          // We have to walk the shortest walk along a path before comitting it (otherwise we can commit going
+          //  upstream), but we've now gotten here so
+
+          ASSERT(path.enterCosts.IsEmpty());
+          path.committed = true;
+
+          // We're going to commit this path now as this is the first time we've actually crossed it to this distance.
+          if (path.out != walk.pos)
+          {
+            // We first saw this from the other direction but we're committing this way
+            ASSERT(path.in == walk.pos);
+            std::swap(path.in, path.out);
+            std::swap(path.inDir, path.outDir);
+            path.inDir = -path.inDir;
+            path.outDir = -path.outDir;
+          }
+        }
+
+        if (path.out != walk.pos)
+          { continue; } // We've since committed this path the other direction so don't continue.
+
+        // Now that we've walked it, we can commit the enter costs.
+        auto found = std::ranges::find(path.enterCosts, walk.prePathFacing, &EnterCost::srcFacing);
+
+        // Only add this facing if there is not already one (which would have a lower cost than this one)
+        if (found != path.enterCosts.end())
+          { ASSERT(found->totalCost <= walk.postPathCost); continue; }
+        else
+          { path.enterCosts.Append({ .srcFacing = walk.prePathFacing, .totalCost = walk.postPathCost }); }
+      }
+
+      if (grid[walk.pos] == 'E')
+      {
+        // Reached the end! Since we're doing breadth first we can record this as the shortest cost, we'll never
+        //  get here with a shorter path again (but we may get here with a same-length path again)
+        p1 = walk.postPathCost;
+        endPos = walk.pos;
         continue;
       }
 
-      if (nodeVal.exitPaths.empty())
+      // Now test every direction except the one we entered from (can't 180)
+      for (auto &dir : { walk.facing, walk.facing.RotateLeft(), walk.facing.RotateRight() })
       {
-        // Now we need to trace the exits
-        for (auto exitDir : { walk.nodeKey.facing, walk.nodeKey.facing.RotateLeft(), walk.nodeKey.facing.RotateRight() })
+        auto next = walk.pos + dir;
+
+        // If it's not an open space skip it.
+        if (grid[next] != '.')
+          { continue; }
+
+        if (pathGrid[next] == Unpathed)
         {
-          auto target = walk.nodeKey.pos + exitDir;
-
-          if (grid[target] == '#')
-            { continue; } // No exit this way
-
-          auto pathKey = PathKey{ .src = walk.nodeKey.pos, .exitDir = exitDir };
-          auto &pathVal = paths[pathKey];
-          if (pathVal.type == ExitType::DeadEnd)
-            { continue; } // We already checked and this was a dead end so we can move on.
-
-          if (pathVal.type == ExitType::Untraced)
+          // We haven't traced this path yet so do so now.
+          if (auto result = TracePath(grid, walk.pos, dir); result.has_value())
           {
-            // We haven't traced this path yet so do so now.
-            auto facing = exitDir;
+            // The trace was successful, so throw the path into the grid so that we can find it next time.
+            auto [target, targetFacing, pathCost, pathStepCount] = *result;
 
-            s32 cost = 1; // Don't count the initial turn since this path info is global.
+            pathGrid[next] = s32(paths.size());
+            pathGrid[target - targetFacing] = s32(paths.size());
 
-            // Start the step count as 0 here instead of 1 because we want to not count the endpoints, and we'll count the
-            //  destination in the loop below, so rather than subtracting 1 at the end to counter that, just don't count
-            //  this first step.
-            s32 stepCount = 0;
-
-            while (true)
-            {
-              if (grid[target] == '.')
+            paths.push_back(
               {
-                // See how many exits this space has
-                s32 exitCount = 0;
-                Vec outDir;
-                for (auto d : { X, -X, Y, -Y })
-                {
-                  if (grid[target + d] != '#')
-                  {
-                    if (d != -facing)
-                      { outDir = d; }
-                    exitCount++;
-                  }
-                }
-
-                if (exitCount == 1)
-                {
-                  // Dead end. Mark it so we don't try to trace it again.
-                  pathVal.type = ExitType::DeadEnd;
-                  break;
-                }
-
-                if (exitCount == 2)
-                {
-                  // This is just a path so move along.
-                  target += outDir;
-                  cost += 1 + ((facing == outDir) ? 0 : 1000);
-                  facing = outDir;
-                  stepCount++;
-                  continue;
-                }
-
-                if (exitCount > 2)
-                {
-                  // This is an intersection so mark it with an I so future traces to here are easier
-                  grid[target] = 'I';
-                }
-              }
-
-              // Found an intersection or the end. Update this path to do the right thing, then connect up to our node
-              pathVal =
-                {
-                  .type = ExitType::Traced,
-                  .dst = { .pos = target, .facing = facing },
-                  .cost = cost,
-                  .stepCount = stepCount,
-                };
-              break;
-            }
+                .in = walk.pos,
+                .inDir = dir,
+                .out = target,
+                .outDir = targetFacing,
+                .stepCount = pathStepCount,
+                .cost = pathCost,
+              });
           }
-
-          if (pathVal.type == ExitType::Traced)
+          else
           {
-            // This reached an ending so add it to the list (applying the cost of turning if it is necessary)
-            NodePath nodePath =
-              {
-                .src = walk.nodeKey,
-                .dst = pathVal.dst,
-                .cost = pathVal.cost + ((pathKey.exitDir == walk.nodeKey.facing) ? 0 : 1000),
-                .stepCount = pathVal.stepCount,
-              };
-
-            // Link in both directions.
-            nodeVal.exitPaths.push_back(nodePath);
-            graph[pathVal.dst].entrancePaths.push_back(nodePath);
+            // We hit a dead end so block it off so any future walks don't even try
+            grid[next] = '#';
+            continue;
           }
         }
-      }
 
-      // One way or another we have our path list now, so move along the paths.
-      for (auto &exit : nodeVal.exitPaths)
-        { traceQueue.push({ .nodeKey = exit.dst , .totalCost = walk.totalCost + exit.cost }); }
+        // Now we definitely have this path available
+        auto &path = paths[pathGrid[next]];
+
+        // If it's facing the wrong way and is committed, don't go any further.
+        if (path.committed && walk.pos == path.out)
+          { continue; }
+
+        // The cost along this path is our current cost, the path's cost, plus 1000 if we had to turn to go down it.
+        s32 newCost = walk.postPathCost + path.cost + ((dir == walk.facing) ? 0 : 1000);
+        traceQueue.push(
+          {
+            // An uncommitted path can be facing either direction so get the correct orientation for this travel
+            .pos = (walk.pos == path.out) ? path.in : path.out,
+            .facing = (walk.pos == path.out) ? -path.inDir : path.outDir,
+
+            .prePathFacing = walk.facing,
+            .postPathCost = newCost,
+          });
+      }
     }
 
     PrintFmt("P1: {}\n", p1);
 
-    // Now time to do part 2.
-
-    p2 = 1; // Start by counting the end.
-
-    // Figure out which entrance(s) into the exit cost exactly our lowest exit cost and queue them - that's where we'll
-    //  start tracing.
-    std::queue<NodePath> queue;
-    for (auto &d : endDirs)
+    struct Backwalk
     {
-      auto &data = graph[{e, d}];
-      for (auto &ent : data.entrancePaths)
+      Vec srcPos;
+      Vec towardOriginFacing;
+    };
+
+    std::queue<Backwalk> backwalkQueue;
+    p2 = 2; // Start counting the 'E' and 'S' spaces already.
+
+    // Start the queue with all the paths that came into the end with the minimum cost.
+    auto origGrid = ReadFileAsCharArray2D(filePath);
+
+    for (auto d : { -X, X, -Y, Y })
+    {
+      auto i = pathGrid[endPos + d];
+      if (i == 0)
+        { continue; }
+
+      for (auto &ent : paths[i].enterCosts)
       {
-        if (graph[ent.src].lowestCostTo + ent.cost == p1)
-          { queue.push(ent);  }
+        if (ent.totalCost != p1)
+          { continue; }
+
+        if (grid[endPos + d] != 'P')
+        {
+          grid[endPos + d] = 'P';
+          p2 += paths[i].stepCount;
+          backwalkQueue.push({ .srcPos = paths[i].in, .towardOriginFacing = paths[i].inDir });
+        }
       }
     }
 
-    while (!queue.empty())
+
+    // Now trace backwards along the shortest path
+    while (!backwalkQueue.empty())
     {
-      auto q = queue.front();
-      queue.pop();
+      auto bw = backwalkQueue.front();
+      backwalkQueue.pop();
 
-      // We'll use a "T" on the grid at the entrance to the origin to mark whether or not we've already counted this
-      //  path's steps or not.
-      if (grid[q.dst.pos - q.dst.facing] != 'T')
-      {
-        grid[q.dst.pos - q.dst.facing] = 'T';
-        p2 += q.stepCount;
-      }
+      // If we hit the start we don't have to trace farther.
+      if (grid[bw.srcPos] == 'S')
+        { continue; }
 
-      // We're going to use 0 through 15 as a set of four flags denoting which directions a grid space has been visited
-      //  from.
-      if (grid[q.src.pos] >= 15)
+      // If we haven't counted this space yet, count it now.
+      if (grid[bw.srcPos] != 'V')
       {
-        // We haven't visited this space yet so count it as a space along the best path and clear its value (no flags).
+        // We're marking intersections we reach with 'V' (for visited) as we count them so we don't double-count.
+        grid[bw.srcPos] = 'V';
         p2++;
-        grid[q.src.pos] = 0;
       }
 
-      // Build a flag value out of our direction (the values don't matter as long as each cardinal direction is unique)
-      u32 dirFlag = (q.src.facing.x != 0)
-        ? ((q.src.facing.x < 0) ? 1 : 2)
-        : ((q.src.facing.y < 0) ? 4 : 8);
+      // Helper lambda to call another lambda for each valid path, with the current cost and the path.
+      auto ForEachEntrance =
+        [&](auto call)
+        {
+          for (auto d
+            : { bw.towardOriginFacing, bw.towardOriginFacing.RotateRight(), bw.towardOriginFacing.RotateLeft() })
+          {
+            // If there's no exit here (or if we've already visited it, which we note by marking it with a 'P' for
+            //  "path" below), move along.
+            if (grid[bw.srcPos - d] != '.')
+              { continue; }
 
-      if ((grid[q.src.pos] & dirFlag) != 0)
-        { continue; } // We've already gone into that space in this direction so we don't need to do it again.
-      else
-        { grid[q.src.pos] |= char(dirFlag); } // Add our flag into the grid.
+            // Get the path itself now and only continue if it ended at our location.
+            auto &path = paths[pathGrid[bw.srcPos - d]];
+            if (path.out != bw.srcPos)
+              { continue; }
 
-      // Now we're going to scan the other end's entrances and any that cost the lowest cost we'll trace along.
-      auto &otherEnd = graph[q.src];
-      for (auto &ent : otherEnd.entrancePaths)
-      {
-        if (graph[ent.src].lowestCostTo + ent.cost == otherEnd.lowestCostTo)
-          { queue.push(ent); }
-      }
+            // Now for each entrance calculate the current cost (including turn cost) and then call the lambda.
+            for (auto &ent : path.enterCosts)
+            {
+              s32 cost = ent.totalCost + ((path.outDir != bw.towardOriginFacing) ? 1000 : 0);
+              call(cost, path);
+            }
+          }
+        };
+
+      // Use the above lambda to calculate the minimum cost to get into this space from all sides.
+      s32 minCost = std::numeric_limits<s32>::max();
+      ForEachEntrance([&](auto cost, auto) { minCost = std::min(minCost, cost); });
+
+      // Now that we know the minimum cost we'll visit all of the min-cost ones.
+      ForEachEntrance(
+        [&](auto cost, auto path)
+        {
+          if (cost != minCost)
+            { return; }
+
+          // Mark this grid space with a 'P' so we won't count it or navigate down it again.
+          grid[bw.srcPos - path.outDir] = 'P';
+          p2 += path.stepCount;
+          backwalkQueue.push({ .srcPos = path.in, .towardOriginFacing = path.inDir });
+        });
     }
 
     PrintFmt("P2: {}\n", p2);

@@ -132,7 +132,7 @@ namespace D17
 
 
     // Part 2 is not general-purpose for any input count, it requires:
-    // - We don't shift A a variable amount (i.e. not using a register)
+    // - We don't shift A (writing to A) a variable amount (i.e. not using a register), nor a zero amount.
     // - We don't shift A after the jump instruction (could probably handle this, but I don't)
     // - The initial values of B and C don't matter (they can be anything to start and get the same result)
     // - Maybe some other stuff?
@@ -155,10 +155,14 @@ namespace D17
       // Shift up by whatever our calculated shift amount per loop is.
       A <<= aShift;
 
+      // If A's shift is < 3 then we only have as many digits as the shift frees up. But if it's 3 or more we have the
+      //  full 3-bit space to play with.
+      s32 maxV = std::min(7, (1 << aShift) - 1);
+
       // Now try every possible output digit to see which one, when we run it through the whole process, we get the
       //  last "st.outputCount" digits of the program. Iterate backwards through this because we're using a stack
       //  and we want to go depth-first on the lowest values first (Since that's what the answer asked for)
-      for (s32 v = 7; v >= 0; v--)
+      for (s32 v = maxV; v >= 0; v--)
       {
         output.clear();
         auto newA = A | v;

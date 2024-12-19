@@ -14,7 +14,7 @@ namespace D19
     std::map<char, TrieNode> children;
   };
 
-  s64 CountWays(std::string_view design, TrieNode *trie, std::map<std::string_view, std::optional<s64>> &counts)
+  s64 CountWays(std::string_view design, TrieNode *trie, std::vector<std::optional<s64>> &memo)
   {
     // If there's nothing left, there's one way to finish from here (it's finished)
     if (design.empty())
@@ -22,7 +22,7 @@ namespace D19
 
 
     // If we've already calculated this one, return the existing calculation.
-    auto &countDest = counts[design];
+    auto &countDest = memo[design.size()];
     if (countDest.has_value())
       { return *countDest; }
 
@@ -41,7 +41,7 @@ namespace D19
 
       // If this is a valid ending point, recurse and find the number of ways valid from here.
       if (cur->validTerminal)
-        { wayCount += CountWays(design.substr(i + 1), trie, counts); }
+        { wayCount += CountWays(design.substr(i + 1), trie, memo); }
     }
 
     // Done!
@@ -70,9 +70,11 @@ namespace D19
       cur->validTerminal = true;
     }
 
+    std::vector<std::optional<s64>> memo;
     for (auto &design : lines | std::views::drop(2))
     {
-      std::map<std::string_view, std::optional<s64>> memo;
+      memo.clear();
+      memo.resize(design.size() + 1);
       auto count = CountWays(design, &root, memo);
       p1 += (count > 0) ? 1 : 0; // p1 just cares about whether it can be made any way.
       p2 += count;

@@ -129,6 +129,9 @@
     <ClInclude Include="D18.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="D19.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

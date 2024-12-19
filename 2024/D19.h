@@ -11,7 +11,7 @@ namespace D19
   struct TrieNode
   {
     bool validTerminal = false;
-    std::map<char, TrieNode> children;
+    std::array<std::unique_ptr<TrieNode>, 5> children;
   };
 
   s64 CountWays(std::string_view design, TrieNode *trie, std::vector<std::optional<s64>> &memo)
@@ -34,10 +34,9 @@ namespace D19
     for (auto [i, c] : design | std::views::enumerate)
     {
       // Find the entry for this character
-      auto found = cur->children.find(c);
-      if (found == cur->children.end())
+      if (cur->children[c - '0'] == nullptr)
         { return wayCount; } // Didn't find one so this is the end, return whatever number of ways we calculated.
-      cur = &(*found).second;
+      cur = cur->children[c - '0'].get();
 
       // If this is a valid ending point, recurse and find the number of ways valid from here.
       if (cur->validTerminal)
@@ -56,6 +55,14 @@ namespace D19
 
     auto lines = ReadFileLines(filePath);
 
+    char chmap[256] {0};
+    chmap['w'] = '0';
+    chmap['u'] = '1';
+    chmap['b'] = '2';
+    chmap['r'] = '3';
+    chmap['g'] = '4';
+
+
     // Build the trie (*is* this a trie? it is definitely my distantly half-remembered concept of one)
     TrieNode root;
     for (auto pat : Split(lines[0], " ,", KeepEmpty::No))
@@ -63,11 +70,21 @@ namespace D19
       TrieNode *cur = &root;
 
       // Scan all the way to the end of this pattern
-      for (auto c : pat)
-        { cur = &cur->children[c]; }
+      for (auto i : pat | std::views::transform([&](char c) { return chmap[c] - '0'; }))
+      {
+        if (cur->children[i] == nullptr)
+          { cur->children[i] = std::make_unique<TrieNode>(); }
+        cur = cur->children[i].get();
+      }
 
       // This is a valid ending spot.
       cur->validTerminal = true;
+    }
+
+    for (auto &line : lines  | std::views::drop(2))
+    {
+      for (auto &c : line)
+        { c = chmap[c]; }
     }
 
     std::vector<std::optional<s64>> memo;

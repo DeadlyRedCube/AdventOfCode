@@ -42,15 +42,7 @@ namespace D21
 
 
   // Memoize based on the pattern and the remaining depth
-  struct MemoKey
-  {
-    ButtonPattern pat;
-    u32 depth;
-
-    constexpr auto operator<=>(const MemoKey &) const = default;
-  };
-
-  std::map<MemoKey, s64> expansionMap;
+  Array2D<s64> expansionMap {12, 26}; // 12 patterns x 25 max depth (so 26 to store depth == 25).
 
 
   // Count the buttons that the given button pattern turns into (recursively). Any given movement from A and back
@@ -88,7 +80,7 @@ namespace D21
     }
 
     // Look up the memoized version, if we have one return it immediately.
-    auto &v = expansionMap[{pat, depth}];
+    auto &v = expansionMap[u32(pat), depth];
     if (v != 0)
       { return v; }
 
@@ -141,7 +133,6 @@ namespace D21
 
   s64 TypeCode(std::string_view code, u32 depth)
   {
-
     // Start on the A key always
     Vec pos = {2,3};
 

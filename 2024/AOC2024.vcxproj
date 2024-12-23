@@ -131,6 +131,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>.</AdditionalIncludeDirectories>
+      <AdditionalOptions>/constexpr:steps16777216 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -163,6 +164,7 @@
     <ClInclude Include="D20.h" />
     <ClInclude Include="D21.h" />
     <ClInclude Include="D22.h" />
+    <ClInclude Include="D23.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="Util\BitmapVis.h" />
     <ClInclude Include="Util\ComPtr.h" />

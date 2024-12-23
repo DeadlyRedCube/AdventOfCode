@@ -56,10 +56,10 @@ namespace D23
       {
         for (auto &k3 : connections[k2])
         {
-          if (!connections[k].contains(k3))
+          if (k.ch[0] != 't' && k2.ch[0] != 't' && k3.ch[0] != 't')
             { continue; }
 
-          if (k.ch[0] == 't' || k2.ch[0] == 't' || k3.ch[0] == 't')
+          if (vec.contains(k3))
             { p1++; }
         }
       }
@@ -75,6 +75,9 @@ namespace D23
     connected.reserve(32);
     for (auto &[c0, c0Connections] : connections)
     {
+      if (c0Connections.size() < largest.size())
+        { continue; }
+
       // Start by assuming that every node connected to c0 is in the connected set
       connected.clear();
       connected.insert_range(c0Connections);

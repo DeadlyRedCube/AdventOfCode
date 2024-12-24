@@ -49,28 +49,18 @@ namespace D24
       {
         auto toks = Split(lines[i], " ->", KeepEmpty::No);
 
-        auto a = toks[0];
-        Op op;
-        if (toks[1] == "AND")
-          { op = And; }
-        else if (toks[1] == "OR")
-          { op = Or; }
-        else
-          { ASSERT(toks[1] == "XOR"); op = Xor; }
-
-        auto b = toks[2];
-
-        auto dstName = toks[3];
-
-        if (a[0] == 'x')
+        // Count up how many 'x' values there are, which tells us the ultimate bit count.
+        if (toks[0][0] == 'x')
           { bitCount++; }
 
         instructions.push_back(
           {
-            .a = a,
-            .b = b,
-            .op = op,
-            .dst = dstName,
+            .a = toks[0],
+            .b = toks[2],
+            .op = (toks[1] == "AND")
+              ? And
+              : (toks[1] == "OR") ? Or : Xor,
+            .dst = toks[3],
           });
       }
     }
@@ -82,8 +72,10 @@ namespace D24
     {
       // This is a janky way to do this but it's gonna work. Iterate through the instructions until the moment we find
       //  the first instruction we have the values for.
-      for (auto &&[i, inst] : std::views::enumerate(instructions))
+      for (size_t i = 0; i < instructions.size(); i++)
       {
+        auto &inst = instructions[i];
+
         // If neither operand is in the values list then
         auto foundA = values.find(inst.a);
         if (foundA == values.end())
@@ -103,22 +95,22 @@ namespace D24
         }
 
         instructions.erase(instructions.begin() + i);
-        break;
       }
     }
 
-
+    // Now build our binary value by finding any 'z' values, converting its number (everything after the z) into an
+    //  integer, then shifting the bit's (0 or 1) value by that much.
     for (auto [k, v] : values)
     {
       if (!k.starts_with('z'))
         { continue; }
-
-      auto i = AsS32(std::string_view{k}.substr(1).data());
-
-      p1 |= s64(v) << i;
+      p1 |= s64(v) << AsS32(std::string_view{k}.substr(1).data());
     }
 
     PrintFmt("P1: {}\n", p1);
+
+
+    // Part 2:
 
     // For this to be a proper adder, here's what this needs to look like:
     //  x00 ^ y00 -> z00         // x00 ^ y00 outputs the first bit

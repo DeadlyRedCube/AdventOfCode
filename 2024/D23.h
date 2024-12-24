@@ -96,11 +96,18 @@ namespace D23
 
           // if c1 and c2 are not connected then c2 is not part of this large connection.
           if (!connections[c1].contains(c2))
-            { connected.erase(c2); }
+          {
+            connected.erase(c2);
+            if (connected.size() < largest.size())
+              { break; }
+          }
         }
+
+        if (connected.size() < largest.size())
+          { break; }
       }
 
-      if (connected.size() + 1 >= largest.size()) // + 1 because connected doesn't include c0
+      if (connected.size() + 1 > largest.size()) // + 1 because connected doesn't include c0
       {
         // This is the new largest set.
         largest.clear();

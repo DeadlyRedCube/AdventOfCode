@@ -144,6 +144,9 @@
     <ClInclude Include="D23.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="D24.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">

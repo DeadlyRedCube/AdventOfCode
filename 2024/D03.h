@@ -9,23 +9,38 @@ namespace D03
     s64 p2 = 0;
     bool doMuls = true;
 
-    for (auto line : ReadFileLines(path))
+    for (auto line : ReadFileLines(path) | std::views::transform([](auto &s) { return std::string_view(s); }))
     {
-      for (auto match : FindAllMatchesOverlapping(std::regex { R"((do\(\)|don't\(\)|mul\((\d+),(\d+)\)))" }, line))
+      while (!line.empty())
       {
-        char *end;
-        if (match[0] == "do()")
-          { doMuls = true; }
-        else if (match[0] == "don't()")
-          { doMuls = false; }
-        else
+        if (line.starts_with("do()"))
         {
-          auto l = std::strtoll(match[2].str().c_str(), &end, 10);
-          auto r = std::strtoll(match[3].str().c_str(), &end, 10);
+          doMuls = true;
+          line = line.substr(4);
+        }
+        else if (line.starts_with("don't()"))
+        {
+          doMuls = false;
+          line = line.substr(7);
+        }
+        else if (line.starts_with("mul("))
+        {
+          line = line.substr(4);
+          char *end;
+          auto l = std::strtoll(line.data(), &end, 10);
+          if (*end != ',')
+            { continue; }
+          line = line.substr(intptr_t(end - line.data()) + 1);
+          auto r = std::strtoll(line.data(), &end, 10);
+          if (*end != ')')
+            { continue; }
+
           p1 += l * r;
           if (doMuls)
             { p2 += l * r; }
         }
+        else
+          { line = line.substr(1); }
       }
     }
 

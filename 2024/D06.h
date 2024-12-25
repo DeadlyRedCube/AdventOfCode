@@ -3,6 +3,10 @@
 
 namespace D06
 {
+  using Vec = Vec2<s32>;
+  constexpr auto X = Vec::XAxis();
+  constexpr auto Y = Vec::YAxis();
+
   enum class Dir
   {
     N,
@@ -36,23 +40,25 @@ namespace D06
 
     Vec2<s32> initialGuardPos;
 
+    std::vector<std::vector<s32>> wallXsPerY;
+    std::vector<std::vector<s32>> wallYsPerX;
+    wallYsPerX.resize(grid.Width());
+    wallXsPerY.resize(grid.Height());
+
     // Start by finding the initial guard pos.
-    for (s32 y = 0; y < grid.Height(); y++)
+    for (auto c : grid.IterCoords<s32>())
     {
-      bool found = false;
-      for (s32 x = 0; x < grid.Width(); x++)
+      if (grid[c] == '^')
       {
-        if (grid[x, y] == '^')
-        {
-          grid[x, y] = '.';
-          initialGuardPos = { x, y };
-          found = true;
-          break;
-        }
+        grid[c] = '.';
+        initialGuardPos = c;
       }
 
-      if (found)
-        { break; }
+      if (grid[c] == '#')
+      {
+        wallXsPerY[c.y].push_back(c.x);
+        wallYsPerX[c.x].push_back(c.y);
+      }
     }
 
     // Make an array of Dirs (all starting Unset) to track both where the guard visits and also which direction they
@@ -88,68 +94,93 @@ namespace D06
       }
     }
 
-    auto loopTestDirs = Array2D<DirFlag>{grid.Width(), grid.Height()};
 
     // We don't want to consider the initial guard post in this.
     visits[initialGuardPos] = Dir::Unset;
 
-    constexpr Vec2<s32> dirVecs[] = { { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, 0 } };
+    constexpr Vec dirVecs[] = { -Y, X, Y, -X };
 
-    // I tried a few ways and iterating the visits list and checking for "true"s was the fastest
-    for (auto vy = 0; vy < visits.Height(); vy++)
+    // Make a grid of the last wallTestIndex value that hit a wall at this location.
+    auto loopTestIndices = Array2D<s32>{grid.Width(), grid.Height()};
+
+    for (s32 wallTestIndex = 0; auto wallTest : visits.IterCoords<s32>())
     {
-      for (auto vx = 0; vx < visits.Width(); vx++)
-      {
-        auto t = Vec2{vx, vy};
-        if (visits[t] == Dir::Unset)
-          { continue; } // This isn't a location we visited so there's no point in trying a wall here.
+      auto c = wallTest;
+      if (visits[c] == Dir::Unset)
+        { continue; } // Skip any unvisited locations in the grid.
 
-        grid[t] = '#';
+      ++wallTestIndex;
 
-        // Start just before the guard would have reached this space.
-        guardPos = t - dirVecs[s32(visits[t])];
+      // Start just before the guard would have reached this space, rotated to the right of where we were facing when
+      //  we would have gotten here the first time
+      auto dir = RotateDirRight(visits[c]);
+      c -= dirVecs[s32(visits[c])];
 
-        // ...but also, we can start facing to the right of this spot because we know we're going to turn (we literally
-        //  just put a block in front of the guard)
-        auto dir = RotateDirRight(visits[t]);
-        auto dirV = dirVecs[s32(dir)];
+      // Start with no directions in the loop test grid
+      loopTestIndices[c] = wallTestIndex;
 
-        // Start with no directions in the loop test grid
-        loopTestDirs.Fill(DirFlag::None);
-        while (true)
+      // Helper lambda to commonize this gross direction-scanning code
+      auto ScanDir = [&]<s32 Vec::*travelXY, s32 Vec::*crossXY, auto pred>(auto &&range)
         {
-          auto n = guardPos + dirV;
-
-          // Move until we go out of range or reach a wall.
-          auto g = grid[OOBZero(n)];
-          while (g == '.')
+          auto foundWall = std::ranges::find_if(range, [&](auto xy) { return pred(xy, c.*travelXY); });
+          s32 coord;
+          if (c.*crossXY == wallTest.*crossXY && pred(wallTest.*travelXY, c.*travelXY))
           {
-            guardPos = n;
-            n += dirV;
-            g = grid[OOBZero(n)];
+            // The wallTest position is in front of us so we need to see if it's closer to us than foundWall (if we
+            //  even found a wall)
+            coord = (foundWall == range.end())
+              ? wallTest.*travelXY // No wall found so use wallTest's coord directly
+              : (pred(wallTest.*travelXY, *foundWall) ? *foundWall : wallTest.*travelXY); // Use the closer of the two
           }
+          else if (foundWall == range.end())
+            { return false; } // We did not find a wall so this is not a loop
+          else
+            { coord = *foundWall; } // Found a wall (and we're not in line with wallTest) so use the found wall directly.
 
-          // We're done if we went out of range, this isn't a loop.
-          if (g == 0)
-            { break; }
-
-          auto flag = DirFlag(1 << s32(dir));
-          if ((loopTestDirs[guardPos] & flag) == flag)
-          {
-            // We already reached this block going this direction so this is a loop!
-            p2++;
-            break;
-          }
-
-          // Add our direction to the loop and rotate right.
-          loopTestDirs[guardPos] |= flag;
+          c.*travelXY = coord - dirVecs[s32(dir)].*travelXY;
           dir = RotateDirRight(dir);
-          dirV = dirV.RotateRight();
+          return true;
+        };
+
+
+      while (true)
+      {
+        // If we're facing a wall, turn right.
+        while (grid[OOBZero(c + dirVecs[s32(dir)])] == '#')
+          { dir = RotateDirRight(dir); }
+
+        switch (dir)
+        {
+        case Dir::N:
+          // Scan backwards through the list for the first wall with a y less than ours
+          if (!ScanDir.operator()<&Vec::y, &Vec::x, std::less<s32>{}>(wallYsPerX[c.x] | std::views::reverse))
+            { goto EndOfLoop; }
+          break;
+        case Dir::S:
+          if (!ScanDir.operator()<&Vec::y, &Vec::x, std::greater<s32>{}>(wallYsPerX[c.x]))
+            { goto EndOfLoop; }
+          break;
+        case Dir::W:
+          if (!ScanDir.operator()<&Vec::x, &Vec::y, std::less<s32>{}>(wallXsPerY[c.y] | std::views::reverse))
+            { goto EndOfLoop; }
+          break;
+        case Dir::E:
+          if (!ScanDir.operator()<&Vec::x, &Vec::y, std::greater<s32>{}>(wallXsPerY[c.y]))
+            { goto EndOfLoop; }
+          break;
         }
 
-        // Now remove our temp addition of a wall.
-        grid[t] = '.';
+        if (loopTestIndices[c] == wallTestIndex)
+        {
+          // We've already been here during this wallTest so it's a loop!
+          p2++;
+          break;
+        }
+
+        loopTestIndices[c] = wallTestIndex;
       }
+
+    EndOfLoop:;
     }
 
     PrintFmt("P1: {}\n", p1);

@@ -60,14 +60,19 @@ namespace D20
         { continue; }
 
       // Scan for nearest within 20 along any direction
-      for (s32 dy = 0; dy <= 20; dy++) // Only scan from the current row downwards (don't double-count up)
+      for (s32 ny = c.y; ny <= std::min(c.y + 20, s32(grid.Height()) - 2); ny++) // Only scan from the current row downwards (don't double-count up)
       {
+        s32 dy = ny - c.y;
         // Scan from left to right, but if we're at y == 0 then start just to the right (don't want to double-count
         //  shortcuts to the left of "c")
-        for (s32 dx = (dy == 0 ? 1 : (dy - 20)) ; dx <= (20 - dy); dx++)
+        // for (s32 dx = (dy == 0 ? 1 : (dy - 20)) ; dx <= (20 - (c.y - dy)); dx++)
+        for (s32 nx = std::clamp((dy == 0) ? (c.x + 1) : (c.x + dy - 20), 1, s32(grid.Width()) - 2);
+          nx <= std::min(c.x + (20 - dy), s32(grid.Width()) - 1);
+          nx++)
         {
-          auto n = c + Vec(dx, dy);
-          if (grid[OOBZero(n)] != '.')
+          s32 dx = nx - c.x;
+          auto n = Vec{nx, ny};
+          if (grid[n] != '.')
             { continue; }
 
           auto manhat = std::abs(dx) + dy;

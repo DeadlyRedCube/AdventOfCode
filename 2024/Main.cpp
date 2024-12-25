@@ -16,37 +16,36 @@
 //#include "Util/BitmapVis.h"
 
 
-//#include "D01.h"
-//#include "D02.h"
-//#include "D03.h"
-//#include "D04.h"
-//#include "D05.h"
-//#include "D06.h"
-//#include "D07.h"
-//#include "D08.h"
-//#include "D09.h"
-//#include "D10.h"
-//#include "D11.h"
-//#include "D12.h"
-//#include "D13.h"
-//#include "D14.h"
-//#include "D15.h"
-//#include "D16.h"
-//#include "D17.h"
-//#include "D18.h"
-//#include "D19.h"
-//#include "D20.h"
-//#include "D21.h"
-//#include "D22.h"
-//#include "D23.h"
-//#include "D24.h"
+#include "D01.h"
+#include "D02.h"
+#include "D03.h"
+#include "D04.h"
+#include "D05.h"
+#include "D06.h"
+#include "D07.h"
+#include "D08.h"
+#include "D09.h"
+#include "D10.h"
+#include "D11.h"
+#include "D12.h"
+#include "D13.h"
+#include "D14.h"
+#include "D15.h"
+#include "D16.h"
+#include "D17.h"
+#include "D18.h"
+#include "D19.h"
+#include "D20.h"
+#include "D21.h"
+#include "D22.h"
+#include "D23.h"
+#include "D24.h"
 #include "D25.h"
 
 int main()
 {
   Timer t;
 
-  #if 0
   std::puts("\n-- Day 01:");
   D01::Run("D01.txt");
   std::puts("\n-- Day 02:");
@@ -95,8 +94,6 @@ int main()
   D23::Run("D23.txt");
   std::puts("\n-- Day 24:");
   D24::Run("D24.txt");
-  #endif
-
   std::puts("\n-- Day 25:");
   D25::Run("D25.txt");
 

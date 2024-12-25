@@ -5,54 +5,49 @@ namespace D05
 {
   void Run(const char *path)
   {
-    s64 p1 = 0;
-    s64 p2 = 0;
+    s32 p1 = 0;
+    s32 p2 = 0;
 
-    std::map<s64, std::vector<s64>> rules;
-    std::vector<std::vector<s64>> pages;
+    std::unordered_map<s32, std::vector<s32>> rules;
+
+    struct V
+    {
+      s32 i;
+      s32 v;
+    };
+
+    std::vector<V> values;
+    values.reserve(64);
 
     // Parse the first part (with '|'s) as a map and thesecond part as lists.
-    for (auto line : ReadFileLines(path))
+    auto lines = ReadFileLines(path);
+    usz lineIndex = 0;
+    for (; !lines[lineIndex].empty(); ++lineIndex)
     {
-      char *end;
-      if (line.contains('|'))
-      {
-        auto toks = Split(line, "|", KeepEmpty::No);
-        auto l = std::strtoll(toks[0].c_str(), &end, 10);
-        auto r = std::strtoll(toks[1].c_str(), &end, 10);
-        rules[l].push_back(r);
-      }
-
-      else if (line.contains(','))
-      {
-        auto &v = pages.emplace_back();
-        for (auto i : Split(line, ",", KeepEmpty::No)
-            | std::views::transform([&](auto &&s) { return std::strtoll(s.c_str(), &end, 10); }))
-          { v.push_back(i); }
-      }
+      auto &line = lines[lineIndex];
+      rules[AsS32(line)].push_back(AsS32(&line[line.find_first_of('|') + 1]));
     }
 
-    for (auto &pg : pages)
+    for (++lineIndex; lineIndex < lines.size(); lineIndex++)
     {
-      // A page is good if none of the numbers *before* a given number are in the rules list for that latter number.
-      bool good = true;
-      for (size_t i = 1; good && i < pg.size(); i++)
+      auto &line = lines[lineIndex];
+      values.clear();
+      std::string_view v = line;
+      while (true)
       {
-        for (size_t j = 0; good && j < i; j++)
-        {
-          if (std::ranges::contains(rules[pg[i]], pg[j]))
-            { good = false; }
-        }
+        values.push_back({ .i = s32(values.size()), .v = AsS32(v.data()) });
+        auto nextComma = v.find_first_of(',');
+        if (nextComma == std::string_view::npos)
+          { break; }
+        v = v.substr(nextComma + 1);
       }
 
-      if (good)
-        { p1 += pg[pg.size() / 2]; } // p1 is just tally up the good pages
+      // A page is good if none of the numbers *before* a given number are in the rules list for that latter number.
+      std::ranges::sort(values, [&](V l, V r) { return std::ranges::contains(rules[l.v], r.v); });
+      if (std::ranges::all_of(std::views::enumerate(values), [](const auto &tup) { return std::get<0>(tup) == std::get<1>(tup).v; }))
+        { p1 += values[values.size() / 2].v; } // p1 is just tally up the good pages
       else
-      {
-        // Use the rules to sort numbers - a number should come first if the latter's rule contains it.
-        std::ranges::sort(pg, [&](s64 l, s64 r) { return std::ranges::contains(rules[l], r); });
-        p2 += pg[pg.size() / 2];
-      }
+        { p2 += values[values.size() / 2].v; }
     }
 
     PrintFmt("P1: {}\n", p1);

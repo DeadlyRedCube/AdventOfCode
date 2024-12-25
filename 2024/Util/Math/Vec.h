@@ -17,25 +17,25 @@ public:
     , y(v)
     { }
 
-  T LengthSqr() const
+  constexpr T LengthSqr() const
     { return x * x + y * y; }
 
-  T Length() const requires (std::floating_point<T>)
+  constexpr T Length() const requires (std::floating_point<T>)
     { return std::sqrt(LengthSqr()); }
 
-  T MinComponent() const
+  constexpr T MinComponent() const
     { return std::min(x, y); }
 
-  T MaxComponent() const
+  constexpr T MaxComponent() const
     { return std::max(x, y); }
 
-  T &operator[](ssz i)
+  constexpr T &operator[](ssz i)
   {
     ASSERT(InRangeArray(i, 2));
     return (&x)[i];
   }
 
-  T operator[](ssz i) const
+  constexpr T operator[](ssz i) const
   {
     ASSERT(InRangeArray(i, 2));
     return (&x)[i];
@@ -44,52 +44,52 @@ public:
   constexpr bool operator==(const Vec2 &) const = default;
   constexpr auto operator<=>(const Vec2 &) const = default;
 
-  Vec2 operator-() const requires (std::signed_integral<T> || std::floating_point<T>)
+  constexpr Vec2 operator-() const requires (std::signed_integral<T> || std::floating_point<T>)
     { return { -x, -y }; }
 
-  Vec2 operator+(Vec2 other) const
+  constexpr Vec2 operator+(Vec2 other) const
     { return { x + other.x, y + other.y }; }
 
-  Vec2 operator-(Vec2 other) const
+  constexpr Vec2 operator-(Vec2 other) const
     { return { x - other.x, y - other.y }; }
 
-  Vec2 operator*(T v) const
+  constexpr Vec2 operator*(T v) const
     { return { x * v, y * v }; }
 
-  Vec2 operator*(Vec2 v) const
+  constexpr Vec2 operator*(Vec2 v) const
     { return { x * v.x, y * v.y }; }
 
-  Vec2 operator/(T v) const
+  constexpr Vec2 operator/(T v) const
     { return { x / v, y / v }; }
 
-  Vec2 operator/(Vec2 v) const
+  constexpr Vec2 operator/(Vec2 v) const
     { return { x / v.x, y / v.y }; }
 
-  Vec2 &operator+=(Vec2 v)
+  constexpr Vec2 &operator+=(Vec2 v)
     { *this = *this + v; return *this; }
 
-  Vec2 &operator-=(Vec2 v)
+  constexpr Vec2 &operator-=(Vec2 v)
     { *this = *this - v; return *this; }
 
-  Vec2 &operator*=(T v)
+  constexpr Vec2 &operator*=(T v)
     { *this = *this * v; return *this; }
 
-  Vec2 &operator*=(Vec2 v)
+  constexpr Vec2 &operator*=(Vec2 v)
     { *this = *this * v; return *this; }
 
-  Vec2 &operator/=(T v)
+  constexpr Vec2 &operator/=(T v)
     { *this = *this / v; return *this; }
 
-  Vec2 &operator/=(Vec2 v)
+  constexpr Vec2 &operator/=(Vec2 v)
     { *this = *this / v; return *this; }
 
-  [[nodiscard]] Vec2 RotateRight() const
+  [[nodiscard]] constexpr Vec2 RotateRight() const
     { return { -y, x }; }
 
-  [[nodiscard]] Vec2 RotateLeft() const
+  [[nodiscard]] constexpr Vec2 RotateLeft() const
     { return { y, -x }; }
 
-  [[nodiscard]] Vec2 Rotate180() const
+  [[nodiscard]] constexpr Vec2 Rotate180() const
     { return { -x, -y }; }
 
   T x = T(0);

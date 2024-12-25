@@ -13,6 +13,7 @@ namespace D14
     {
       Vec2S32 pos;
       Vec2S32 vel;
+      s32 lastMoveTime = 0;
     };
 
     std::vector<Robot> bots;
@@ -51,65 +52,37 @@ namespace D14
     PrintFmt("P1: {}\n", p1);
 
     // Make a grid that is true when a robot is occupying a space.
-    Array2D<bool> hasRobot { Width, Height };
+    Array2D<s32> lastSeenRobotIndex { Width, Height };
     while (true)
     {
       p2++;
-
-      hasRobot.Fill(false);
 
       // Step and wrap each bot and then update the grid to show the counts of them all.
       bool noOverlaps = true;
       usz i = 0;
       for (; i < bots.size(); i++)
       {
-        // Move and wrap this bot (We can use the simpler wrap below rather than WrapAngle because none of the robot
-        //  velocities are larger than the size of the grid)
         auto &b = bots[i];
-        b.pos += b.vel;
-        b.pos.x = (b.pos.x + Width) % Width;
-        b.pos.y = (b.pos.y + Height) % Height;
+        s32 delta = p2 - b.lastMoveTime;
+        b.pos += b.vel * delta;
+        b.pos.x = WrapIndex(b.pos.x, Width);
+        b.pos.y = WrapIndex(b.pos.y, Height);
+        b.lastMoveTime = p2;
 
-        auto &has = hasRobot[b.pos];
-        if (has)
+        auto &lastIndex = lastSeenRobotIndex[b.pos];
+        if (lastIndex == p2)
         {
-          // If we have a robot here already, that's an overlap. Break out of this loop (we can stop testing for
-          //  overlap and just blast through the remaining robots in a tighter loop)
+          // If we have a robot here already, that's an overlap and we can stop updating this turn.
           noOverlaps = false;
           break;
         }
 
         // Mark that there's a robot here now.
-        has = true;
+        lastIndex = p2;
       }
 
       if (noOverlaps)
-      {
-        #if 0
-          // Print the visualization!
-          PrintFmt("\n\n\n------------ Step: {}\n", p2);
-          for (auto c : hasRobot.IterCoords<s32>())
-          {
-            if (c.x == 0)
-              { fputs("\n", stdout); }
-            fputs(hasRobot[c] ? "#" : ".", stdout);
-          }
-        #endif
-
-        // There were no overlaps and it turns out the first no-overlap moment is when the tree is.
-        break;
-      }
-      else
-      {
-        // We found that there was an overlap but we still have bots to process.
-        for (++i; i < bots.size(); i++)
-        {
-          auto &b = bots[i];
-          b.pos += b.vel;
-          b.pos.x = (b.pos.x + Width) % Width;
-          b.pos.y = (b.pos.y + Height) % Height;
-        }
-      }
+        { break; } // There were no overlaps and it turns out the first no-overlap moment is when the tree is.
     }
 
     PrintFmt("P2: {}\n", p2);

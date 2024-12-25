@@ -39,7 +39,8 @@
 //#include "D21.h"
 //#include "D22.h"
 //#include "D23.h"
-#include "D24.h"
+//#include "D24.h"
+#include "D25.h"
 
 int main()
 {
@@ -92,15 +93,12 @@ int main()
   D22::Run("D22.txt");
   std::puts("\n-- Day 23:");
   D23::Run("D23.txt");
-  #endif
-
   std::puts("\n-- Day 24:");
   D24::Run("D24.txt");
+  #endif
 
-  #if 0
   std::puts("\n-- Day 25:");
   D25::Run("D25.txt");
-  #endif
 
   PrintFmt("Finished in {:.02f}ms", t.SecondsSinceLastCheckpoint() * 1000.0f);
   return 0;

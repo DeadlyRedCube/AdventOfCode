@@ -1,6 +1,7 @@
 module;
 
 #include <cassert>
+#include <stdio.h>
 
 export module Util:Helpers;
 
@@ -139,17 +140,17 @@ export
   template <typename... t_args>
   void PrintFmt(std::format_string<t_args...> fmt, t_args&&...args)
   {
-    printf(std::format(fmt, std::forward<t_args>(args)...).c_str());
+    printf("%s", std::format(fmt, std::forward<t_args>(args)...).c_str());
   }
 
 
-    inline ssz WrapIndex(ssz i, ssz count)
-    {
-      // equivalent to: return (index < 0) ? (m_count - 1 + ((index + 1) % m_count)) : index % m_count,
-      constexpr size_t k_shift = std::numeric_limits<size_t>::digits - 1;
-      ssz index = ssz(i);
-      return ((count - 1) & (index >> k_shift)) + ((index + ssz(usz(index) >> k_shift)) % count);
-    }
+  inline ssz WrapIndex(ssz i, ssz count)
+  {
+    // equivalent to: return (index < 0) ? (m_count - 1 + ((index + 1) % m_count)) : index % m_count,
+    constexpr size_t k_shift = std::numeric_limits<size_t>::digits - 1;
+    ssz index = ssz(i);
+    return ((count - 1) & (index >> k_shift)) + ((index + ssz(usz(index) >> k_shift)) % count);
+  }
 
   // Out-Of-Bounds Zero means that the Array2D index will return 0 on an out-of-bounds access.
   template <std::integral T>

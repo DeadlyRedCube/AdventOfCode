@@ -19,6 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="D01.ixx" />
+    <ClCompile Include="D02.ixx" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Util\BitmapVis.ixx" />
     <ClCompile Include="Util\ComPtr.ixx" />
@@ -36,6 +38,9 @@
     <ClCompile Include="Util\Math\MathHelper.ixx" />
     <ClCompile Include="Util\Math\Vec.ixx" />
     <ClCompile Include="Util\Types.ixx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="NatvisFile.natvis" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
@@ -126,7 +131,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <DisableSpecificWarnings>4324;4820;4514;5045;4868;4710;4711;4435;4548;4547</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4324;4820;4514;5045;4868;4710;4711;4435;4548;4547;4686</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>
@@ -150,7 +155,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)</AdditionalIncludeDirectories>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
-      <DisableSpecificWarnings>4324;4820;4514;5045;4868;4710;4711;4435;4548;4547</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4324;4820;4514;5045;4868;4710;4711;4435;4548;4547;4686</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <TreatAngleIncludeAsExternal>true</TreatAngleIncludeAsExternal>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="ArrayView&lt;*&gt;">
+        <DisplayString>[Count = {count}] {elements, [count] na}</DisplayString>
+        <Expand>
+            <Item Name="[Count]">count</Item>
+            <Synthetic Name="[Elements]" Condition="count > 0">
+                <Expand>
+                    <ArrayItems>
+                        <Size>count</Size>
+                        <ValuePointer>elements</ValuePointer>
+                    </ArrayItems>
+                </Expand>
+            </Synthetic>
+        </Expand>
+    </Type>
+
+    <Type Name="Array2D&lt;*&gt;>">
+        <DisplayString>Array[{width}, {height}]</DisplayString>
+        <Expand>
+            <CustomListItems>
+                <Variable Name="y" InitialValue="0"/>
+                <Loop Condition="y &lt; height">
+                    <Item Name="{y}">&amp;data[y * width],[width]na</Item>
+                    <Exec>++y</Exec>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
+    <Type Name="Array3D&lt;*&gt;>">
+        <DisplayString>Array[{dims[0]}, {dims[1]}, {dims[2]}]</DisplayString>
+        <Expand>
+            <CustomListItems>
+                <Variable Name="z" InitialValue="0"/>
+                <Variable Name="y" InitialValue="0"/>
+                <Loop Condition="z &lt; dims[2]">
+                    <Exec>y = 0</Exec>
+                    <Loop Condition="y &lt; dims[1]">
+                        <Item Name="{z}, {y}">&amp;data[y * dims[0] + z * dims[0] * dims[1]],[dims[0]]na</Item>
+                        <Exec>++y</Exec>
+                    </Loop>
+                    <Exec>++z</Exec>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
+    <Type Name="D19::PartInterval">
+        <DisplayString>[x:[{x.start}, {x.end - 1}], m:[{m.start}, {m.end - 1}], a:[{a.start}, {a.end - 1}], s:[{s.start}, {s.end - 1}]</DisplayString>
+    </Type>
+</AutoVisualizer>

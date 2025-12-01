@@ -9,3 +9,7 @@ AdventOfCode2022/bin/
 2024/x64/
 *.txt
 
+2025/2025/
+2025/Output/
+*.pdb
+2025/x64/

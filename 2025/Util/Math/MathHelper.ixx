@@ -20,6 +20,24 @@ export template <std::floating_point T> constexpr T TwoPi = T(6.2831853071795864
 export template <std::floating_point T> constexpr T Epsilon = T(1e-5);
 export template <> constexpr f64 Epsilon<f64> = 1e-9;
 
+export u32 CountDecimalDigits(u64 v)
+{
+  u32 count = 1;
+  while (true)
+  {
+    if (v < 10)
+      { return count; }
+    if (v < 100)
+      { return count + 1; }
+    if (v < 1000)
+      { return count + 2; }
+    if (v < 10000)
+      { return count + 3; }
+    v /= 10000;
+    count += 4;
+  }
+}
+
 
 export constexpr bool InRangeInclusive(auto v, auto minV, auto maxV)
   { return v >= minV && v <= maxV; }

@@ -16,8 +16,8 @@ import D12;
 int main()
 {
   Timer t;
-  std::puts("\n-- Day 01:"); D01::Run("D01.txt");
-  //std::puts("\n-- Day 02:"); D02::Run("D02.txt");
+  //std::puts("\n-- Day 01:"); D01::Run("D01.txt");
+  std::puts("\n-- Day 02:"); D02::Run("D02.txt");
   //std::puts("\n-- Day 03:"); D03::Run("D03.txt");
   //std::puts("\n-- Day 04:"); D04::Run("D04.txt");
   //std::puts("\n-- Day 05:"); D05::Run("D05.txt");

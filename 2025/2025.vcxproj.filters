@@ -78,6 +78,36 @@
     <ClCompile Include="D02.ixx">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="D03.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D04.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D05.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D06.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D07.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D08.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D09.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D10.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D11.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D12.ixx">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />

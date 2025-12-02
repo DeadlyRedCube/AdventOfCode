@@ -21,6 +21,16 @@
   <ItemGroup>
     <ClCompile Include="D01.ixx" />
     <ClCompile Include="D02.ixx" />
+    <ClCompile Include="D03.ixx" />
+    <ClCompile Include="D04.ixx" />
+    <ClCompile Include="D05.ixx" />
+    <ClCompile Include="D06.ixx" />
+    <ClCompile Include="D07.ixx" />
+    <ClCompile Include="D08.ixx" />
+    <ClCompile Include="D09.ixx" />
+    <ClCompile Include="D10.ixx" />
+    <ClCompile Include="D11.ixx" />
+    <ClCompile Include="D12.ixx" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Util\BitmapVis.ixx" />
     <ClCompile Include="Util\ComPtr.ixx" />

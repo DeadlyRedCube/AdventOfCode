@@ -269,66 +269,47 @@ export
     bool PositionInRange(Vec2S64 v) const
       { return v.x >= 0 && v.x < width && v.y >= 0 && v.y < height; }
 
-    template <std::integral I, IterDir Dir = IterDir::Horizontal>
-    auto IterCoords()
+    void ForEachIn3x3(ssz xOrig, ssz yOrig, auto &&func)
     {
-      struct Coord
+      const auto minX = std::max(ssz(0), xOrig - 1);
+      const auto endX = std::min(width, xOrig + 2);
+      const auto minY = std::max(ssz(0), yOrig - 1);
+      const auto endY = std::min(height, yOrig + 2);
+
+      for (ssz y = minY; y < endY; y++)
       {
-        Vec2<I> c;
-        Vec2<I> max;
-
-        Vec2<I> operator*() const
-          { return c; }
-
-        Coord &operator++()
+        for (ssz x = minX; x < endX; x++)
         {
-          if constexpr (Dir == IterDir::Horizontal)
-          {
-            c.x++;
-            if (c.x == max.x)
-            {
-              c.x = 0;
-              c.y++;
-            }
-          }
-          else
-          {
-            c.y++;
-            if (c.y == max.y)
-            {
-              c.y = 0;
-              c.x++;
-            }
-          }
-
-          return *this;
+          func(x, y, Idx(x, y));
         }
+      }
+    }
 
-        bool operator==(std::default_sentinel_t) const
-        {
-          if constexpr (Dir == IterDir::Horizontal)
-            { return c.x == 0 && c.y == max.y; }
-          else
-            { return c.y == 0 && c.x == max.x; }
-        }
-      };
+    void ForEachIn3x3(Vec2S32 v, auto &&func)
+      { ForEachIn3x3(v.x, v.y, std::forward<decltype(func)>(func)); }
 
-      struct Iterator
+    void ForEachIn3x3(Vec2S64 v, auto &&func)
+      { ForEachIn3x3(v.x, v.y, std::forward<decltype(func)>(func)); }
+
+    template <std::integral I, IterDir Dir = IterDir::Horizontal>
+    void ForEach(auto &&func)
+    {
+      if constexpr(Dir == IterDir::Horizontal)
       {
-        Iterator(Vec2<I> m)
-          : max(m)
-          { }
-
-        Coord begin() const
-          { return { .max = max }; }
-
-        std::default_sentinel_t end() const
-          { return {}; }
-
-        Vec2<I> max;
-      };
-
-      return Iterator{{I(Width()), I(Height())}};
+        for (I y = 0; y < I(height); y++)
+        {
+          for (I x = 0; x < I(width); x++)
+            { func(x, y, Idx(x, y)); }
+        }
+      }
+      else
+      {
+        for (I x = 0; x < I(width); x++)
+        {
+          for (I y = 0; y < I(height); y++)
+            { func(x, y, Idx(x, y)); }
+        }
+      }
     }
 
   private:

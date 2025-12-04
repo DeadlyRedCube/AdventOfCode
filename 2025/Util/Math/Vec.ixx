@@ -488,11 +488,14 @@ export template <numeric T>
 class Vec<T, 2> : public Vec2<T>
   { using Vec2<T>::Vec2; };
 
-export template<numeric T>
-struct std::hash<Vec2<T>>
+extern "C++"
 {
-  std::size_t operator()(const Vec2<T> &v) const noexcept
+  export template<numeric T>
+  struct std::hash<Vec2<T>>
   {
-    return std::hash<T>{}(v.x) ^ std::hash<T>{}(v.y);
-  }
-};
+    std::size_t operator()(const Vec2<T> &v) const noexcept
+    {
+      return std::hash<T>{}(v.x) ^ std::hash<T>{}(v.y);
+    }
+  };
+}

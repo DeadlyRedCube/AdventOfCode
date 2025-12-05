@@ -1,7 +1,3 @@
-module;
-
-#include <cassert> // !!!
-
 export module D05;
 
 import Util;

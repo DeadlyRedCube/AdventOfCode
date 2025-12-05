@@ -491,6 +491,12 @@ export
     return std::strtoll(s.data(), &end, 10);
   }
 
+  u64 AsU64(std::string_view s)
+  {
+    char *end;
+    return std::strtoull(s.data(), &end, 10);
+  }
+
   template <typename T>
   class Array3D
   {

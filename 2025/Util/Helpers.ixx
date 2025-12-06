@@ -110,7 +110,7 @@ export
     Yes
   };
 
-  std::vector<std::string> Split(const std::string &s, const std::string &delims, KeepEmpty ke)
+  std::vector<std::string> Split(std::string_view s, const std::string &delims, KeepEmpty ke)
   {
     std::string buf;
     std::vector<std::string> v;
@@ -311,6 +311,9 @@ export
         }
       }
     }
+
+    std::string_view GetRowAsStringView(ssz y) const
+      { return {&data[y * width], usz(width)}; }
 
   private:
     T &Idx(ssz x, ssz y)

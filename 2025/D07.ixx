@@ -21,6 +21,8 @@ export namespace D07
     // Now we're going to trace the beams from top to bottom (finishing a row before moving on to the next)
     std::queue<Vec2<s32>> beams;
     beams.push(start);
+    std::vector<Vec2<s32>> potentials;
+    potentials.reserve(2);
     while (!beams.empty())
     {
       auto beam = beams.front();
@@ -34,27 +36,22 @@ export namespace D07
         continue;
       }
 
+      potentials.clear();
       if (grid[next] == '^')
       {
         // This is a splitter, so note for part 1 that it split
         part1++;
-        for (auto split : { next - Vec2{1, 0}, next + Vec2{1, 0} })
-        {
-          // If there isn't already a path going to this position, put it in the queue to continue on.
-          if (countGrid[split] == 0)
-            { beams.push(split); }
-
-          // Either way, add our incoming visit count to whatever is there (to let it continue propagating down)
-          countGrid[split] += countGrid[beam];
-        }
+        potentials.push_back(next - Vec2{1, 0});
+        potentials.push_back(next + Vec2{1, 0});
       }
       else
+        { potentials.push_back(next); }
+
+      for (auto potential : potentials)
       {
-        // This is empty space. If nothing has reached here before, add it to the queue, and either way increment its
-        //  visit count with the incoming count.
-        if (countGrid[next] == 0)
-          { beams.push(next); }
-        countGrid[next] += countGrid[beam];
+        if (countGrid[potential] == 0)
+          { beams.push(potential); }
+        countGrid[potential] += countGrid[beam];
       }
     }
 

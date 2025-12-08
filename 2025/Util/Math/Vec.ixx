@@ -311,7 +311,7 @@ inline Vec3<T> Normalize(Vec3<T> v)
   { return v / v.Length(); }
 
 export template <numeric T>
-inline Vec3<T> Dot(Vec3<T> a, Vec3<T> b)
+inline T Dot(Vec3<T> a, Vec3<T> b)
   { return a.x * b.x + a.y * b.y + a.z * b.z; }
 
 export template <std::floating_point T>

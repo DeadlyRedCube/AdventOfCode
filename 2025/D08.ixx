@@ -27,14 +27,21 @@ export namespace D08
         { auto vals = Split(line, ",", KeepEmpty::No); return Vec3{AsS64(vals[0]), AsS64(vals[1]), AsS64(vals[2])}; })
       | std::ranges::to<std::vector>();
 
+    auto HeapPred = [](auto &a, auto &b) { return std::get<0>(a) > std::get<0>(b); };
+
     // Build a list of distances, sorted from smallest to largest
     std::vector<std::tuple<s64, V, V>> distances;
     for (usz i = 0; i < vecs.size(); i++)
     {
       for (usz j = i + 1; j < vecs.size(); j++)
-        { distances.push_back(std::make_tuple(DistanceSqr(vecs[i], vecs[j]), vecs[i], vecs[j])); }
+      {
+        distances.push_back(std::make_tuple(DistanceSqr(vecs[i], vecs[j]), vecs[i], vecs[j]));
+        std::ranges::push_heap(distances, HeapPred);
+      }
     }
-    std::ranges::sort(distances);
+
+    auto [_, aa, bb] = distances[0];
+    PrintFmt("{},{},{} -> {},{},{}\n", aa.x, aa.y, aa.z, bb.x, bb.y, bb.z);
 
     // Now, put all of the boxes in their own circuits and give each circuit a count of 1.
     std::map<V, u64> circuitIDs;
@@ -77,8 +84,13 @@ export namespace D08
       };
 
     const auto p1DistCount = (vecs.size() > 20) ? 1000u : 10u; // Take 10 from the sample, 1000 from the real input
-    for (auto [d, a, b] : distances | std::views::take(p1DistCount))
-      { std::ignore = Connect(a, b); }
+    for (usz i = 0; i < p1DistCount; i++)
+    {
+      auto [d, a, b] = distances[0];
+      std::ranges::pop_heap(distances, HeapPred);
+      std::ignore = Connect(a, b);
+      distances.pop_back();
+    }
 
     {
       // Get the sizes as a vector and rearrange it such that the first 3 elements are largest
@@ -91,13 +103,18 @@ export namespace D08
     }
 
     // We keep going!
-    for (auto [d, a, b] : distances | std::views::drop(p1DistCount))
+    while (distances.size() > 0)
     {
+      auto [d, a, b] = distances[0];
+      std::ranges::pop_heap(distances, HeapPred);
       if (Connect(a, b) == vecs.size())
       {
+        // This connection clicked the last 2 grids together
         PrintFmt("Part 2: {}\n", a.x * b.x);
         break;
       }
+
+      distances.pop_back();
     }
   }
 }

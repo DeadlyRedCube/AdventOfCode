@@ -34,9 +34,6 @@ export namespace D08
       }
     }
 
-    auto [_, aa, bb] = distances[0];
-    PrintFmt("{},{},{} -> {},{},{}\n", aa.x, aa.y, aa.z, bb.x, bb.y, bb.z);
-
     // Now, put all of the boxes in their own circuits and give each circuit a count of 1.
     std::map<V, u64> circuitIDs;
     std::map<u64, std::vector<V>> circuits;

@@ -498,4 +498,13 @@ extern "C++"
       return std::hash<T>{}(v.x) ^ std::hash<T>{}(v.y);
     }
   };
+
+  export template<numeric T>
+  struct std::hash<Vec3<T>>
+  {
+    std::size_t operator()(const Vec3<T> &v) const noexcept
+    {
+      return std::hash<T>{}(v.x) ^ std::hash<T>{}(v.y) ^ std::hash<T>{}(v.z);
+    }
+  };
 }

@@ -4,16 +4,10 @@ import Util;
 
 export namespace D08
 {
-  auto DistanceSqr(Vec3<s64> a, Vec3<s64> b)
+  auto DistanceSqr(const Vec3<s64> &a, const Vec3<s64> &b)
   {
     auto d = b - a;
     return Dot(d, d);
-  }
-
-
-  void InsertSorted(auto &vec, auto &e, auto &&pred)
-  {
-
   }
 
 

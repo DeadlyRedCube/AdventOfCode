@@ -52,16 +52,10 @@ export namespace D09
     // It's a max heap so the largest area is guaranteed to be the first one.
     s64 area1 = std::get<0>(areas[0]);
 
-    // Here comes the fun part: vector is a max heap, and that gets things into a ~kinda~ sorted order. It's not
-    //  actually sorted but it has biased the larger areas towards the front, so rather than treat this truly as a
-    //  priority queue and pull them out perfectly sorted, it's actually faster to just iterate the list and test from
-    //  largest-ish to smallest-ish instead.
     s64 area2 = 0;
-    for (auto [area, ul, lr] : areas)
+    while (true)
     {
-      // Because this isn't truly sorted, we can save some time here by skipping areas that are definitely too small.
-      if (area < area2)
-        { continue; }
+      auto [area, ul, lr] = areas[0];
 
       for (usz i = 0; i < redTiles.size(); i++)
       {
@@ -75,10 +69,12 @@ export namespace D09
           { goto nope; } // effectively "continue outer loop", a construct that C++ doesn't have, sadly
       }
 
-      area2 = std::max(area2, area);
+      area2 = area;
       break;
 
     nope:;
+      std::ranges::pop_heap(areas, {}, [](auto &&e) { return std::get<0>(e); });
+      areas.pop_back();
     }
 
     PrintFmt("Part 1: {}\n", area1);

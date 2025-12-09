@@ -41,7 +41,7 @@ export namespace D09
         auto ul = Min(redTiles[aI], redTiles[bI]);
         auto lr = Max(redTiles[aI], redTiles[bI]);
 
-        auto area = s64((lr.x - ul.x + 1) * (lr.y - ul.y + 1));
+        auto area = s64((lr.x - ul.x + 1)) * (lr.y - ul.y + 1);
 
         // Now push this into our vector as if the vector were a max heap.
         areas.push_back({area, ul, lr});

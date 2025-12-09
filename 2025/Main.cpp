@@ -23,8 +23,8 @@ int main()
   //std::puts("\n-- Day 05:"); D05::Run("D05.txt");
   //std::puts("\n-- Day 06:"); D06::Run("D06.txt");
   //std::puts("\n-- Day 07:"); D07::Run("D07.txt");
-  std::puts("\n-- Day 08:"); D08::Run("D08.txt");
-  //std::puts("\n-- Day 09:"); D09::Run("D09.txt");
+  //std::puts("\n-- Day 08:"); D08::Run("D08.txt");
+  std::puts("\n-- Day 09:"); D09::Run("D09.txt");
   //std::puts("\n-- Day 10:"); D10::Run("D10.txt");
   //std::puts("\n-- Day 11:"); D11::Run("D11.txt");
   //std::puts("\n-- Day 12:"); D12::Run("D12.txt");

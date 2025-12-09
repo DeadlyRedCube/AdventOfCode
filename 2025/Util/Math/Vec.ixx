@@ -488,6 +488,40 @@ export template <numeric T>
 class Vec<T, 2> : public Vec2<T>
   { using Vec2<T>::Vec2; };
 
+export template <numeric T>
+auto Min(Vec2<T> a, Vec2<T> b) -> Vec2<T>
+  { return { std::min(a.x, b.x), std::min(a.y, b.y) }; }
+
+export template <numeric T>
+auto Max(Vec2<T> a, Vec2<T> b) -> Vec2<T>
+  { return { std::max(a.x, b.x), std::max(a.y, b.y) }; }
+
+export template <numeric T>
+auto Min(Vec3<T> a, Vec3<T> b) -> Vec3<T>
+  { return { std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z) }; }
+
+export template <numeric T>
+auto Max(Vec3<T> a, Vec3<T> b) -> Vec3<T>
+  { return { std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z) }; }
+
+export template <numeric T, ssz N>
+auto Min(VecN<T, N> a, VecN<T, N> b) -> VecN<T, N>
+{
+  VecN<T, N> r;
+  for (ssz i = 0; i < N; i++)
+    { r[i] = std::min(a[i], b[i]); }
+  return r;
+}
+
+export template <numeric T, ssz N>
+auto Max(VecN<T, N> a, VecN<T, N> b) -> VecN<T, N>
+{
+  VecN<T, N> r;
+  for (ssz i = 0; i < N; i++)
+    { r[i] = std::max(a[i], b[i]); }
+  return r;
+}
+
 extern "C++"
 {
   export template<numeric T>

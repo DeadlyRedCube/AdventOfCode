@@ -8,6 +8,7 @@ module;
 #include <wincodecsdk.h>
 #pragma warning (pop)
 
+#pragma comment (lib, "windowscodecs")
 export module Util:BitmapVis;
 
 import :Containers.ArrayView;
@@ -77,7 +78,7 @@ export inline void SaveWicTexture(const wchar_t *path, u32 width, u32 height, Ar
 }
 
 
-template <typename T, typename Func>
+export template <typename T, typename Func>
 void WriteAsPNG(const Array2D<T> &array, const wchar_t *path, Func &&f)
 {
   s32 scale = 4;

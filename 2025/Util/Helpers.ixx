@@ -183,6 +183,13 @@ export
       , data(new T[usz(w * h)] {})
       { }
 
+    template <std::integral I1, std::integral I2>
+    Array2D(I1 w, I2 h)
+      : width(ssz(w))
+      , height(ssz(h))
+      , data(new T[usz(w * h)] {})
+      { }
+
     Array2D(const Array2D &) = delete;
     auto operator=(const Array2D &) = delete;
 
@@ -220,24 +227,16 @@ export
     }
 
     template <std::integral I>
-    T &operator[](Vec2<I> v)
-      { return Idx(v.x, v.y); }
+    auto &operator[](this auto &&self, Vec2<I> v)
+      { return self.Idx(v.x, v.y); }
 
-    template <std::integral I>
-    T &operator[](I x, I y)
-      { return Idx(x, y); }
+    template <std::integral I1, std::integral I2>
+    auto &operator[](this auto &&self, I1 x, I2 y)
+      { return self.Idx(ssz(x), ssz(y)); }
 
 
-    template <std::integral I>
-    const T &operator[](Vec2<I> v) const
-      { return Idx(v.x, v.y); }
-
-    template <std::integral I>
-    const T &operator[](I x, I y) const
-      { return Idx(x, y); }
-
-    template <std::integral I>
-    T operator[](OOBZero<I> v) const requires requires { T(0); }
+    template <std::integral I> requires requires { T(0); }
+    T operator[](OOBZero<I> v) const
     {
       if (!PositionInRange(v))
         { return T(0); }
@@ -313,6 +312,10 @@ export
     }
 
     std::string_view GetRowAsStringView(ssz y) const
+     requires std::same_as<T, char>
+      { return {&data[y * width], usz(width)}; }
+
+    std::span<T> GetRowAsSpan(ssz y) const
       { return {&data[y * width], usz(width)}; }
 
   private:

@@ -47,7 +47,7 @@ export namespace D09
     {
       auto &&[x, v] = kvp;
       v = s32(i) * 2;
-      uncompressedXes[usz(v)] = x + 1;
+      uncompressedXes[usz(v)] = x + 1; // Add 1 here to guarantee that 0 is "nothing is here"
     }
 
     std::vector<s32> uncompressedYs;
@@ -57,7 +57,7 @@ export namespace D09
     {
       auto &&[y, v] = kvp;
       v = s32(i) * 2;
-      uncompressedYs[usz(v)] = y + 1;
+      uncompressedYs[usz(v)] = y + 1; // Add 1 here to guarantee that 0 is "nothing is here"
     }
 
     // Now that the mapping is done, make a little helper grid that we can use to build the summed area table that

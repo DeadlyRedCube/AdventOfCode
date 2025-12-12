@@ -497,6 +497,12 @@ export
     return std::strtoll(s.data(), &end, 10);
   }
 
+  u32 AsU32(std::string_view s)
+  {
+    char *end;
+    return std::strtoul(s.data(), &end, 10);
+  }
+
   u64 AsU64(std::string_view s)
   {
     char *end;
